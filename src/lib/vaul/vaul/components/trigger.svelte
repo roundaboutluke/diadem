@@ -4,22 +4,22 @@ import { getCtx } from "../ctx.js";
 const {
   refs: { triggerRef }
 } = getCtx();
-export let el = void 0;
+export let ref = void 0;
 export let asChild = false;
 $:
-  if (el) {
-    triggerRef.set(el);
+  if (ref) {
+    triggerRef.set(ref);
   }
 </script>
 
 {#if asChild}
-	<DialogPrimitive.Trigger {asChild} let:builder on:click on:keydown bind:el {...$$restProps}>
+	<DialogPrimitive.Trigger {asChild} let:builder on:click on:keydown bind:ref {...$$restProps}>
 		<TriggerWrapper meltBuilder={builder} let:newBuilder>
 			<slot builder={newBuilder} />
 		</TriggerWrapper>
 	</DialogPrimitive.Trigger>
 {:else}
-	<DialogPrimitive.Trigger let:builder on:click on:keydown bind:el {...$$restProps}>
+	<DialogPrimitive.Trigger let:builder on:click on:keydown bind:ref {...$$restProps}>
 		<slot {builder} />
 	</DialogPrimitive.Trigger>
 {/if}

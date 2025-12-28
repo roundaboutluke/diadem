@@ -1,7 +1,7 @@
 <script>import { Dialog as DialogPrimitive } from "bits-ui";
 import { getCtx } from "../ctx.js";
 import CloseWrapper from "./close-wrapper.svelte";
-export let el = void 0;
+export let ref = void 0;
 export let asChild = false;
 const {
   methods: { closeDrawer }
@@ -10,7 +10,7 @@ const {
 
 {#if asChild}
 	<DialogPrimitive.Close
-		bind:el
+		bind:ref
 		on:click={(e) => {
 			e.preventDefault();
 			closeDrawer();
@@ -31,7 +31,7 @@ const {
 	</DialogPrimitive.Close>
 {:else}
 	<DialogPrimitive.Close
-		bind:el
+		bind:ref
 		on:click={(e) => {
 			e.preventDefault();
 			closeDrawer();

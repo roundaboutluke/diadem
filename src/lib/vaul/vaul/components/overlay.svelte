@@ -12,7 +12,7 @@ $:
 
 <DialogPrimitive.Overlay
 	on:mouseup={onRelease}
-	bind:el={$overlayRef}
+	bind:ref={$overlayRef}
 	data-vaul-drawer-visible={$visible ? "true" : "false"}
 	data-vaul-overlay=""
 	data-vaul-snap-points={$isOpen && hasSnapPoints ? "true" : "false"}

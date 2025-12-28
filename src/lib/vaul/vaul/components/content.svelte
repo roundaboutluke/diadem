@@ -14,7 +14,7 @@ export let style = "";
 </script>
 
 <DialogPrimitive.Content
-	bind:el={$drawerRef}
+	bind:ref={$drawerRef}
 	style={$getContentStyle(style)}
 	preventScroll={false}
 	on:pointerdown={(e) => {
