@@ -6,13 +6,16 @@ const {
   methods: { onRelease }
 } = getCtx();
 let hasSnapPoints = false;
+let overlayEl = null;
 $:
   hasSnapPoints = $snapPoints && $snapPoints.length > 0;
+$:
+  overlayRef.set(overlayEl ?? void 0);
 </script>
 
 <DialogPrimitive.Overlay
 	on:mouseup={onRelease}
-	bind:ref={$overlayRef}
+	bind:ref={overlayEl}
 	data-vaul-drawer-visible={$visible ? "true" : "false"}
 	data-vaul-overlay=""
 	data-vaul-snap-points={$isOpen && hasSnapPoints ? "true" : "false"}

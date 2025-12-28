@@ -11,10 +11,13 @@ const {
   rootProps: { closeOnOutsideClick = true, onOutsideClick, onOpenChange } = {}
 } = getCtx();
 export let style = "";
+let drawerEl = null;
+$:
+  drawerRef.set(drawerEl ?? void 0);
 </script>
 
 <DialogPrimitive.Content
-	bind:ref={$drawerRef}
+	bind:ref={drawerEl}
 	style={$getContentStyle(style)}
 	preventScroll={false}
 	on:pointerdown={(e) => {
