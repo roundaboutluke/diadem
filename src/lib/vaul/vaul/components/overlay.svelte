@@ -13,12 +13,16 @@ $:
   overlayRef.set(overlayEl ?? void 0);
 </script>
 
-<DialogPrimitive.Overlay
-	on:mouseup={onRelease}
-	bind:ref={overlayEl}
-	data-vaul-drawer-visible={$visible ? "true" : "false"}
-	data-vaul-overlay=""
-	data-vaul-snap-points={$isOpen && hasSnapPoints ? "true" : "false"}
-	data-vaul-snap-points-overlay={$isOpen && $shouldFade ? "true" : "false"}
-	{...$$restProps}
-/>
+<DialogPrimitive.Overlay {...$$restProps}>
+	{#snippet child({ props })}
+		<div
+			{...props}
+			bind:this={overlayEl}
+			on:mouseup={onRelease}
+			data-vaul-drawer-visible={$visible ? "true" : "false"}
+			data-vaul-overlay=""
+			data-vaul-snap-points={$isOpen && hasSnapPoints ? "true" : "false"}
+			data-vaul-snap-points-overlay={$isOpen && $shouldFade ? "true" : "false"}
+		></div>
+	{/snippet}
+</DialogPrimitive.Overlay>

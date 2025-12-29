@@ -17,24 +17,8 @@ $:
 </script>
 
 <DialogPrimitive.Content
-	bind:ref={drawerEl}
 	style={$getContentStyle(style)}
 	preventScroll={false}
-	on:pointerdown={(e) => {
-		onPress(e);
-	}}
-	on:pointerup={(e) => {
-		onRelease(e);
-	}}
-	on:pointermove={(e) => {
-		onDrag(e);
-	}}
-	on:touchend={(e) => {
-		onRelease(e);
-	}}
-	on:touchmove={(e) => {
-		onDrag(e);
-	}}
 	onEscapeKeydown={(e) => {
 		e.preventDefault();
 	}}
@@ -62,11 +46,33 @@ $:
 			closeDrawer();
 		}
 	}}
-	data-vaul-drawer=""
-	data-vaul-drawer-direction={$direction}
-	data-vaul-drawer-visible={$visible ? "true" : "false"}
 	{...$$restProps}
 >
-	<Visible />
-	<slot />
+	{#snippet child({ props })}
+		<div
+			{...props}
+			bind:this={drawerEl}
+			on:pointerdown={(e) => {
+				onPress(e);
+			}}
+			on:pointerup={(e) => {
+				onRelease(e);
+			}}
+			on:pointermove={(e) => {
+				onDrag(e);
+			}}
+			on:touchend={(e) => {
+				onRelease(e);
+			}}
+			on:touchmove|nonpassive={(e) => {
+				onDrag(e);
+			}}
+			data-vaul-drawer=""
+			data-vaul-drawer-direction={$direction}
+			data-vaul-drawer-visible={$visible ? "true" : "false"}
+		>
+			<Visible />
+			<slot />
+		</div>
+	{/snippet}
 </DialogPrimitive.Content>
