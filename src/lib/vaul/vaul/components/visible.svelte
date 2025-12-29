@@ -5,8 +5,11 @@ const {
   methods: { scaleBackground, restorePositionSetting }
 } = getCtx();
 onMount(() => {
-  visible.set(true);
+  const raf = requestAnimationFrame(() => {
+    visible.set(true);
+  });
   return () => {
+    cancelAnimationFrame(raf);
     scaleBackground(false);
     restorePositionSetting();
   };
