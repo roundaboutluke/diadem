@@ -1,24 +1,15 @@
 <script lang="ts">
-	import SliderRange from '@/components/ui/input/slider/SliderRange.svelte';
-	import * as m from '@/lib/paraglide/messages';
-	import { pokemonSizes } from '@/lib/utils/pokemonUtils';
-	import ToggleGroup from '@/components/ui/input/selectgroup/ToggleGroup.svelte';
-	import SelectGroupItem from '@/components/ui/input/selectgroup/SelectGroupItem.svelte';
-	import { Camera, CameraOff, CircleSmall, Mars, Venus } from 'lucide-svelte';
-	import {
-		type FiltersetPokemon,
-		type FiltersetQuest,
-		type MinMax
-	} from '@/lib/features/filters/filtersets';
-	import { changeAttributeMinMax } from '@/lib/features/filters/filtersetUtils';
-	import RadioGroup from '@/components/ui/input/selectgroup/RadioGroup.svelte';
-	import { QuestArType } from '@/lib/features/filters/filterUtilsQuest';
-	import { RewardType, rewardTypeLabel } from '@/lib/utils/pokestopUtils';
+	import RadioGroup from "@/components/ui/input/selectgroup/RadioGroup.svelte";
+	import SelectGroupItem from "@/components/ui/input/selectgroup/SelectGroupItem.svelte";
+	import type { FiltersetQuest } from "@/lib/features/filters/filtersets";
+	import { updateDetailsCurrentSelectedFilterset } from "@/lib/features/filters/filtersetPageData.svelte";
+	import * as m from "@/lib/paraglide/messages";
+	import { RewardType, rewardTypeLabel } from "@/lib/utils/pokestopUtils";
 
 	let {
 		data
 	}: {
-		data: FiltersetQuest
+		data: FiltersetQuest;
 	} = $props();
 
 	const filterableRewards = [
@@ -28,7 +19,17 @@
 		RewardType.MEGA_ENERGY,
 		RewardType.XP,
 		RewardType.CANDY
-	]
+	];
+
+	function clearRewardFilters(rewardType: RewardType) {
+		if (rewardType !== RewardType.POKEMON) delete data.pokemon;
+		if (rewardType !== RewardType.ITEM) delete data.item;
+		if (rewardType !== RewardType.STARDUST) delete data.stardust;
+		if (rewardType !== RewardType.MEGA_ENERGY) delete data.megaResource;
+		if (rewardType !== RewardType.XP) delete data.xp;
+		if (rewardType !== RewardType.CANDY) delete data.candy;
+		if (rewardType !== RewardType.XL_CANDY) delete data.xlCandy;
+	}
 </script>
 
 <div class="">
@@ -38,22 +39,22 @@
 
 	<RadioGroup
 		childCount={filterableRewards.length}
-		value={data.rewardType}
-		onValueChange={(value: RewardType) => {
-			if (data.rewardType === value) {
-				delete data.rewardType
+		value={data.rewardType?.toString() ?? ""}
+		onValueChange={(value: string) => {
+			const rewardType = Number(value) as RewardType;
+			if (data.rewardType === rewardType) {
+				delete data.rewardType;
 			} else {
-				data.rewardType = value
+				data.rewardType = rewardType;
+				clearRewardFilters(rewardType);
 			}
+
+			updateDetailsCurrentSelectedFilterset();
 		}}
 		class="w-full gap-3!"
 	>
 		{#each filterableRewards as rewardType}
-			<SelectGroupItem
-				type="radio"
-				value={rewardType}
-				class="p-2 w-full"
-			>
+			<SelectGroupItem type="radio" value={rewardType.toString()} class="p-2 w-full">
 				{rewardTypeLabel(rewardType)}
 			</SelectGroupItem>
 		{/each}

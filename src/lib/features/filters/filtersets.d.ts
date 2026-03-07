@@ -29,6 +29,20 @@ export type FiltersetTitle = {
 	title?: string;
 } & Message;
 
+export type FiltersetModifiers = {
+	glow?: {
+		color: string;
+		radius?: number;
+		opacity?: number;
+	};
+	scale?: number;
+	rotation?: number;
+	background?: {
+		color: string;
+		opacity?: number;
+	};
+};
+
 export type BaseFilterset = {
 	id: string;
 	title: FiltersetTitle;
@@ -41,9 +55,10 @@ export type BaseFilterset = {
 			params: { [key: string]: any };
 		};
 	};
+	modifiers?: FiltersetModifiers;
 };
 
-type MinMax = {
+export type MinMax = {
 	min: number;
 	max: number;
 };
@@ -76,7 +91,7 @@ export type FiltersetPokestopPlain = BaseFilterset & {
 export type FiltersetQuest = BaseFilterset & {
 	ar?: QuestArType;
 	rewardType?: RewardType;
-	tasks?: { title: string, target: number }[];
+	tasks?: { title: string; target: number }[];
 	pokemon?: Pokemon[];
 	item?: QuestReward[];
 	megaResource?: QuestReward[];
@@ -88,7 +103,7 @@ export type FiltersetQuest = BaseFilterset & {
 
 export type FiltersetInvasion = BaseFilterset & {
 	characters?: number[];
-	rewards?: Pokemon[]
+	rewards?: Pokemon[];
 };
 
 export type FiltersetLure = BaseFilterset & {
@@ -105,7 +120,7 @@ export type FiltersetContest = BaseFilterset & {
 	};
 };
 
-export type FiltersetRoute = BaseFilterset & {}
+export type FiltersetRoute = BaseFilterset & {};
 
 export type FiltersetGymPlain = BaseFilterset & {
 	isSponsored?: boolean;
@@ -125,7 +140,7 @@ export type FiltersetRaid = BaseFilterset & {
 
 export type FiltersetStationPlain = BaseFilterset & {};
 
-type BreadModePokemon = Pokemon & { bread_mode: number }
+type BreadModePokemon = Pokemon & { bread_mode: number };
 
 export type FiltersetMaxBattle = BaseFilterset & {
 	levels?: number[];
@@ -136,8 +151,8 @@ export type FiltersetMaxBattle = BaseFilterset & {
 
 export type FiltersetNest = BaseFilterset & {
 	pokemon?: Pokemon[];
-}
+};
 
-export type FiltersetSpawnpoint = BaseFilterset & {}
+export type FiltersetSpawnpoint = BaseFilterset & {};
 
-export type FiltersetTappable = BaseFilterset & {}
+export type FiltersetTappable = BaseFilterset & {};

@@ -50,7 +50,7 @@ export const FIELDS_NEST = [
 	"pokemon_count",
 	"discarded",
 	"updated"
-].join(",")
+].join(",");
 
 export const FIELDS_TAPPABLE = [
 	"id",
@@ -65,7 +65,7 @@ export const FIELDS_TAPPABLE = [
 	"expire_timestamp_verified",
 	"expire_timestamp",
 	"updated"
-].join(",")
+].join(",");
 
 export const FIELDS_ROUTE = [
 	"id",
@@ -92,7 +92,7 @@ export const FIELDS_ROUTE = [
 	"updated",
 	"version",
 	"waypoints"
-].join(",")
+].join(",");
 
 export type MapObjectResponse<Data extends MapData> = {
 	examined: number;
@@ -104,26 +104,20 @@ export type WrappedMapObjectResponse<Data extends MapData> = {
 	error: number | undefined;
 };
 
-export type SqlExaminedResult = {
-	examined: number;
-}[];
-
-export async function queryMapObjects<Data extends MapData>(
+export async function queryMapObjects(
 	type: MapObjectType,
 	bounds: Bounds,
 	filter: AnyFilter | undefined
-): Promise<WrappedMapObjectResponse<Data>> {
-	let dbResponse: { result: Data[]; error: number | undefined } | undefined = undefined;
-	let examinedResponse: { result: SqlExaminedResult; error: number | undefined } | undefined =
-		undefined;
+): Promise<WrappedMapObjectResponse<MapData>> {
+	let dbResponse: { result: MapData[]; error: number | undefined } | undefined = undefined;
 	const enabled = filter === undefined || filter.enabled;
 
 	if (type === MapObjectType.POKEMON && enabled) {
 		return await queryPokemon(bounds, filter as FilterPokemon | undefined);
 	} else if (type === MapObjectType.GYM && enabled) {
-		[dbResponse, examinedResponse] = await queryGyms(bounds, filter as FilterGym | undefined);
+		[dbResponse] = await queryGyms(bounds, filter as FilterGym | undefined);
 	} else if (type === MapObjectType.POKESTOP && enabled) {
-		[dbResponse, examinedResponse] = await queryPokestops(
+		[dbResponse] = await queryPokestops(
 			bounds,
 			filter as FilterPokestop | undefined
 		);
@@ -146,9 +140,6 @@ export async function queryMapObjects<Data extends MapData>(
 	}
 
 	let examined = dbResponse.result.length;
-	if (examinedResponse && examinedResponse.result[0] && examinedResponse.error === undefined) {
-		examined = examinedResponse.result[0].examined;
-	}
 
 	return { result: { examined, data: dbResponse?.result ?? [] }, error: undefined };
 }
@@ -215,7 +206,7 @@ async function queryPokemon(
 	} else {
 		golbatQueries = [
 			{
-				pokemon: [],
+				pokemon: []
 			}
 		];
 	}
@@ -275,12 +266,14 @@ async function queryStations(bounds: Bounds, filter: FilterStation | undefined) 
 
 async function queryNests(bounds: Bounds, filter: FilterNest | undefined) {
 	const { error, result } = await query<NestData[]>(
-		"SELECT " + FIELDS_NEST +
-		" FROM nests " +
-		" WHERE MBRIntersects(polygon, ST_Envelope(LineString(Point(?, ?), Point(?, ?)))) " +
-		" AND active = 1 " +
-		" AND pokemon_id IS NOT NULL " +
-		" LIMIT " + LIMIT_NEST,
+		"SELECT " +
+			FIELDS_NEST +
+			" FROM nests " +
+			" WHERE MBRIntersects(polygon, ST_Envelope(LineString(Point(?, ?), Point(?, ?)))) " +
+			" AND active = 1 " +
+			" AND pokemon_id IS NOT NULL " +
+			" LIMIT " +
+			LIMIT_NEST,
 		[bounds.minLon, bounds.minLat, bounds.maxLon, bounds.maxLat]
 	);
 	// const { error, result } = await query<NestData[]>(
@@ -295,14 +288,14 @@ async function queryNests(bounds: Bounds, filter: FilterNest | undefined) {
 	// 		LIMIT_NEST,
 	// 	[bounds.minLat, bounds.maxLat, bounds.minLon, bounds.maxLon]
 	// );
-	const defaultName = getServerConfig().golbat.defaultNestName ?? "Unknown Nest"
+	const defaultName = getServerConfig().golbat.defaultNestName ?? "Unknown Nest";
 	for (const nest of result) {
 		if (nest.name === defaultName) {
 			nest.name = null;
 		}
 		nest.pokemon_form = getNormalizedForm(nest.pokemon_id, nest.pokemon_form)
 	}
-	return { error, result }
+	return { error, result };
 }
 
 async function querySpawnpoints(bounds: Bounds, filter: FilterSpawnpoint | undefined) {
