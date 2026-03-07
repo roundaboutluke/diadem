@@ -1,18 +1,24 @@
-import { closeModal, type ModalType, openModal } from "@/lib/ui/modal.svelte";
+import { openModal } from "@/lib/ui/modal.svelte";
 import type { AnyFilterset, BaseFilterset } from "@/lib/features/filters/filtersets";
-import type { AnyFilter, FilterCategory } from "@/lib/features/filters/filters";
+import type { AnyFilter, FilterCategory, FilterS2Cell } from "@/lib/features/filters/filters";
 import { getUserSettings, updateUserSettings, type UserSettings } from "@/lib/services/userSettings.svelte";
 import { updateAllMapObjects } from "@/lib/mapObjects/updateMapObject";
-import { FiltersetPokemonSchema } from "@/lib/features/filters/filtersetSchemas";
 import { getId } from "@/lib/utils/uuid";
-import * as m from "@/lib/paraglide/messages";
 import { deleteAllFeaturesOfType } from "@/lib/map/featuresGen.svelte";
 import { generateFilterDetails } from "@/lib/features/filters/filtersetUtils";
 import { MapObjectType } from "@/lib/mapObjects/mapObjectTypes";
+import { normalizeFilterset } from "@/lib/features/filters/normalizeFilters";
+
+type MajorFilterCategory = keyof UserSettings["filters"];
+type FilterWithFiltersets = Exclude<AnyFilter, FilterS2Cell>;
+type NestedFilterCategory<M extends MajorFilterCategory> = Extract<
+	Exclude<keyof UserSettings["filters"][M], "category" | "enabled" | "filters">,
+	FilterCategory
+>;
 
 type DataGeneric<M extends keyof UserSettings["filters"]> = {
 	majorCategory: M
-	subCategory: keyof UserSettings["filters"][M] | undefined;
+	subCategory: NestedFilterCategory<M> | undefined;
 	selectedAttribute: AnyFilterset | undefined;
 	inEdit: boolean;
 	isShared: boolean;
@@ -23,13 +29,12 @@ export type SelectedFiltersetData = DataGeneric<keyof UserSettings["filters"]>
 let filtersetPageData: SelectedFiltersetData | undefined = $state(undefined);
 
 export function setCurrentSelectedFilterset(
-	majorCategory: FilterCategory,
-	subCategory: FilterCategory | undefined,
+	majorCategory: MajorFilterCategory,
+	subCategory: SelectedFiltersetData["subCategory"],
 	data: AnyFilterset,
 	inEdit: boolean,
 	isShared: boolean = false
 ) {
-	// @ts-ignore my IDE doesn't allow the correct subCategory as defined in DataGeneric here, so this is easier with autocomplete
 	filtersetPageData = { majorCategory, subCategory, data, inEdit, isShared, selectedAttribute: undefined };
 }
 
@@ -41,22 +46,33 @@ export function getCurrentSelectedFilterset() {
 	return filtersetPageData;
 }
 
-function getFilter<Filterset extends AnyFilter>(): Filterset | undefined {
+function hasFiltersets(filter: AnyFilter): filter is FilterWithFiltersets {
+	return "filters" in filter;
+}
+
+function getFilter(): FilterWithFiltersets | undefined {
 	const selectedFilterset = getCurrentSelectedFilterset()
 	if (!selectedFilterset) return
 
 	const majorFilterset = getUserSettings().filters[selectedFilterset.majorCategory]
 	if (selectedFilterset.subCategory) {
-		// @ts-ignore
-		return majorFilterset[selectedFilterset.subCategory] as Filterset
+		const nestedFilter = majorFilterset[selectedFilterset.subCategory];
+		if (nestedFilter && hasFiltersets(nestedFilter)) {
+			return nestedFilter;
+		}
+		return;
 	}
-	// @ts-ignore
-	return majorFilterset as Filterset
+
+	if (hasFiltersets(majorFilterset)) {
+		return majorFilterset;
+	}
+
+	return;
 }
 
 export function existsCurrentSelectedFilterset() {
 	return getFilter()?.filters.some(
-		(f) => f.id === getCurrentSelectedFilterset()?.data.id
+		(f: AnyFilterset) => f.id === getCurrentSelectedFilterset()?.data.id
 	) ?? false;
 }
 
@@ -81,14 +97,15 @@ export function saveSelectedFilterset(mapObject: MapObjectType) {
 	const filter = getFilter()
 	if (!filter) return
 
+	normalizeFilterset(filterset)
+
 	const exists = filter.filters.some((f) => f.id === filterset.id) ?? false;
 	if (exists) {
-		filter.filters = filter.filters.map((f) =>
+		filter.filters = filter.filters.map((f: AnyFilterset) =>
 			f.id === filterset.id ? filterset : f
 		);
 	} else {
-		// @ts-ignore
-		filter.filters.push(filterset)
+		filter.filters.push(filterset as never)
 	}
 
 	updateUserSettings();
@@ -103,7 +120,7 @@ export function deleteCurrentSelectedFilterset(mapObject: MapObjectType) {
 	if (!filter) return
 
 	filter.filters = filter.filters.filter(
-		(f) => f.id !== filterset.id
+		(f: AnyFilterset) => f.id !== filterset.id
 	);
 
 	updateUserSettings();

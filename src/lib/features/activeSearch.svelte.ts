@@ -19,12 +19,12 @@ import type {
 	FiltersetQuest,
 	FiltersetRaid
 } from "@/lib/features/filters/filtersets";
-import * as m from "@/lib/paraglide/messages";
 import { clearAllMapObjects, clearMapObjects } from "@/lib/mapObjects/mapObjectsState.svelte";
 import { deleteAllFeatures, deleteAllFeaturesOfType } from "@/lib/map/featuresGen.svelte";
 import { getDefaultGymFilter } from "@/lib/utils/gymUtils";
 import { defaultFilter } from "@/lib/services/userSettings.svelte";
 import { getDefaultStationFilter } from "@/lib/utils/stationUtils";
+import { normalizeFilter } from "@/lib/features/filters/normalizeFilters";
 
 export type ActiveSearchParams = {
 	filter: AnyFilter;
@@ -66,6 +66,7 @@ export function isSearchViewActive() {
 }
 
 export function setActiveSearch(newParams: ActiveSearchParams) {
+	normalizeFilter(newParams.filter);
 	activeSearchSvelte = newParams;
 	deleteAllFeatures()
 	updateAllMapObjects().then();
@@ -96,7 +97,7 @@ export function setActiveSearchPokemon(
 					pokemon: [
 						{
 							pokemon_id: pokemon.pokemon_id,
-							form: pokemon.form
+							form_id: pokemon.form ?? 0
 						}
 					]
 				}
@@ -122,7 +123,14 @@ export function setActiveSearchQuest(name: string, reward: QuestReward) {
 			filterset.candy = [{ id: reward.info.pokemon_id.toString() }]
 			break
 		case RewardType.POKEMON:
-			filterset.pokemon = [reward.info]
+			if (reward.info.pokemon_id !== undefined) {
+				filterset.pokemon = [
+					{
+						pokemon_id: reward.info.pokemon_id,
+						form_id: reward.info.form ?? reward.info.form_id ?? 0
+					}
+				]
+			}
 			break
 		case RewardType.XL_CANDY:
 			filterset.xlCandy = [{ id: reward.info.pokemon_id.toString() }]

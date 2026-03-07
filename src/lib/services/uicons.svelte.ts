@@ -158,8 +158,11 @@ export function getIconInvasion(character: number | null, confirmed: number | bo
 	return iconSets[DEFAULT_UICONS].invasion(character, Boolean(confirmed));
 }
 
-export function getIconReward(type: RewardType, info: { item_id?: number, pokemon_id?: number, form?: number, amount?: number }) {
-	let rewardType = "";
+export function getIconReward(
+	type: RewardType,
+	info: { item_id?: number; pokemon_id?: number; form?: number; amount?: number }
+) {
+	let rewardType: Lowercase<string> | undefined = undefined;
 	let id: number | undefined = undefined;
 	switch (type) {
 		case RewardType.XP:
@@ -210,7 +213,7 @@ export function getIconReward(type: RewardType, info: { item_id?: number, pokemo
 			rewardType = "player_attribute";
 			break;
 		default:
-			rewardType = "";
+			rewardType = undefined;
 	}
 
 	return iconSets[DEFAULT_UICONS].reward(rewardType, id, info.amount ?? 0);
@@ -232,6 +235,18 @@ export function getIconContest() {
 	return iconSets[DEFAULT_UICONS].misc("showcase");
 }
 
+const rankMedalIconMap: Record<number, "first" | "second" | "third"> = {
+	1: "first",
+	2: "second",
+	3: "third"
+};
+
+export function getIconRankMedal(rank: number) {
+	const medalId = rankMedalIconMap[rank];
+	if (!medalId) return "";
+	return iconSets[DEFAULT_UICONS].misc(medalId) ?? "";
+}
+
 export enum League {
 	LITTLE = 500,
 	GREAT = 1500,
@@ -248,9 +263,9 @@ export function getIconTappable(
 	iconSet: string = getUserSettings().uiconSet.tappable.id
 ) {
 	if (data.item_id) {
-		return getIconItem(data.item_id, data.count ?? 1)
+		return getIconItem(data.item_id, data.count ?? 1);
 	} else if (data.pokemon_id) {
-		return getIconPokemon(data)
+		return getIconPokemon(data);
 	}
 	return iconSets[iconSet].tappable(data.tappable_type);
 }
