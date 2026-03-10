@@ -19,10 +19,10 @@
 	const uniqueLevels = [...new Set(availableBosses.map((b) => b.level))];
 	let showAvailable: boolean = $state(availableBosses.length > 0);
 
-	function onselect(pokemon: { pokemon_id: number; form_id: number }, isSelected: boolean) {
+	function onselect(pokemon: { pokemon_id: number; form: number }, isSelected: boolean) {
 		if (!isSelected) {
 			data.bosses = data.bosses?.filter(
-				(boss) => boss.pokemon_id !== pokemon.pokemon_id || boss.form_id !== pokemon.form_id
+				(boss) => boss.pokemon_id !== pokemon.pokemon_id || boss.form !== pokemon.form
 			);
 		} else {
 			if (!data.bosses) data.bosses = [];

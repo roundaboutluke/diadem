@@ -31,6 +31,11 @@ import type { SpawnpointData } from "@/lib/types/mapObjectData/spawnpoint";
 import type { RouteData } from "@/lib/types/mapObjectData/route";
 import type { TappableData } from "@/lib/types/mapObjectData/tappable";
 import { getServerConfig } from "@/lib/services/config/config.server";
+import { getDefaultFormId, loadMasterFile } from "@/lib/services/masterfile";
+import {
+	getCanonicalFormValue,
+	getSourceFormValue
+} from "@/lib/utils/pokemonForms";
 
 export const FIELDS_NEST = [
 	"nest_id as id",
@@ -102,12 +107,37 @@ export type WrappedMapObjectResponse<Data extends MapData> = {
 	error: number | undefined;
 };
 
+export type SqlExaminedResult = {
+	examined: number;
+}[];
+
+type DbMapObjectResponse<Data extends MapData = MapData> = {
+	result: Data[];
+	error: number | undefined;
+};
+
+function getGolbatPokemonFilter(pokemon: { pokemon_id: number; form?: number | null }) {
+	const filter: { id: number; form?: number } = { id: pokemon.pokemon_id };
+	const form = getSourceFormValue(
+		pokemon.pokemon_id,
+		pokemon.form,
+		getDefaultFormId,
+		{ forQuery: true }
+	);
+
+	if (form !== undefined && form !== null) {
+		filter.form = form;
+	}
+
+	return filter;
+}
+
 export async function queryMapObjects(
 	type: MapObjectType,
 	bounds: Bounds,
 	filter: AnyFilter | undefined
 ): Promise<WrappedMapObjectResponse<MapData>> {
-	let dbResponse: { result: MapData[]; error: number | undefined } | undefined = undefined;
+	let dbResponse: DbMapObjectResponse | undefined = undefined;
 	const enabled = filter === undefined || filter.enabled;
 
 	if (type === MapObjectType.POKEMON && enabled) {
@@ -115,10 +145,7 @@ export async function queryMapObjects(
 	} else if (type === MapObjectType.GYM && enabled) {
 		[dbResponse] = await queryGyms(bounds, filter as FilterGym | undefined);
 	} else if (type === MapObjectType.POKESTOP && enabled) {
-		[dbResponse] = await queryPokestops(
-			bounds,
-			filter as FilterPokestop | undefined
-		);
+		[dbResponse] = await queryPokestops(bounds, filter as FilterPokestop | undefined);
 	} else if (type === MapObjectType.STATION && enabled) {
 		dbResponse = await queryStations(bounds, filter as FilterStation | undefined);
 	} else if (type === MapObjectType.NEST && enabled) {
@@ -137,7 +164,7 @@ export async function queryMapObjects(
 		return { result: { examined: 0, data: [] }, error: 500 };
 	}
 
-	let examined = dbResponse.result.length;
+	const examined = dbResponse.result.length;
 
 	return { result: { examined, data: dbResponse?.result ?? [] }, error: undefined };
 }
@@ -146,18 +173,14 @@ async function queryPokemon(
 	bounds: Bounds,
 	filter: FilterPokemon | undefined
 ): Promise<WrappedMapObjectResponse<PokemonData>> {
+	await loadMasterFile()
+
 	let golbatQueries: GolbatPokemonQuery[];
 	const enabledFilters = filter?.filters?.filter((f) => f.enabled) ?? [];
 	if (enabledFilters.length > 0) {
 		golbatQueries = enabledFilters.map((filter) => {
 			const query: GolbatPokemonQuery = {};
-			if (filter.pokemon)
-				query.pokemon = filter.pokemon.map((p) => {
-					const obj: { id: number; form?: number } = { id: p.pokemon_id };
-					if (p.form_id !== undefined && p.form_id !== null) obj.form = p.form_id;
-
-					return obj;
-				});
+			if (filter.pokemon) query.pokemon = filter.pokemon.map(getGolbatPokemonFilter);
 			if (filter.iv) query.iv = filter.iv;
 			if (filter.ivAtk) query.atk_iv = filter.ivAtk;
 			if (filter.ivDef) query.def_iv = filter.ivDef;
@@ -199,6 +222,11 @@ async function queryPokemon(
 		for (const pokemon of result.pokemon) {
 			pokemon.shiny = false;
 			pokemon.username = null;
+			pokemon.form = getCanonicalFormValue(
+				pokemon.pokemon_id,
+				pokemon.form,
+				getDefaultFormId
+			) ?? null;
 		}
 		return {
 			result: {

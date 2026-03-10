@@ -8,6 +8,7 @@ import { deleteAllFeaturesOfType } from "@/lib/map/featuresGen.svelte";
 import { generateFilterDetails } from "@/lib/features/filters/filtersetUtils";
 import { MapObjectType } from "@/lib/mapObjects/mapObjectTypes";
 import { normalizeFilterset } from "@/lib/features/filters/normalizeFilters";
+import { getDefaultFormId } from "@/lib/services/masterfile";
 
 type MajorFilterCategory = keyof UserSettings["filters"];
 type FilterWithFiltersets = Exclude<AnyFilter, FilterS2Cell>;
@@ -97,7 +98,7 @@ export function saveSelectedFilterset(mapObject: MapObjectType) {
 	const filter = getFilter()
 	if (!filter) return
 
-	normalizeFilterset(filterset)
+	normalizeFilterset(filterset, getDefaultFormId)
 
 	const exists = filter.filters.some((f) => f.id === filterset.id) ?? false;
 	if (exists) {

@@ -38,7 +38,7 @@
 		}
 		return getIconPokemon({
 			pokemon_id: selected.pokemon_id,
-			form: selected.form_id
+			form: selected.form
 		});
 	});
 </script>

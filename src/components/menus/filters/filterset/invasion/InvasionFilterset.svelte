@@ -48,7 +48,7 @@
 		const rewards = filterset.rewards;
 		const reward = rewards?.[rewards.length - 1];
 		if (reward) {
-			return getIconPokemon({ pokemon_id: reward.pokemon_id, form: reward.form_id });
+			return getIconPokemon({ pokemon_id: reward.pokemon_id, form: reward.form });
 		}
 
 		const characters = filterset.characters;

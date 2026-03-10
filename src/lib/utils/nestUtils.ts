@@ -4,6 +4,8 @@ import { getActiveSearch } from "@/lib/features/activeSearch.svelte";
 import { MapObjectType } from "@/lib/mapObjects/mapObjectTypes";
 import type { FilterNest } from "@/lib/features/filters/filters";
 import { getUserSettings } from "@/lib/services/userSettings.svelte";
+import { getDefaultFormId } from "@/lib/services/masterfile";
+import { formsMatch } from "@/lib/utils/pokemonForms";
 
 export function getActiveNestFilter() {
 	const activeSearch = getActiveSearch();
@@ -26,7 +28,9 @@ export function shouldDisplayNest(nest: NestData) {
 		if (
 			filterset.pokemon &&
 			filterset.pokemon.find(
-				(p) => p.pokemon_id === nest.pokemon_id && p.form_id === nest.pokemon_form
+				(p) =>
+					p.pokemon_id === nest.pokemon_id &&
+					formsMatch(p.pokemon_id, p.form, nest.pokemon_form, getDefaultFormId)
 			)
 		) {
 			return true;

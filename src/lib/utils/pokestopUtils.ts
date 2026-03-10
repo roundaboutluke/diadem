@@ -15,6 +15,11 @@ import { getActiveSearch } from "@/lib/features/activeSearch.svelte";
 import { MapObjectType } from "@/lib/mapObjects/mapObjectTypes";
 import { getIconContest, getIconPokemon, getIconType } from "@/lib/services/uicons.svelte";
 import type { FiltersetInvasion } from "@/lib/features/filters/filtersets";
+import { getDefaultFormId } from "@/lib/services/masterfile";
+import {
+	formsMatch,
+	normalizePokemonWithForm
+} from "@/lib/utils/pokemonForms";
 
 export const CONTEST_SLOTS = 200;
 export const INCIDENT_DISPLAY_GOLD = 7;
@@ -46,10 +51,11 @@ export enum RewardType {
 
 export function parseQuestReward(reward?: string | null) {
 	const parsed = JSON.parse(reward ?? "[]")[0] as QuestReward | undefined;
-	if (parsed && "form_id" in parsed.info) {
-		// @ts-ignore
-		parsed.info["form"] = parsed.info["form_id"];
-		delete parsed.info["form_id"];
+	if (parsed?.info && typeof parsed.info === "object") {
+		parsed.info = normalizePokemonWithForm(
+			parsed.info as { pokemon_id?: number; form?: number | null; form_id?: number | null },
+			getDefaultFormId
+		);
 	}
 	return parsed;
 }
@@ -115,7 +121,7 @@ function matchesInvasionRewards(
 	return rewards.some((reward) => {
 		return rewardPokemon.some((pokemon) => {
 			if (pokemon.pokemon_id !== reward.pokemon_id) return false;
-			return reward.form_id === (pokemon.form ?? 0);
+			return formsMatch(reward.pokemon_id, reward.form, pokemon.form, getDefaultFormId);
 		});
 	});
 }
@@ -373,7 +379,7 @@ export function shouldDisplayQuest(
 			questFilter.pokemon.find(
 				(p) =>
 					p.pokemon_id === reward.info.pokemon_id &&
-					p.form_id === (reward.info.form ?? reward.info.form_id ?? 0)
+					formsMatch(p.pokemon_id, p.form, reward.info.form, getDefaultFormId)
 			)
 		) {
 			return true;
@@ -460,10 +466,15 @@ export function shouldDisplayContest(data: Partial<PokestopData>) {
 		}
 
 		if (
-			contestFilter.focus.form_id &&
-			contestFilter.focus.form_id !== data.showcase_pokemon_form_id
+			contestFilter.focus.form !== undefined &&
+			!formsMatch(
+				data.showcase_pokemon_id,
+				contestFilter.focus.form,
+				data.showcase_pokemon_form_id,
+				getDefaultFormId
+			)
 		) {
-			return false;
+			return false
 		}
 
 		if (

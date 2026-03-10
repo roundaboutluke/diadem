@@ -13,11 +13,7 @@
 	} = $props();
 
 	const allPokemon = getSpawnablePokemon();
-	type PokemonLike = { pokemon_id: number; form?: number | null; form_id?: number | null };
-
-	function getPokemonForm(pokemon: PokemonLike) {
-		return pokemon.form ?? pokemon.form_id ?? 0;
-	}
+	type PokemonLike = { pokemon_id: number; form?: number | null };
 
 	let searchQuery: string = $state("");
 	type QuickFilter = "all" | "selected" | "legendary";
@@ -31,7 +27,7 @@
 				(data.pokemon ?? []).some(
 					(selected) =>
 						selected.pokemon_id === pokemon.pokemon_id &&
-						getPokemonForm(selected as PokemonLike) === pokemon.form
+						(selected.form ?? 0) === pokemon.form
 				)
 			);
 		} else if (quickFilter === "legendary") {
@@ -87,7 +83,7 @@
 			if (!isSelected) {
 				data.pokemon = data.pokemon?.filter(
 					(selected) =>
-						selected.pokemon_id !== pokemon.pokemon_id || selected.form_id !== pokemon.form_id
+						selected.pokemon_id !== pokemon.pokemon_id || (selected.form ?? 0) !== pokemon.form
 				);
 			} else {
 				if (!data.pokemon) data.pokemon = [];

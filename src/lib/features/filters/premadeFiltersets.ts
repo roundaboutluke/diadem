@@ -72,7 +72,7 @@ export const premadeFiltersets: { [key in FilterCategory]?: FiltersetPokemon[] }
 			title: "filter_template_unown",
 			pokemon: Array.from({ length: 28 }, (_, i) => i + 1).map((i) => ({
 				pokemon_id: 201,
-				form_id: i
+				form: i
 			}))
 		}),
 		filterset<FiltersetPokemon>({
@@ -82,9 +82,9 @@ export const premadeFiltersets: { [key in FilterCategory]?: FiltersetPokemon[] }
 			},
 			title: "filter_template_legendary_birds",
 			pokemon: [
-				{ pokemon_id: 144, form_id: 716 },
-				{ pokemon_id: 145, form_id: 773 },
-				{ pokemon_id: 146, form_id: 836 }
+				{ pokemon_id: 144, form: 716 },
+				{ pokemon_id: 145, form: 773 },
+				{ pokemon_id: 146, form: 836 }
 			]
 		}),
 		filterset<FiltersetPokemon>({
@@ -94,9 +94,9 @@ export const premadeFiltersets: { [key in FilterCategory]?: FiltersetPokemon[] }
 			},
 			title: "filter_template_sea_trio",
 			pokemon: [
-				{ pokemon_id: 480, form_id: 0 },
-				{ pokemon_id: 481, form_id: 0 },
-				{ pokemon_id: 482, form_id: 0 }
+				{ pokemon_id: 480, form: 0 },
+				{ pokemon_id: 481, form: 0 },
+				{ pokemon_id: 482, form: 0 }
 			]
 		})
 	],

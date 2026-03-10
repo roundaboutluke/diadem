@@ -4,10 +4,14 @@ import type { PokemonData } from '@/lib/types/mapObjectData/pokemon';
 import * as m from '@/lib/paraglide/messages';
 import { getActiveSearch } from "@/lib/features/activeSearch.svelte";
 import { MapObjectType } from "@/lib/mapObjects/mapObjectTypes";
-import type { FilterNest, FilterStation } from "@/lib/features/filters/filters";
+import type { FilterStation } from "@/lib/features/filters/filters";
 import { defaultFilter, getUserSettings } from "@/lib/services/userSettings.svelte";
 import { isCurrentSelectedOverwrite } from "@/lib/mapObjects/currentSelectedState.svelte";
-import { getActiveNestFilter } from "@/lib/utils/nestUtils";
+import { getDefaultFormId } from "@/lib/services/masterfile";
+import {
+	formsMatch,
+	getCanonicalFormValue
+} from "@/lib/utils/pokemonForms";
 
 export const STATION_SLOTS = 40;
 
@@ -19,7 +23,7 @@ export function getStationTitle(data: StationData) {
 export function getStationPokemon(data: StationData): Partial<PokemonData> {
 	return {
 		pokemon_id: data.battle_pokemon_id,
-		form: data.battle_pokemon_form,
+		form: getCanonicalFormValue(data.battle_pokemon_id, data.battle_pokemon_form, getDefaultFormId),
 		costume: data.battle_pokemon_costume,
 		gender: data.battle_pokemon_gender,
 		alignment: data.battle_pokemon_alignment,
@@ -60,8 +64,9 @@ export function shouldDisplayStation(station: StationData) {
 		if (
 			filterset.bosses !== undefined &&
 			filterset.bosses.find(
-				(p) => p.pokemon_id === station.battle_pokemon_id
-					&& p.form_id === station.battle_pokemon_form
+				(p) =>
+					p.pokemon_id === station.battle_pokemon_id
+					&& formsMatch(p.pokemon_id, p.form, station.battle_pokemon_form, getDefaultFormId)
 					&& p.bread_mode === station.battle_pokemon_bread_mode
 			)
 		) {

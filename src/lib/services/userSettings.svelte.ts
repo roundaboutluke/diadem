@@ -18,7 +18,9 @@ import type { AnySearchEntry } from "@/lib/services/search.svelte";
 import { getDefaultPokestopFilter } from "@/lib/utils/pokestopUtils";
 import { getDefaultGymFilter } from "@/lib/utils/gymUtils";
 import { getDefaultStationFilter } from "@/lib/utils/stationUtils";
+import { getDefaultFormId } from "@/lib/services/masterfile";
 import { normalizeFilter } from "@/lib/features/filters/normalizeFilters";
+import { normalizeSearchEntries } from "@/lib/utils/searchEntries";
 
 export type UiconSetUS = {
 	id: string;
@@ -165,19 +167,16 @@ export async function getUserSettingsFromServer() {
 }
 
 export function setUserSettings(newUserSettings: UserSettings) {
-	const mergedSettings = deepMerge(getDefaultUserSettings(), newUserSettings) as UserSettings;
+	const merged = deepMerge(getDefaultUserSettings(), newUserSettings) as UserSettings;
 
-	normalizeFilter(mergedSettings.filters.pokemon);
-	normalizeFilter(mergedSettings.filters.pokestop);
-	normalizeFilter(mergedSettings.filters.gym);
-	normalizeFilter(mergedSettings.filters.station);
-	normalizeFilter(mergedSettings.filters.s2cell);
-	normalizeFilter(mergedSettings.filters.nest);
-	normalizeFilter(mergedSettings.filters.spawnpoint);
-	normalizeFilter(mergedSettings.filters.route);
-	normalizeFilter(mergedSettings.filters.tappable);
+	for (const filter of Object.values(merged.filters)) {
+		normalizeFilter(filter, getDefaultFormId);
+	}
 
-	userSettings = mergedSettings;
+	merged.recentSearches = normalizeSearchEntries(merged.recentSearches, getDefaultFormId) ?? [];
+
+	// @ts-ignore
+	userSettings = merged;
 }
 
 export function getUserSettings() {

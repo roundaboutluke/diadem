@@ -46,7 +46,7 @@ export function generateInvasionFilterDetails(filter: FiltersetInvasion) {
 				category: IconCategory.POKEMON,
 				params: {
 					pokemon_id: firstReward.pokemon_id,
-					form: firstReward.form_id
+					form: firstReward.form
 				}
 			}
 		});

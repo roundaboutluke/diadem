@@ -33,7 +33,7 @@
 		const bosses = filterset.bosses;
 		const boss = bosses?.[bosses.length - 1];
 		if (boss) {
-			return getIconPokemon({ pokemon_id: boss.pokemon_id, form: boss.form_id });
+			return getIconPokemon({ pokemon_id: boss.pokemon_id, form: boss.form });
 		}
 
 		return getIconRaidEgg(filterset.levels?.[0] ?? RaidLevel.LEGENDARY);

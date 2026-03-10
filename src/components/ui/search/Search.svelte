@@ -14,6 +14,8 @@
 	} from "@/lib/services/search.svelte";
 	import { isSupportedFeature } from "@/lib/services/supportedFeatures";
 	import { getUserSettings } from "@/lib/services/userSettings.svelte";
+	import { getDefaultFormId } from "@/lib/services/masterfile";
+	import { normalizeSearchEntry } from "@/lib/utils/searchEntries";
 	import type { FuzzyResult } from "@nozbe/microfuzz";
 	import SearchResults from "@/components/ui/search/SearchResults.svelte";
 	import { Command } from "bits-ui";
@@ -25,7 +27,11 @@
 	});
 
 	let recentSearches: FuzzyResult<AnySearchEntry>[] = $derived(getUserSettings().recentSearches.map(i => {
-		return { item: i, score: 0, matches: [] };
+		return {
+			item: normalizeSearchEntry(i, getDefaultFormId),
+			score: 0,
+			matches: []
+		};
 	}));
 
 	let results = $derived(getCurrentSearchResults());

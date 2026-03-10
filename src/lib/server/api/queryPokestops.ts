@@ -18,14 +18,22 @@ import {
 } from "@/lib/utils/pokestopUtils";
 import type { PokestopData } from '@/lib/types/mapObjectData/pokestop';
 import { currentTimestamp } from "@/lib/utils/currentTimestamp";
+import { getDefaultFormId, loadMasterFile } from "@/lib/services/masterfile";
+import { normalizeContestFocusPokemon } from "@/lib/utils/pokemonForms";
 
 export function processRawPokestop(pokestop: PokestopData) {
 	if (pokestop.showcase_focus && (pokestop.showcase_expiry ?? 0) > currentTimestamp()) {
-		pokestop.contest_focus = JSON.parse(pokestop.showcase_focus)
+		pokestop.contest_focus = normalizeContestFocusPokemon(
+			JSON.parse(pokestop.showcase_focus),
+			getDefaultFormId
+		)
 	}
 }
 
-export async function queryPokestops(bounds: Bounds, filter: FilterPokestop | undefined) {
+export async function queryPokestops(
+	bounds: Bounds,
+	filter: FilterPokestop | undefined
+): Promise<[{ error: number | undefined; result: PokestopData[] }, undefined]> {
 	const boundsFilter = "WHERE lat BETWEEN ? AND ? AND lon BETWEEN ? AND ? AND deleted = 0 "
 	const boundsValues = [bounds.minLat, bounds.maxLat, bounds.minLon, bounds.maxLon]
 
@@ -82,6 +90,7 @@ export async function queryPokestops(bounds: Bounds, filter: FilterPokestop | un
 
 	const result = await query<PokestopData[]>(sqlQuery, values)
 	if (result.result) {
+		await loadMasterFile()
 		for (const pokestop of result.result) {
 			processRawPokestop(pokestop)
 		}
@@ -89,4 +98,3 @@ export async function queryPokestops(bounds: Bounds, filter: FilterPokestop | un
 
 	return [result, undefined]
 }
-

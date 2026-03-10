@@ -47,21 +47,23 @@ const MinMaxSchema = z.object({
 	max: z.number()
 });
 
-const PokemonSchema = z
-	.union([
-		z.object({
-			pokemon_id: z.number(),
-			form: z.number()
-		}),
-		z.object({
-			pokemon_id: z.number(),
-			form_id: z.number()
-		})
-	])
-	.transform((pokemon) => ({
-		pokemon_id: pokemon.pokemon_id,
-		form_id: "form_id" in pokemon ? pokemon.form_id : pokemon.form
-	}));
+const PokemonSchemaBase = z.object({
+	pokemon_id: z.number(),
+	form: z.number().optional(),
+	form_id: z.number().optional()
+});
+
+const PokemonSchema = PokemonSchemaBase.transform(({ form, form_id, ...rest }) => ({
+	...rest,
+	...((form ?? form_id) !== undefined ? { form: form ?? form_id } : {})
+}));
+
+const BreadModePokemonSchema = PokemonSchemaBase.extend({
+	bread_mode: z.number()
+}).transform(({ form, form_id, ...rest }) => ({
+	...rest,
+	...((form ?? form_id) !== undefined ? { form: form ?? form_id } : {})
+}));
 
 const QuestRewardSchema = z.object({
 	id: z.string(),
@@ -128,7 +130,7 @@ export const FiltersetStationPlainSchema = BaseFiltersetSchema.extend({});
 
 export const FiltersetMaxBattleSchema = BaseFiltersetSchema.extend({
 	levels: z.array(z.number()).optional(),
-	bosses: z.array(PokemonSchema).optional(),
+	bosses: z.array(BreadModePokemonSchema).optional(),
 	isActive: z.boolean().optional(),
 	hasGmax: z.boolean().optional()
 });

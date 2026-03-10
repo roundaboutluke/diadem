@@ -120,7 +120,7 @@ export type InvasionSearchEntry = SearchEntry & {
 export type RaidBossSearchEntry = SearchEntry & {
 	type: SearchableType.RAID_BOSS;
 	pokemon_id: number;
-	form_id: number;
+	form: number;
 };
 
 export type RaidLevelSearchEntry = SearchEntry & {
@@ -347,10 +347,10 @@ export function initSearch() {
 			return {
 				name: m.pokemon_raids({ pokemon: mPokemon(raidBoss) }),
 				category: "raids",
-				key: "raidboss- " + raidBoss.pokemon_id + "-" + raidBoss.form,
+				key: "raidboss-" + raidBoss.pokemon_id + "-" + raidBoss.form,
 				type: SearchableType.RAID_BOSS,
 				pokemon_id: raidBoss.pokemon_id,
-				form_id: raidBoss.form
+				form: raidBoss.form
 			} as RaidBossSearchEntry;
 		});
 	}
@@ -362,7 +362,7 @@ export function initSearch() {
 				name: m.pokemon_max_battles({ pokemon: mPokemon(maxBattle) }),
 				category: "max_battles",
 				key:
-					"raidboss- " + maxBattle.pokemon_id + "-" + maxBattle.form + "-" + maxBattle.bread_mode,
+					"raidboss-" + maxBattle.pokemon_id + "-" + maxBattle.form + "-" + maxBattle.bread_mode,
 				type: SearchableType.MAX_BATTLE_BOSS,
 				pokemon_id: maxBattle.pokemon_id,
 				form: maxBattle.form,

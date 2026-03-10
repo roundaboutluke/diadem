@@ -63,7 +63,7 @@ export type MinMax = {
 	max: number;
 };
 
-export type Pokemon = { pokemon_id: number; form_id: number };
+export type Pokemon = { pokemon_id: number; form?: number };
 export type QuestReward = { id: string; amount?: number };
 
 export type FiltersetPokemon = BaseFilterset & {
@@ -115,7 +115,7 @@ export type FiltersetContest = BaseFilterset & {
 	rankingStandard: number;
 	focus: {
 		pokemon_id?: number;
-		form_id?: number;
+		form?: number;
 		type_id?: number;
 	};
 };

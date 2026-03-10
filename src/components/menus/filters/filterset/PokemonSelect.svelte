@@ -4,57 +4,44 @@
 	import { getIconPokemon } from "@/lib/services/uicons.svelte";
 	import LongSelectItem from "@/components/menus/filters/LongSelectItem.svelte";
 
-	type PokemonLike = { pokemon_id: number; form?: number | null; form_id?: number | null };
-	type SelectedPokemon = { pokemon_id: number; form_id: number };
+	type Pokemon = { pokemon_id: number; form: number };
+	type SelectedPokemon = { pokemon_id: number; form?: number };
 
 	let {
 		pokemonList,
 		selected,
 		onselect
 	}: {
-		pokemonList: PokemonLike[];
-		selected: PokemonLike[];
-		onselect: (pokemon: SelectedPokemon, isSelected: boolean) => void;
+		pokemonList: Pokemon[];
+		selected: SelectedPokemon[];
+		onselect: (pokemon: Pokemon, isSelected: boolean) => void;
 	} = $props();
 
 	// TODO: style pokemon select better
 	const isCompact = false;
 
-	function getPokemonForm(pokemon: PokemonLike) {
-		return pokemon.form ?? pokemon.form_id ?? 0;
-	}
-
-	function pokemonValue(pokemon: PokemonLike) {
-		return `${pokemon.pokemon_id}-${getPokemonForm(pokemon)}`;
-	}
-
-	function getDisplayPokemon(pokemon: PokemonLike) {
-		return { pokemon_id: pokemon.pokemon_id, form: getPokemonForm(pokemon) };
-	}
-
-	function getSelectedPokemon(pokemon: PokemonLike): SelectedPokemon {
-		return { pokemon_id: pokemon.pokemon_id, form_id: getPokemonForm(pokemon) };
+	function pokemonValue(pokemon: SelectedPokemon) {
+		return `${pokemon.pokemon_id}-${pokemon.form ?? 0}`;
 	}
 
 	let selectedValues = $derived(selected.map((pokemon) => pokemonValue(pokemon)) ?? []);
 </script>
 
-{#each pokemonList as pokemon (`${pokemon.pokemon_id}-${getPokemonForm(pokemon)}`)}
+{#each pokemonList as pokemon (`${pokemon.pokemon_id}-${pokemon.form}`)}
 	<LongSelectItem
 		isSelected={selectedValues.includes(pokemonValue(pokemon))}
 		onselect={(isSelected) => {
-			onselect(getSelectedPokemon(pokemon), isSelected);
+			onselect(pokemon, isSelected);
 		}}
 	>
-		{@const displayPokemon = getDisplayPokemon(pokemon)}
 		<img
 			class:size-10={!isCompact}
-			alt={mPokemon(displayPokemon)}
-			src={resize(getIconPokemon(displayPokemon), { width: 64 })}
+			alt={mPokemon(pokemon)}
+			src={resize(getIconPokemon(pokemon), { width: 64 })}
 			loading="lazy"
 		/>
 		<span>
-			{mPokemon(displayPokemon)}
+			{mPokemon(pokemon)}
 		</span>
 	</LongSelectItem>
 {/each}

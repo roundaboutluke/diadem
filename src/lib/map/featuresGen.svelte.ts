@@ -281,7 +281,7 @@ function getRewardIconInfo(reward: { info: { [key: string]: any } }) {
 	return {
 		item_id: reward.info.item_id,
 		pokemon_id: reward.info.pokemon_id,
-		form: reward.info.form ?? reward.info.form_id ?? undefined,
+		form: reward.info.form ?? undefined,
 		amount: reward.info.amount
 	};
 }

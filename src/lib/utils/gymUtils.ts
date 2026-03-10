@@ -7,6 +7,11 @@ import { isCurrentSelectedOverwrite } from "@/lib/mapObjects/currentSelectedStat
 import type { FilterGym, FilterPokestop } from "@/lib/features/filters/filters";
 import { getActiveSearch } from "@/lib/features/activeSearch.svelte";
 import { MapObjectType } from "@/lib/mapObjects/mapObjectTypes";
+import { getDefaultFormId } from "@/lib/services/masterfile";
+import {
+	formsMatch,
+	getCanonicalFormValue
+} from "@/lib/utils/pokemonForms";
 
 export type RaidFilterType = "level" | "boss"
 export const GYM_SLOTS = 6;
@@ -29,7 +34,7 @@ export const RAID_LEVELS = Object.values(RaidLevel).filter(v => typeof v === "nu
 export function getRaidPokemon(gym: GymData): Partial<PokemonData> {
 	return {
 		pokemon_id: gym.raid_pokemon_id,
-		form: gym.raid_pokemon_form,
+		form: getCanonicalFormValue(gym.raid_pokemon_id, gym.raid_pokemon_form, getDefaultFormId),
 		cp: gym.raid_pokemon_cp,
 		gender: gym.raid_pokemon_gender,
 		costume: gym.raid_pokemon_costume,
@@ -109,7 +114,7 @@ export function shouldDisplayRaid(data: GymData) {
 		for (const boss of filter.bosses ?? []) {
 			if (
 				boss.pokemon_id === data.raid_pokemon_id &&
-				boss.form_id === (data.raid_pokemon_form ?? 0)
+				formsMatch(boss.pokemon_id, boss.form, data.raid_pokemon_form, getDefaultFormId)
 			) {
 				return true
 			}

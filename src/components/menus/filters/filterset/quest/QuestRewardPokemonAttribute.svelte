@@ -11,7 +11,7 @@
 		rewards
 			.map((reward) => ({
 				pokemon_id: reward.reward.info.pokemon_id ?? 0,
-				form: reward.reward.info.form ?? reward.reward.info.form_id ?? 0
+				form: reward.reward.info.form ?? 0
 			}))
 			.filter((pokemon) => pokemon.pokemon_id > 0)
 			.sort((a, b) => a.pokemon_id - b.pokemon_id || a.form - b.form)
@@ -25,8 +25,7 @@
 		onselect={(pokemon, isSelected) => {
 			if (!isSelected) {
 				data.pokemon = data.pokemon?.filter(
-					(selected) =>
-						selected.pokemon_id !== pokemon.pokemon_id || selected.form_id !== pokemon.form_id
+					(selected) => selected.pokemon_id !== pokemon.pokemon_id || selected.form !== pokemon.form
 				);
 			} else {
 				if (!data.pokemon) data.pokemon = [];

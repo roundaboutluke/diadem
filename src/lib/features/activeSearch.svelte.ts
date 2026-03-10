@@ -24,6 +24,7 @@ import { deleteAllFeatures, deleteAllFeaturesOfType } from "@/lib/map/featuresGe
 import { getDefaultGymFilter } from "@/lib/utils/gymUtils";
 import { defaultFilter } from "@/lib/services/userSettings.svelte";
 import { getDefaultStationFilter } from "@/lib/utils/stationUtils";
+import { getDefaultFormId } from "@/lib/services/masterfile";
 import { normalizeFilter } from "@/lib/features/filters/normalizeFilters";
 
 export type ActiveSearchParams = {
@@ -66,7 +67,7 @@ export function isSearchViewActive() {
 }
 
 export function setActiveSearch(newParams: ActiveSearchParams) {
-	normalizeFilter(newParams.filter);
+	normalizeFilter(newParams.filter, getDefaultFormId);
 	activeSearchSvelte = newParams;
 	deleteAllFeatures()
 	updateAllMapObjects().then();
@@ -97,7 +98,7 @@ export function setActiveSearchPokemon(
 					pokemon: [
 						{
 							pokemon_id: pokemon.pokemon_id,
-							form_id: pokemon.form ?? 0
+							...(pokemon.form !== undefined ? { form: pokemon.form } : {})
 						}
 					]
 				}
@@ -127,9 +128,11 @@ export function setActiveSearchQuest(name: string, reward: QuestReward) {
 				filterset.pokemon = [
 					{
 						pokemon_id: reward.info.pokemon_id,
-						form_id: reward.info.form ?? reward.info.form_id ?? 0
+						...(reward.info.form !== undefined && reward.info.form !== null
+							? { form: reward.info.form }
+							: {})
 					}
-				]
+				];
 			}
 			break
 		case RewardType.XL_CANDY:
@@ -183,8 +186,8 @@ export function setActiveSearchContest(name: string, rankingStandard: number, fo
 		filterset.focus = {
 			pokemon_id: focus.pokemon_id,
 		}
-		if (focus.pokemon_form) {
-			filterset.focus.form_id = focus.pokemon_form
+		if (focus.pokemon_form !== undefined) {
+			filterset.focus.form = focus.pokemon_form
 		}
 	} else if (focus.type === "type") {
 		filterset.focus = {
@@ -248,7 +251,7 @@ export function setActiveSearchInvasion(name: string, characterId: number) {
 	});
 }
 
-export function setActiveSearchRaidBoss(name: string, pokemonId: number, formId: number | undefined) {
+export function setActiveSearchRaidBoss(name: string, pokemonId: number, form: number | undefined) {
 	const filterset = {
 		id: "searchOverwrite",
 		enabled: true,
@@ -259,8 +262,8 @@ export function setActiveSearchRaidBoss(name: string, pokemonId: number, formId:
 		}],
 	} as FiltersetRaid;
 
-	// @ts-ignore
-	if (formId) filterset.bosses[0].form_id = formId
+	const boss = filterset.bosses?.[0]
+	if (form !== undefined && boss) boss.form = form
 
 	const filter = getDefaultGymFilter();
 	filter.gymPlain.enabled = false
@@ -298,7 +301,7 @@ export function setActiveSearchRaidLevel(name: string, level: number) {
 }
 
 export function setActiveSearchMaxBattleBoss(name: string, pokemon_id: number, form: number, bread_mode: number) {
-	const pokemon = { pokemon_id, form_id: form, bread_mode }
+	const pokemon = { pokemon_id, form, bread_mode }
 
 	const filterset = {
 		id: "searchOverwrite",
@@ -325,7 +328,7 @@ export function setActiveSearchMaxBattleBoss(name: string, pokemon_id: number, f
 export function setActiveSearchNest(name: string, pokemon_id: number, form: number) {
 	const filter = { category: "nest", ...defaultFilter(true) } as FilterNest
 
-	const pokemon = { pokemon_id, form_id: form }
+	const pokemon = { pokemon_id, form }
 
 	const filterset = {
 		id: "searchOverwrite",

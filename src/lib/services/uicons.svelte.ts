@@ -12,6 +12,8 @@ import { RewardType, shouldDisplayIncidient, shouldDisplayLure } from "@/lib/uti
 import { GYM_SLOTS, isFortOutdated } from "@/lib/utils/gymUtils";
 import { allMapObjectTypes, type MapData, MapObjectType } from "@/lib/mapObjects/mapObjectTypes";
 import type { TappableData } from "@/lib/types/mapObjectData/tappable";
+import { getDefaultFormId } from "@/lib/services/masterfile";
+import { getSourceFormValue } from "@/lib/utils/pokemonForms";
 
 export const DEFAULT_UICONS = "DEFAULT";
 
@@ -75,6 +77,8 @@ export function getIconPokemon(
 		pokemon_id?: number | null | undefined;
 		temp_evolution_id?: number | null | undefined;
 		form?: number | null | undefined;
+		form_id?: number | null | undefined;
+		pokemon_form?: number | null | undefined;
 		costume?: number | null | undefined;
 		gender?: number | null | undefined;
 		alignment?: number | null | undefined;
@@ -83,10 +87,16 @@ export function getIconPokemon(
 	},
 	iconSet: string = getUserSettings().uiconSet.pokemon.id
 ) {
+	const form = getSourceFormValue(
+		data.pokemon_id,
+		data.form ?? data.form_id ?? data.pokemon_form,
+		getDefaultFormId
+	);
+
 	return iconSets[iconSet].pokemon(
 		data.pokemon_id,
 		data.temp_evolution_id,
-		data.form,
+		form,
 		data.costume,
 		data.gender,
 		data.alignment,
@@ -160,7 +170,7 @@ export function getIconInvasion(character: number | null, confirmed: number | bo
 
 export function getIconReward(
 	type: RewardType,
-	info: { item_id?: number; pokemon_id?: number; form?: number; amount?: number }
+	info: { item_id?: number; pokemon_id?: number; form?: number | null; amount?: number }
 ) {
 	let rewardType: Lowercase<string> | undefined = undefined;
 	let id: number | undefined = undefined;
@@ -216,7 +226,11 @@ export function getIconReward(
 			rewardType = undefined;
 	}
 
-	return iconSets[DEFAULT_UICONS].reward(rewardType, id, info.amount ?? 0);
+	return iconSets[DEFAULT_UICONS].reward(
+		rewardType as Parameters<UICONS["reward"]>[0],
+		id,
+		info.amount ?? 0
+	);
 }
 
 export function getIconItem(itemId: number | string, amount: number = 0) {

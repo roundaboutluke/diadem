@@ -4,7 +4,10 @@ import { LIMIT_GYM } from "@/lib/constants";
 import { query } from "@/lib/server/db/external/internalQuery";
 import type { GymData } from "@/lib/types/mapObjectData/gym";
 
-export async function queryGyms(bounds: Bounds, filter: FilterGym | undefined) {
+export async function queryGyms(
+	bounds: Bounds,
+	filter: FilterGym | undefined
+): Promise<[{ error: number | undefined; result: GymData[] }, undefined]> {
 	const boundsFilter = "WHERE lat BETWEEN ? AND ? AND lon BETWEEN ? AND ? AND deleted = 0 ";
 	const boundsValues = [bounds.minLat, bounds.maxLat, bounds.minLon, bounds.maxLon];
 

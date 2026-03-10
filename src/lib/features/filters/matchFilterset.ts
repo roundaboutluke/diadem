@@ -12,6 +12,8 @@ import {
 	matchesQuestRewardSelection,
 	RewardType
 } from "@/lib/utils/pokestopUtils";
+import { getDefaultFormId } from "@/lib/services/masterfile";
+import { formsMatch } from "@/lib/utils/pokemonForms";
 
 function matchesPokemonSpecies(
 	filterPokemon: FiltersetPokemon["pokemon"] | undefined,
@@ -19,10 +21,9 @@ function matchesPokemonSpecies(
 ) {
 	if (!filterPokemon || filterPokemon.length === 0) return true;
 
-	const dataForm = pokemon.form ?? 0;
 	return filterPokemon.some((candidate) => {
 		if (candidate.pokemon_id !== pokemon.pokemon_id) return false;
-		return candidate.form_id === dataForm;
+		return formsMatch(candidate.pokemon_id, candidate.form, pokemon.form, getDefaultFormId);
 	});
 }
 
@@ -101,11 +102,10 @@ function matchesPokemonFilterset(filterset: FiltersetPokemon, pokemon: PokemonDa
 
 function matchesRaidBoss(bosses: FiltersetRaid["bosses"] | undefined, raidData: GymData) {
 	if (!bosses || bosses.length === 0 || !raidData.raid_pokemon_id) return false;
-	const raidForm = raidData.raid_pokemon_form ?? 0;
 
 	return bosses.some((boss) => {
 		if (boss.pokemon_id !== raidData.raid_pokemon_id) return false;
-		return boss.form_id === raidForm;
+		return formsMatch(boss.pokemon_id, boss.form, raidData.raid_pokemon_form, getDefaultFormId);
 	});
 }
 
@@ -151,7 +151,7 @@ function matchesInvasionRewards(
 	return rewards.some((reward) => {
 		return rewardPokemon.some((pokemon) => {
 			if (pokemon.pokemon_id !== reward.pokemon_id) return false;
-			return reward.form_id === (pokemon.form ?? 0);
+			return formsMatch(reward.pokemon_id, reward.form, pokemon.form, getDefaultFormId);
 		});
 	});
 }
@@ -216,8 +216,10 @@ function matchesQuestFilterset(
 		filterset.pokemon &&
 		reward.type === RewardType.POKEMON &&
 		filterset.pokemon.find((pokemon) => {
-			const rewardForm = reward.info.form ?? reward.info.form_id ?? 0;
-			return pokemon.pokemon_id === reward.info.pokemon_id && pokemon.form_id === rewardForm;
+			return (
+				pokemon.pokemon_id === reward.info.pokemon_id &&
+				formsMatch(pokemon.pokemon_id, pokemon.form, reward.info.form, getDefaultFormId)
+			);
 		})
 	) {
 		return true;

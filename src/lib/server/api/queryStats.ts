@@ -1,6 +1,12 @@
 import { query } from "@/lib/server/db/external/internalQuery";
 import type { ContestFocus, QuestReward } from "@/lib/types/mapObjectData/pokestop";
 import { getQuestKey, parseQuestReward } from "@/lib/utils/pokestopUtils";
+import { getDefaultFormId, loadMasterFile } from "@/lib/services/masterfile";
+import {
+	getCanonicalFormValue,
+	getCanonicalPokemonKey,
+	normalizeContestFocusPokemon
+} from "@/lib/utils/pokemonForms";
 
 type AllShinyStatsRow = {
 	pokemon_id: number;
@@ -122,7 +128,7 @@ export type NestStatsEntry = {
 export type MasterStats = {
 	totalPokemon: TotalPokemonStats;
 	pokemon: {
-		[key: string]: PokemonStatEntry; // key format: "pokemonId-formId"
+		[key: string]: PokemonStatEntry; // key format: "pokemonId-form"
 	};
 	totalQuests: TotalQuestStats;
 	quests: QuestStats;
@@ -135,6 +141,8 @@ export type MasterStats = {
 };
 
 export async function queryMasterStats(): Promise<MasterStats> {
+	await loadMasterFile()
+
 	// TODO: timeframe
 	// TODO: there needs to be something like a cronjob to properly update stats in the background
 	// this takes a while, and is cached. but only ever invoked when a user requests for it
@@ -229,22 +237,31 @@ export async function queryMasterStats(): Promise<MasterStats> {
 
 	if (allShinyStats.result) {
 		for (const row of allShinyStats.result) {
-			const key = `${row.pokemon_id}-${row.form_id}`;
+			const key = getCanonicalPokemonKey(row.pokemon_id, row.form_id, getDefaultFormId);
 			if (!pokemon[key]) {
 				pokemon[key] = {};
 			}
 			const stats = row[""][0];
-			pokemon[key].shiny = {
+			const next = {
 				shinies: Number(stats?.shinies ?? 0),
 				total: Number(stats?.total ?? 0),
 				days: stats?.days ?? 0
 			};
+			const existing = pokemon[key].shiny;
+
+			pokemon[key].shiny = existing
+				? {
+					shinies: existing.shinies + next.shinies,
+					total: existing.total + next.total,
+					days: Math.max(existing.days, next.days)
+				}
+				: next;
 		}
 	}
 
 	if (allSpawnStats.result) {
 		for (const row of allSpawnStats.result) {
-			const key = `${row.pokemon_id}-${row.form_id}`;
+			const key = getCanonicalPokemonKey(row.pokemon_id, row.form_id, getDefaultFormId);
 			if (!pokemon[key]) {
 				pokemon[key] = {};
 			}
@@ -256,10 +273,18 @@ export async function queryMasterStats(): Promise<MasterStats> {
 				pokemonTotalDays = stats?.days ?? 0;
 			}
 
-			pokemon[key].spawns = {
+			const next = {
 				count: Number(stats?.count ?? 0),
 				days: stats?.days ?? 0
 			};
+			const existing = pokemon[key].spawns;
+
+			pokemon[key].spawns = existing
+				? {
+					count: existing.count + next.count,
+					days: Math.max(existing.days, next.days)
+				}
+				: next;
 		}
 	}
 
@@ -282,7 +307,25 @@ export async function queryMasterStats(): Promise<MasterStats> {
 	}
 
 	if (allRaidStats.result) {
-		activeRaids = allRaidStats.result;
+		const dedupedRaids = new Map<string, ActiveRaidStats>();
+		for (const row of allRaidStats.result) {
+			const count = Number(row.count ?? 0);
+			const form = getCanonicalFormValue(row.pokemon_id, row.form, getDefaultFormId) ?? 0;
+			const key = `${row.level}-${row.pokemon_id}-${form}`;
+			const existing = dedupedRaids.get(key);
+
+			if (existing) {
+				existing.count += count;
+			} else {
+				dedupedRaids.set(key, {
+					level: row.level,
+					pokemon_id: row.pokemon_id,
+					form,
+					count
+				});
+			}
+		}
+		activeRaids = [...dedupedRaids.values()];
 	}
 
 	if (allCharacterStats.result) {
@@ -290,38 +333,74 @@ export async function queryMasterStats(): Promise<MasterStats> {
 	}
 
 	if (allContestStats.result) {
+		const dedupedContests = new Map<string, ContestStatsEntry>();
 		for (const row of allContestStats.result) {
 			const count = Number(row[""][0]?.count ?? 0);
-			activeContests.push({
+			const focus = normalizeContestFocusPokemon(
+				JSON.parse(row.focus) as ContestFocus,
+				getDefaultFormId
+			);
+			const key = `${row.ranking_standard}-${JSON.stringify(focus)}`;
+			const existing = dedupedContests.get(key);
+
+			if (existing) {
+				existing.count += count;
+				continue;
+			}
+
+			dedupedContests.set(key, {
 				ranking_standard: row.ranking_standard,
-				focus: JSON.parse(row.focus) as ContestFocus,
+				focus,
 				count
 			});
 		}
+		activeContests.push(...dedupedContests.values());
 	}
 
 	if (allMaxBattlesStats.result) {
+		const dedupedMaxBattles = new Map<string, MaxBattleStatsEntry>();
 		for (const row of allMaxBattlesStats.result) {
 			const count = Number(row[""][0]?.count ?? 0);
-			activeMaxBattles.push({
+			const form = getCanonicalFormValue(row.pokemon_id, row.form, getDefaultFormId) ?? 0;
+			const key = `${row.level}-${row.pokemon_id}-${form}-${row.bread_mode}`;
+			const existing = dedupedMaxBattles.get(key);
+
+			if (existing) {
+				existing.count += count;
+				continue;
+			}
+
+			dedupedMaxBattles.set(key, {
 				level: row.level,
 				pokemon_id: row.pokemon_id,
-				form: row.form,
+				form,
 				bread_mode: row.bread_mode,
 				count
 			});
 		}
+		activeMaxBattles.push(...dedupedMaxBattles.values());
 	}
 
 	if (allNestsStats.result) {
+		const dedupedNests = new Map<string, NestStatsEntry>();
 		for (const row of allNestsStats.result) {
 			const count = Number(row[""][0]?.count ?? 0);
-			activeNests.push({
+			const form = getCanonicalFormValue(row.pokemon_id, row.form, getDefaultFormId) ?? 0;
+			const key = `${row.pokemon_id}-${form}`;
+			const existing = dedupedNests.get(key);
+
+			if (existing) {
+				existing.count += count;
+				continue;
+			}
+
+			dedupedNests.set(key, {
 				pokemon_id: row.pokemon_id,
-				form: row.form,
+				form,
 				count
 			});
 		}
+		activeNests.push(...dedupedNests.values());
 	}
 
 	return {

@@ -9,6 +9,8 @@ import {
 	FiltersetPokemonSchema,
 	FiltersetRaidSchema
 } from "@/lib/features/filters/filtersetSchemas";
+import { normalizeFilterset } from "@/lib/features/filters/normalizeFilters";
+import { getDefaultFormId, loadMasterFile } from "@/lib/services/masterfile";
 import * as m from "@/lib/paraglide/messages";
 import type { ZodSafeParseResult } from "zod";
 import { getLogger } from "@/lib/utils/logger";
@@ -55,8 +57,16 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
 	const configResponse = await fetch("/api/config");
 	setConfig(await configResponse.json());
 	await loadRemoteLocale(getConfig().general.defaultLocale, fetch);
+	await loadMasterFile(fetch);
 
-	const filterset = decodeFilterset(params.majorCategory, params.subCategory, params.encodedFilter);
+	const decodedFilterset = decodeFilterset(
+		params.majorCategory,
+		params.subCategory,
+		params.encodedFilter
+	);
+	const filterset = decodedFilterset
+		? normalizeFilterset(decodedFilterset, getDefaultFormId)
+		: undefined;
 	const majorCategory = filterset ? params.majorCategory : undefined;
 	const subCategory = filterset ? params.subCategory : undefined;
 

@@ -32,7 +32,7 @@
 			}
 			return getIconReward(RewardType.POKEMON, {
 				pokemon_id: pokemon.pokemon_id,
-				form: pokemon.form_id
+				form: pokemon.form
 			});
 		}
 
