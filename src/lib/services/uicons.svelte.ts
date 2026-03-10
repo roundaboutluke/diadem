@@ -235,6 +235,18 @@ export function getIconContest() {
 	return iconSets[DEFAULT_UICONS].misc("showcase");
 }
 
+const rankMedalIconMap: Record<number, "first" | "second" | "third"> = {
+	1: "first",
+	2: "second",
+	3: "third"
+};
+
+export function getIconRankMedal(rank: number) {
+	const medalId = rankMedalIconMap[rank];
+	if (!medalId) return "";
+	return iconSets[DEFAULT_UICONS].misc(medalId) ?? "";
+}
+
 export enum League {
 	LITTLE = 500,
 	GREAT = 1500,

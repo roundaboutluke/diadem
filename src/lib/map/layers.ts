@@ -13,6 +13,7 @@ export enum MapSourceId {
 export enum MapObjectLayerId {
 	ICONS_UNDERLAY = "mapObjectIconsUnderlay",
 	ICONS = "mapObjectIcons",
+	ICONS_BADGE = "mapObjectIconsBadge",
 	CIRCLES = "mapObjectCircles",
 	POLYGON_FILL = "mapObjectPolygonFill",
 	POLYGON_STROKE = "mapObjectPolygonStroke"

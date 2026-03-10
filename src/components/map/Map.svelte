@@ -255,7 +255,32 @@
 			filter={[
 				"all",
 				["==", ["get", "type"], MapObjectFeatureType.ICON],
-				["==", ["coalesce", ["get", "isUnderlay"], false], false]
+				["==", ["coalesce", ["get", "isUnderlay"], false], false],
+				["==", ["coalesce", ["get", "isAttachedBadge"], false], false]
+			]}
+			layout={{
+				"icon-image": ["get", "imageUrl"],
+				"icon-overlap": "always",
+				"icon-size": [
+					"*",
+					["get", "imageSize"],
+					["get", "selectedScale"],
+					getUserSettings().mapIconSize
+				],
+				"icon-allow-overlap": true,
+				"icon-offset": ["get", "imageOffset"],
+				"icon-rotate": ["coalesce", ["get", "imageRotation"], 0]
+			}}
+			eventsIfTopMost={true}
+		/>
+		<SymbolLayer
+			id={MapObjectLayerId.ICONS_BADGE}
+			hoverCursor="pointer"
+			filter={[
+				"all",
+				["==", ["get", "type"], MapObjectFeatureType.ICON],
+				["==", ["coalesce", ["get", "isUnderlay"], false], false],
+				["==", ["coalesce", ["get", "isAttachedBadge"], false], true]
 			]}
 			layout={{
 				"icon-image": ["get", "imageUrl"],

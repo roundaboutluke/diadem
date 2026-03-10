@@ -5,6 +5,7 @@ import {
 	getIconGym,
 	getIconInvasion,
 	getIconPokemon,
+	getIconRankMedal,
 	getIconRaidEgg,
 	getIconReward
 } from "@/lib/services/uicons.svelte.js";
@@ -79,6 +80,7 @@ export type MapObjectIconProperties = {
 	imageOffset?: number[];
 	imageRotation?: number;
 	isUnderlay?: boolean;
+	isAttachedBadge?: boolean;
 	renderStateKey?: string;
 	expires: number | null;
 };
@@ -304,6 +306,41 @@ function getModifiers(iconSet: UiconSet | undefined, type: UiconSetModifierType)
 	return { scale, offsetY, offsetX, spacing };
 }
 
+function getBestPvpLeagueRank(entries: PokemonData["pvp"]["great"] | PokemonData["pvp"]["ultra"]) {
+	if (!entries?.length) return 0;
+
+	const ranks = entries
+		.map((entry) => entry.rank)
+		.filter((rank) => Number.isInteger(rank) && rank > 0);
+	if (!ranks.length) return 0;
+	return Math.min(...ranks);
+}
+
+function getPokemonPvpMedalRank(data: PokemonData) {
+	const ranks = [
+		getBestPvpLeagueRank(data.pvp?.great),
+		getBestPvpLeagueRank(data.pvp?.ultra)
+	].filter((rank) => rank > 0);
+
+	if (!ranks.length) return 0;
+
+	const best = Math.min(...ranks);
+	if (best < 1 || best > 3) return 0;
+	return best;
+}
+
+const pvpMedalScaleRatio = 14 / 24;
+
+function getPokemonPvpMedalOffset(modifiers: { offsetX: number; offsetY: number }) {
+	// icon-offset scales with icon-size; adjust base offsets to the medal scale first.
+	const edgeOffset = (32 * (1 - pvpMedalScaleRatio)) / pvpMedalScaleRatio;
+
+	return [
+		modifiers.offsetX / pvpMedalScaleRatio + edgeOffset,
+		modifiers.offsetY / pvpMedalScaleRatio + edgeOffset
+	];
+}
+
 function getFiltersetModifierStateKey(filtersetModifiers: FiltersetModifiers | undefined) {
 	if (!filtersetModifiers) return "";
 
@@ -319,7 +356,11 @@ function getPokemonFeatureStateKey(
 	data: PokemonData,
 	filtersetModifiers: FiltersetModifiers | undefined
 ) {
-	return [data.expire_timestamp ?? "", getFiltersetModifierStateKey(filtersetModifiers)].join("|");
+	return [
+		data.expire_timestamp ?? "",
+		getPokemonPvpMedalRank(data),
+		getFiltersetModifierStateKey(filtersetModifiers)
+	].join("|");
 }
 
 function getRenderedPokemonFeatureStateKey(mapId: string) {
@@ -449,6 +490,7 @@ export function updateFeatures(mapObjects: MapObjectsStateType) {
 		let showThis: boolean = true;
 		const modifiers = getModifiers(userIconSet, iconType);
 		let expires = null;
+		let pokemonMedalRank = 0;
 		let pokemonRenderStateKey: string | undefined = undefined;
 
 		const subFeatures: MapObjectFeature[] = [];
@@ -733,6 +775,7 @@ export function updateFeatures(mapObjects: MapObjectsStateType) {
 		} else if (obj.type === MapObjectType.POKEMON) {
 			if (obj.expire_timestamp && obj.expire_timestamp < timestamp) continue;
 			expires = obj.expire_timestamp;
+			pokemonMedalRank = getPokemonPvpMedalRank(obj as PokemonData);
 			pokemonRenderStateKey = getPokemonFeatureStateKey(obj as PokemonData, iconFiltersetModifiers);
 		} else if (obj.type === MapObjectType.STATION) {
 			showThis = false;
@@ -877,6 +920,24 @@ export function updateFeatures(mapObjects: MapObjectsStateType) {
 					expires
 				})
 			);
+
+			if (pokemonMedalRank > 0) {
+				const medalIcon = getIconRankMedal(pokemonMedalRank);
+				if (medalIcon) {
+					// PvP medals are secondary runtime badges, not part of filter modifier transforms.
+					subFeatures.push(
+						getIconFeature(`${obj.mapId}-pvp-medal-${pokemonMedalRank}`, [obj.lon, obj.lat], {
+							imageUrl: medalIcon,
+							id: obj.mapId,
+							imageSize: iconVisual.imageSize * pvpMedalScaleRatio,
+							selectedScale: selectedScale,
+							imageOffset: getPokemonPvpMedalOffset(modifiers),
+							isAttachedBadge: true,
+							expires
+						})
+					);
+				}
+			}
 		}
 
 		features[obj.type][obj.mapId] = subFeatures;

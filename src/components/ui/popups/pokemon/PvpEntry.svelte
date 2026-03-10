@@ -1,38 +1,41 @@
 <script lang="ts">
-	import { mPokemon } from '@/lib/services/ingameLocale.js';
-	import type { PokemonData, PvpStats } from '@/lib/types/mapObjectData/pokemon';
-	import { getIconPokemon, getIconRaidEgg } from '@/lib/services/uicons.svelte.js';
-	import * as m from '@/lib/paraglide/messages';
-	import Countdown from '@/components/utils/Countdown.svelte';
-	import ImagePopup from '@/components/ui/popups/common/ImagePopup.svelte';
-	import { timestampToLocalTime } from '@/lib/utils/timestampToLocalTime';
-	import { currentTimestamp } from '@/lib/utils/currentTimestamp';
-	import { getRaidPokemon } from '@/lib/utils/gymUtils';
+	import { mPokemon } from "@/lib/services/ingameLocale.js";
+	import type { PokemonData, PvpStats } from "@/lib/types/mapObjectData/pokemon";
+	import { getIconPokemon, getIconRankMedal } from "@/lib/services/uicons.svelte.js";
+	import * as m from "@/lib/paraglide/messages";
+	import ImagePopup from "@/components/ui/popups/common/ImagePopup.svelte";
 
 	let {
 		data,
 		league
 	}: {
-		data: PvpStats
-		league: "little" | "great" | "ultra"
-	} = $props()
+		data: PvpStats;
+		league: "little" | "great" | "ultra";
+	} = $props();
 
-	let pokemon: Partial<PokemonData> = $derived({ pokemon_id: data.pokemon, form: data.form })
+	let pokemon: Partial<PokemonData> = $derived({ pokemon_id: data.pokemon, form: data.form });
 	let leagueName: string = $derived.by(() => {
-		if (league === "little") return m.little_league()
-		if (league === "great") return m.great_league()
-		if (league === "ultra") return m.ultra_league()
-		return ""
-	})
+		if (league === "little") return m.little_league();
+		if (league === "great") return m.great_league();
+		if (league === "ultra") return m.ultra_league();
+		return "";
+	});
+	let rankMedalIcon: string = $derived.by(() => {
+		if (league !== "great" && league !== "ultra") return "";
+		return getIconRankMedal(data.rank);
+	});
 </script>
 
 <div class="flex gap-2 items-center">
-	<div class="w-6 shrink-0">
-		<ImagePopup
-			src={getIconPokemon(pokemon)}
-			alt={mPokemon(pokemon)}
-			class="w-6"
-		/>
+	<div class="relative w-6 h-6 shrink-0">
+		<ImagePopup src={getIconPokemon(pokemon)} alt={mPokemon(pokemon)} class="w-6 h-6" />
+		{#if rankMedalIcon}
+			<img
+				src={rankMedalIcon}
+				alt={m.rank_x({ rank: data.rank })}
+				class="absolute -right-1 -bottom-1 w-3.5 h-3.5 drop-shadow-sm"
+			/>
+		{/if}
 	</div>
 	<div>
 		<div>

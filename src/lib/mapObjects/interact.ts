@@ -24,6 +24,7 @@ import { Coords } from "@/lib/utils/coordinates";
 const clickableMapObjectLayers: string[] = [
 	MapObjectLayerId.ICONS_UNDERLAY,
 	MapObjectLayerId.ICONS,
+	MapObjectLayerId.ICONS_BADGE,
 	MapObjectLayerId.CIRCLES,
 	MapObjectLayerId.POLYGON_FILL,
 	MapObjectLayerId.POLYGON_STROKE
