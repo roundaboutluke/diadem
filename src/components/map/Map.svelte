@@ -1,12 +1,23 @@
 <script lang="ts">
-	import { CircleLayer, FillLayer, GeoJSON, LineLayer, MapLibre, Marker, SymbolLayer } from "svelte-maplibre";
+	import {
+		CircleLayer,
+		FillLayer,
+		GeoJSON,
+		LineLayer,
+		MapLibre,
+		Marker,
+		SymbolLayer
+	} from "svelte-maplibre";
 	import { getUserSettings, updateUserSettings } from "@/lib/services/userSettings.svelte.js";
 	import { onDestroy, onMount, tick } from "svelte";
 	import { getDirectLinkObject, openMapObject } from "@/lib/features/directLinks.svelte.js";
 	import { clickMapHandler, openPopup, updateCurrentPath } from "@/lib/mapObjects/interact";
 	import { updateAllMapObjects } from "@/lib/mapObjects/updateMapObject";
 	import * as m from "@/lib/paraglide/messages";
-	import { clearUpdateMapObjectsInterval, resetUpdateMapObjectsInterval } from "@/lib/map/mapObjectsInterval";
+	import {
+		clearUpdateMapObjectsInterval,
+		resetUpdateMapObjectsInterval
+	} from "@/lib/map/mapObjectsInterval";
 	import { getMap, setMap } from "@/lib/map/map.svelte";
 	import { clearPressTimer, onContextMenu } from "@/lib/ui/contextmenu.svelte.js";
 	import { clearSessionImageUrls } from "@/lib/map/featuresManage.svelte";
@@ -15,7 +26,8 @@
 		onMapMove,
 		onMapMoveEnd,
 		onMapMoveStart,
-		onMapStyleDataLoading, onMapStyleLoad,
+		onMapStyleDataLoading,
+		onMapStyleLoad,
 		onTouchStart,
 		onWindowFocus
 	} from "@/lib/map/events";
@@ -97,13 +109,18 @@
 		const map = getMap();
 		if (
 			!isInitUpdatedMapObjects &&
-			map
-			&& hasLoadedFeature(LoadedFeature.REMOTE_LOCALE, LoadedFeature.MASTER_FILE, LoadedFeature.ICON_SETS, LoadedFeature.USER_DETAILS)
+			map &&
+			hasLoadedFeature(
+				LoadedFeature.REMOTE_LOCALE,
+				LoadedFeature.MASTER_FILE,
+				LoadedFeature.ICON_SETS,
+				LoadedFeature.USER_DETAILS
+			)
 		) {
 			const directLinkData = getDirectLinkObject();
 			if (directLinkData) {
 				if (directLinkData.id) {
-					openMapObject(directLinkData)
+					openMapObject(directLinkData);
 				} else {
 					openToast(m.direct_link_not_found({ type: m["pogo_" + directLinkData.type]() }), 5000);
 				}
@@ -120,7 +137,7 @@
 				.then(() => {
 					resetUpdateMapObjectsInterval();
 				})
-				.catch(e => console.error(e));
+				.catch((e) => console.error(e));
 		}
 	});
 
@@ -136,10 +153,7 @@
 	});
 </script>
 
-<svelte:window
-	onfocus={onWindowFocus}
-	onblur={clearUpdateMapObjectsInterval}
-></svelte:window>
+<svelte:window onfocus={onWindowFocus} onblur={clearUpdateMapObjectsInterval} />
 
 <DebugMenu />
 
@@ -180,26 +194,21 @@
 	<GeoJSON
 		id={MapSourceId.MAP_OBJECTS}
 		data={{
-			type: 'FeatureCollection',
+			type: "FeatureCollection",
 			features: []
 		}}
 	>
 		<FillLayer
 			id={MapObjectLayerId.POLYGON_FILL}
 			paint={{
-			  'fill-color': [
-				  'case',
-				  ['get', 'isSelected'],
-				  ['get', 'selectedFill'],
-				  ['get', 'fillColor']
-				]
+				"fill-color": ["case", ["get", "isSelected"], ["get", "selectedFill"], ["get", "fillColor"]]
 			}}
 			hoverCursor="pointer"
 		/>
 		<LineLayer
 			id={MapObjectLayerId.POLYGON_STROKE}
-			layout={{ 'line-cap': 'round', 'line-join': 'round' }}
-			paint={{ 'line-color': ["get", "strokeColor"], 'line-width': 1 }}
+			layout={{ "line-cap": "round", "line-join": "round" }}
+			paint={{ "line-color": ["get", "strokeColor"], "line-width": 1 }}
 			hoverCursor="pointer"
 		/>
 		<CircleLayer
@@ -213,16 +222,20 @@
 					["get", "selectedScale"],
 					getUserSettings().mapIconSize
 				],
-				'circle-color': ["get", "fillColor"],
-				'circle-stroke-width': 1,
-				'circle-stroke-color': ["get", "strokeColor"]
+				"circle-color": ["get", "fillColor"],
+				"circle-stroke-width": 1,
+				"circle-stroke-color": ["get", "strokeColor"]
 			}}
 			eventsIfTopMost={true}
 		/>
 		<SymbolLayer
-			id={MapObjectLayerId.ICONS}
-			hoverCursor="pointer"
-			filter={["==", ["get", "type"], MapObjectFeatureType.ICON]}
+			id={MapObjectLayerId.ICONS_UNDERLAY}
+			interactive={false}
+			filter={[
+				"all",
+				["==", ["get", "type"], MapObjectFeatureType.ICON],
+				["==", ["coalesce", ["get", "isUnderlay"], false], true]
+			]}
 			layout={{
 				"icon-image": ["get", "imageUrl"],
 				"icon-overlap": "always",
@@ -234,6 +247,28 @@
 				],
 				"icon-allow-overlap": true,
 				"icon-offset": ["get", "imageOffset"]
+			}}
+		/>
+		<SymbolLayer
+			id={MapObjectLayerId.ICONS}
+			hoverCursor="pointer"
+			filter={[
+				"all",
+				["==", ["get", "type"], MapObjectFeatureType.ICON],
+				["==", ["coalesce", ["get", "isUnderlay"], false], false]
+			]}
+			layout={{
+				"icon-image": ["get", "imageUrl"],
+				"icon-overlap": "always",
+				"icon-size": [
+					"*",
+					["get", "imageSize"],
+					["get", "selectedScale"],
+					getUserSettings().mapIconSize
+				],
+				"icon-allow-overlap": true,
+				"icon-offset": ["get", "imageOffset"],
+				"icon-rotate": ["coalesce", ["get", "imageRotation"], 0]
 			}}
 			eventsIfTopMost={true}
 		/>
@@ -250,7 +285,6 @@
 	<!--	<div class="size-4 bg-red-400"></div>-->
 	<!--</Marker>-->
 	<!--{/if}-->
-
 
 	<MarkerCurrentLocation />
 	<MarkerContextMenu />

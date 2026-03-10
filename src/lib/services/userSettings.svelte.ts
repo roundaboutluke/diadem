@@ -18,6 +18,7 @@ import type { AnySearchEntry } from "@/lib/services/search.svelte";
 import { getDefaultPokestopFilter } from "@/lib/utils/pokestopUtils";
 import { getDefaultGymFilter } from "@/lib/utils/gymUtils";
 import { getDefaultStationFilter } from "@/lib/utils/stationUtils";
+import { normalizeFilter } from "@/lib/features/filters/normalizeFilters";
 
 export type UiconSetUS = {
 	id: string;
@@ -130,7 +131,10 @@ export function defaultFilter(enabled: boolean = false) {
 }
 
 export function getDefaultIconSet(type: MapObjectType) {
-	let iconSet = getConfig().uiconSets.find((s) => s[type]?.default);
+	let iconSet = getConfig().uiconSets.find((s) => {
+		const modifier = s[type];
+		return typeof modifier === "object" && modifier?.default;
+	});
 
 	if (!iconSet) {
 		iconSet = getConfig().uiconSets.find((s) => s.base?.default);
@@ -161,8 +165,19 @@ export async function getUserSettingsFromServer() {
 }
 
 export function setUserSettings(newUserSettings: UserSettings) {
-	// @ts-ignore
-	userSettings = deepMerge(getDefaultUserSettings(), newUserSettings);
+	const mergedSettings = deepMerge(getDefaultUserSettings(), newUserSettings) as UserSettings;
+
+	normalizeFilter(mergedSettings.filters.pokemon);
+	normalizeFilter(mergedSettings.filters.pokestop);
+	normalizeFilter(mergedSettings.filters.gym);
+	normalizeFilter(mergedSettings.filters.station);
+	normalizeFilter(mergedSettings.filters.s2cell);
+	normalizeFilter(mergedSettings.filters.nest);
+	normalizeFilter(mergedSettings.filters.spawnpoint);
+	normalizeFilter(mergedSettings.filters.route);
+	normalizeFilter(mergedSettings.filters.tappable);
+
+	userSettings = mergedSettings;
 }
 
 export function getUserSettings() {

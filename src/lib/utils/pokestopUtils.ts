@@ -14,6 +14,7 @@ import { QuestArType } from "@/lib/features/filters/filterUtilsQuest";
 import { getActiveSearch } from "@/lib/features/activeSearch.svelte";
 import { MapObjectType } from "@/lib/mapObjects/mapObjectTypes";
 import { getIconContest, getIconPokemon, getIconType } from "@/lib/services/uicons.svelte";
+import type { FiltersetInvasion } from "@/lib/features/filters/filtersets";
 
 export const CONTEST_SLOTS = 200;
 export const INCIDENT_DISPLAY_GOLD = 7;
@@ -53,6 +54,16 @@ export function parseQuestReward(reward?: string | null) {
 	return parsed;
 }
 
+export function matchesQuestRewardSelection(
+	selection: { id: string; amount?: number },
+	rewardId: number | undefined,
+	rewardAmount: number | undefined
+) {
+	if (rewardId === undefined) return false;
+	if (selection.id !== rewardId.toString()) return false;
+	return selection.amount === undefined || selection.amount === rewardAmount;
+}
+
 export function getArTag(isAr: boolean) {
 	if (isAr) return m.quest_ar_tag();
 	return m.quest_noar_tag();
@@ -78,6 +89,35 @@ export function isIncidentKecleon(incident: Incident) {
 
 export function isIncidentContest(incident: Incident) {
 	return incident.display_type === INCIDENT_DISPLAY_CONTEST;
+}
+
+function getIncidentRewardPokemon(incident: Incident) {
+	const rewardPokemon: { pokemon_id?: number; form?: number | null }[] = [
+		{ pokemon_id: incident.slot_1_pokemon_id, form: incident.slot_1_form },
+		{ pokemon_id: incident.slot_2_pokemon_id, form: incident.slot_2_form },
+		{ pokemon_id: incident.slot_3_pokemon_id, form: incident.slot_3_form }
+	];
+
+	return rewardPokemon.filter((pokemon): pokemon is { pokemon_id: number; form?: number | null } =>
+		Boolean(pokemon.pokemon_id)
+	);
+}
+
+function matchesInvasionRewards(
+	rewards: FiltersetInvasion["rewards"] | undefined,
+	incident: Incident
+) {
+	if (!rewards || rewards.length === 0) return false;
+
+	const rewardPokemon = getIncidentRewardPokemon(incident);
+	if (rewardPokemon.length === 0) return false;
+
+	return rewards.some((reward) => {
+		return rewardPokemon.some((pokemon) => {
+			if (pokemon.pokemon_id !== reward.pokemon_id) return false;
+			return reward.form_id === (pokemon.form ?? 0);
+		});
+	});
 }
 
 export function getRewardText(reward: QuestReward) {
@@ -247,7 +287,12 @@ export function shouldDisplayIncidient(incident: Incident, pokestop: Partial<Pok
 	if (!pokestopFilters.enabled) return false;
 
 	if (pokestopFilters.goldPokestop.enabled && isIncidentGold(incident)) return true;
-	if (pokestopFilters.contest.enabled && isIncidentContest(incident) && shouldDisplayContest(pokestop)) return true;
+	if (
+		pokestopFilters.contest.enabled &&
+		isIncidentContest(incident) &&
+		shouldDisplayContest(pokestop)
+	)
+		return true;
 	if (pokestopFilters.kecleon.enabled && isIncidentKecleon(incident)) return true;
 
 	if (pokestopFilters.invasion.enabled && isIncidentInvasion(incident)) {
@@ -256,6 +301,7 @@ export function shouldDisplayIncidient(incident: Incident, pokestop: Partial<Pok
 
 		for (const invasionFilter of invasionFilters) {
 			if (invasionFilter.characters?.includes(incident.character)) return true;
+			if (matchesInvasionRewards(invasionFilter.rewards, incident)) return true;
 		}
 	}
 
@@ -282,12 +328,26 @@ export function shouldDisplayQuest(
 			if (questFilter.ar === QuestArType.NOAR && isAr) continue;
 		}
 
+		if (questFilter.rewardType && questFilter.rewardType !== reward.type) continue;
+
 		if (
 			questFilter.tasks &&
 			!questFilter.tasks.find((t) => t.title === title && t.target === target)
 		) {
 			continue;
 		}
+
+		const hasRewardMatcher = Boolean(
+			questFilter.stardust ||
+				questFilter.xp ||
+				questFilter.pokemon ||
+				questFilter.item ||
+				questFilter.megaResource ||
+				questFilter.candy ||
+				questFilter.xlCandy
+		);
+
+		if (questFilter.rewardType && !hasRewardMatcher) return true;
 
 		if (
 			questFilter.stardust &&
@@ -311,7 +371,9 @@ export function shouldDisplayQuest(
 			questFilter.pokemon &&
 			reward.type === RewardType.POKEMON &&
 			questFilter.pokemon.find(
-				(p) => p.pokemon_id === reward.info.pokemon_id && p.form_id === reward.info.form_id
+				(p) =>
+					p.pokemon_id === reward.info.pokemon_id &&
+					p.form_id === (reward.info.form ?? reward.info.form_id ?? 0)
 			)
 		) {
 			return true;
@@ -320,10 +382,8 @@ export function shouldDisplayQuest(
 		if (
 			questFilter.item &&
 			reward.type === RewardType.ITEM &&
-			questFilter.item.find(
-				(i) =>
-					(i.id === reward.info.item_id.toString() && i.amount === undefined) ||
-					i.amount === reward.info.amount
+			questFilter.item.find((item) =>
+				matchesQuestRewardSelection(item, reward.info.item_id, reward.info.amount)
 			)
 		) {
 			return true;
@@ -332,10 +392,8 @@ export function shouldDisplayQuest(
 		if (
 			questFilter.megaResource &&
 			reward.type === RewardType.MEGA_ENERGY &&
-			questFilter.megaResource.find(
-				(i) =>
-					(i.id === reward.info.pokemon_id.toString() && i.amount === undefined) ||
-					i.amount === reward.info.amount
+			questFilter.megaResource.find((item) =>
+				matchesQuestRewardSelection(item, reward.info.pokemon_id, reward.info.amount)
 			)
 		) {
 			return true;
@@ -344,10 +402,8 @@ export function shouldDisplayQuest(
 		if (
 			questFilter.candy &&
 			reward.type === RewardType.CANDY &&
-			questFilter.candy.find(
-				(i) =>
-					(i.id === reward.info.pokemon_id.toString() && i.amount === undefined) ||
-					i.amount === reward.info.amount
+			questFilter.candy.find((item) =>
+				matchesQuestRewardSelection(item, reward.info.pokemon_id, reward.info.amount)
 			)
 		) {
 			return true;
@@ -356,10 +412,8 @@ export function shouldDisplayQuest(
 		if (
 			questFilter.xlCandy &&
 			reward.type === RewardType.XL_CANDY &&
-			questFilter.xlCandy.find(
-				(i) =>
-					(i.id === reward.info.pokemon_id.toString() && i.amount === undefined) ||
-					i.amount === reward.info.amount
+			questFilter.xlCandy.find((item) =>
+				matchesQuestRewardSelection(item, reward.info.pokemon_id, reward.info.amount)
 			)
 		) {
 			return true;
@@ -398,16 +452,25 @@ export function shouldDisplayContest(data: Partial<PokestopData>) {
 			return false;
 		}
 
-		if (contestFilter.focus.pokemon_id && contestFilter.focus.pokemon_id !== data.showcase_pokemon_id) {
-			return false
+		if (
+			contestFilter.focus.pokemon_id &&
+			contestFilter.focus.pokemon_id !== data.showcase_pokemon_id
+		) {
+			return false;
 		}
 
-		if (contestFilter.focus.form_id && contestFilter.focus.form_id !== data.showcase_pokemon_form_id) {
-			return false
+		if (
+			contestFilter.focus.form_id &&
+			contestFilter.focus.form_id !== data.showcase_pokemon_form_id
+		) {
+			return false;
 		}
 
-		if (contestFilter.focus.type_id && contestFilter.focus.type_id !== data.showcase_pokemon_type_id) {
-			return false
+		if (
+			contestFilter.focus.type_id &&
+			contestFilter.focus.type_id !== data.showcase_pokemon_type_id
+		) {
+			return false;
 		}
 	}
 
