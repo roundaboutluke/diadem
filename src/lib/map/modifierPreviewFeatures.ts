@@ -12,7 +12,7 @@ import {
 	getColorFilteredImageUrl
 } from "@/lib/map/modifierOverlayIcons";
 
-type PreviewFeatureLayer = "underlay" | "icon";
+type PreviewFeatureLayer = "underlay" | "icon" | "badge";
 
 export type ModifierPreviewFeatureProperties = {
 	layer: PreviewFeatureLayer;
@@ -40,6 +40,7 @@ type ModifierPreviewFeatureCollectionArgs = {
 	focusImageOffset: number[];
 	modifiers?: FiltersetModifiers;
 	filtersetTitle?: string;
+	badgeIconUrl?: string;
 	companionIconUrls: string[];
 	companionImageSize: number;
 	companionImageOffset: number[];
@@ -77,6 +78,16 @@ function getCompanionCoordinates(center: Point["coordinates"], bearing: number, 
 	return destination(point(center), distanceMeters / 1000, bearing).geometry.coordinates as Point["coordinates"];
 }
 
+const badgeScaleRatio = 14 / 24;
+
+function getBadgeOffset(baseOffset: number[]) {
+	const edgeOffset = (32 * (1 - badgeScaleRatio)) / badgeScaleRatio;
+	return [
+		baseOffset[0] / badgeScaleRatio + edgeOffset,
+		baseOffset[1] / badgeScaleRatio + edgeOffset
+	];
+}
+
 export function buildModifierPreviewFeatureCollection({
 	center,
 	focusIconUrl,
@@ -84,6 +95,7 @@ export function buildModifierPreviewFeatureCollection({
 	focusImageOffset,
 	modifiers,
 	filtersetTitle,
+	badgeIconUrl,
 	companionIconUrls,
 	companionImageSize,
 	companionImageOffset
@@ -143,6 +155,18 @@ export function buildModifierPreviewFeatureCollection({
 			layer: "icon"
 		})
 	);
+
+	if (modifiers?.showBadge && badgeIconUrl) {
+		features.push(
+			getPreviewFeature({
+				coordinates: center,
+				imageUrl: badgeIconUrl,
+				imageSize: focusImageSize * badgeScaleRatio,
+				imageOffset: getBadgeOffset(focusImageOffset),
+				layer: "badge"
+			})
+		);
+	}
 
 	for (const [index, imageUrl] of companionIconUrls.entries()) {
 		const companionPosition = companionPositions[index];

@@ -20,11 +20,13 @@
 		modifiers = undefined,
 		iconUrl = undefined,
 		filtersetTitle = undefined,
+		badgeIconUrl = undefined,
 		compact = false
 	}: {
 		modifiers?: FiltersetModifiers;
 		iconUrl?: string;
 		filtersetTitle?: string;
+		badgeIconUrl?: string;
 		compact?: boolean;
 	} = $props();
 
@@ -107,6 +109,7 @@
 			focusImageOffset: companionLayout.imageOffset,
 			modifiers,
 			filtersetTitle,
+			badgeIconUrl,
 			companionIconUrls,
 			companionImageSize: companionLayout.imageSize,
 			companionImageOffset: companionLayout.imageOffset
@@ -186,6 +189,22 @@
 						"text-color": "#ffffff",
 						"text-halo-color": "#000000",
 						"text-halo-width": 1.5
+					}}
+				/>
+				<SymbolLayer
+					id="modifierPreviewBadge"
+					interactive={false}
+					filter={["==", ["get", "layer"], "badge"]}
+					layout={{
+						"icon-image": ["get", "imageUrl"],
+						"icon-overlap": "always",
+						"icon-size": [
+							"*",
+							["get", "imageSize"],
+							getUserSettings().mapIconSize
+						],
+						"icon-allow-overlap": true,
+						"icon-offset": ["get", "imageOffset"]
 					}}
 				/>
 			</GeoJSON>

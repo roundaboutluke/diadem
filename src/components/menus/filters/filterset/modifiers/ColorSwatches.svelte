@@ -14,10 +14,11 @@
 	{#each MODIFIER_COLORS as color}
 		<button
 			type="button"
-			class="size-7 rounded-full border-2 cursor-pointer shrink-0 transition-all"
+			class="size-7 rounded-full border-2 cursor-pointer shrink-0 transition-shadow"
 			class:ring-2={selected === color}
 			class:ring-primary={selected === color}
-			class:ring-offset-1={selected === color}
+			class:ring-offset-2={selected === color}
+			class:ring-offset-background={selected === color}
 			aria-label={`Select ${color}`}
 			title={color}
 			style:background-color={color}

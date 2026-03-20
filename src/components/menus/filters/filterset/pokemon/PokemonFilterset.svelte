@@ -51,7 +51,7 @@
 	titleShared={m.shared_pokemon_filter()}
 	titleNew={m.filterset_title_new_pokemon()}
 	titleEdit={m.filterset_title_edit_pokemon()}
-	height={164}
+	height={156}
 >
 	{#snippet base()}
 		{#if data}
@@ -142,15 +142,6 @@
 			</AttributesOverview>
 
 			<AttributesOverview>
-				<Attribute label={m.modifier_visual()}>
-					<ModifierPreview modifiers={data.modifiers} iconUrl={previewIconUrl} compact />
-					{#snippet page(thisData: FiltersetPokemon)}
-						<ModifiersAttribute data={thisData} iconUrl={previewIconUrl} />
-					{/snippet}
-				</Attribute>
-			</AttributesOverview>
-
-			<AttributesOverview>
 				<Attribute label={m.little_league()}>
 					<AttributeChip
 						label={getAttributeLabelRank(data?.pvpRankLittle)}
@@ -224,6 +215,15 @@
 									max
 								)}
 						/>
+					{/snippet}
+				</Attribute>
+			</AttributesOverview>
+
+			<AttributesOverview>
+				<Attribute label={m.modifier_visual()}>
+					<ModifierPreview modifiers={data.modifiers} iconUrl={previewIconUrl} compact />
+					{#snippet page(thisData: FiltersetPokemon)}
+						<ModifiersAttribute data={thisData} iconUrl={previewIconUrl} />
 					{/snippet}
 				</Attribute>
 			</AttributesOverview>
