@@ -88,15 +88,39 @@ const COLOR_FILTER_CSS: Record<string, string> = {
 };
 
 export function getColorFilteredImageUrl(sourceUrl: string, filter: string) {
-	return `${sourceUrl}#cf-${filter}`;
+	return `${sourceUrl}||cf-${filter}`;
 }
 
 export function parseColorFilteredUrl(
 	url: string
 ): { sourceUrl: string; filter: string } | null {
-	const match = url.match(/#cf-(negative|grayscale|sepia)$/);
+	const match = url.match(/\|\|cf-(negative|grayscale|sepia)$/);
 	if (!match) return null;
-	return { sourceUrl: url.slice(0, url.lastIndexOf("#")), filter: match[1] };
+	return { sourceUrl: url.slice(0, url.lastIndexOf("||")), filter: match[1] };
+}
+
+const emojiImageCache = new Map<string, string>();
+
+export function getEmojiImageUrl(emoji: string): string {
+	const cached = emojiImageCache.get(emoji);
+	if (cached) return cached;
+
+	const size = OVERLAY_ICON_SIZE;
+	const canvas = document.createElement("canvas");
+	canvas.width = size;
+	canvas.height = size;
+
+	const context = canvas.getContext("2d");
+	if (!context) return "";
+
+	context.textAlign = "center";
+	context.textBaseline = "middle";
+	context.font = `${size * 0.7}px serif`;
+	context.fillText(emoji, size / 2, size / 2);
+
+	const url = canvas.toDataURL("image/png");
+	emojiImageCache.set(emoji, url);
+	return url;
 }
 
 type MapImage = HTMLImageElement | ImageBitmap;

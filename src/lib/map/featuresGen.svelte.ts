@@ -41,7 +41,8 @@ import { shouldDisplayNest } from "@/lib/utils/nestUtils";
 import {
 	getModifierOverlayIconUrl,
 	getModifierOverlayImageSize,
-	getColorFilteredImageUrl
+	getColorFilteredImageUrl,
+	getEmojiImageUrl
 } from "@/lib/map/modifierOverlayIcons";
 import type {
 	AnyFilterset,
@@ -152,9 +153,15 @@ function getIconFeature(
 	coordinates: Point["coordinates"],
 	properties: Omit<MapObjectIconProperties, "type">
 ): MapObjectIconFeature {
-	const imageUrl = properties.imageUrl.startsWith("data:")
-		? properties.imageUrl
-		: resize(properties.imageUrl, { width: 64 });
+	let imageUrl = properties.imageUrl;
+	if (!imageUrl.startsWith("data:")) {
+		const cfMatch = imageUrl.match(/(\|\|cf-(?:negative|grayscale|sepia))$/);
+		if (cfMatch) {
+			imageUrl = resize(imageUrl.slice(0, -cfMatch[1].length), { width: 64 }) + cfMatch[1];
+		} else {
+			imageUrl = resize(imageUrl, { width: 64 });
+		}
+	}
 
 	return {
 		type: "Feature",
@@ -351,6 +358,9 @@ function getBadgeOffset(modifiers: { offsetX: number; offsetY: number }) {
 function resolveFiltersetBadgeIconUrl(icon: BaseFilterset["icon"]): string | undefined {
 	if (icon.uicon) {
 		return getIcon(icon.uicon.category, icon.uicon.params);
+	}
+	if (icon.emoji) {
+		return getEmojiImageUrl(icon.emoji);
 	}
 	return undefined;
 }
