@@ -40,15 +40,20 @@ import { geojson, s2 } from "s2js";
 import { shouldDisplayNest } from "@/lib/utils/nestUtils";
 import {
 	getModifierOverlayIconUrl,
-	getModifierOverlayImageSize
+	getModifierOverlayImageSize,
+	getColorFilteredImageUrl
 } from "@/lib/map/modifierOverlayIcons";
 import type {
+	AnyFilterset,
+	BaseFilterset,
 	FiltersetInvasion,
 	FiltersetModifiers,
 	FiltersetPokemon,
 	FiltersetQuest,
 	FiltersetRaid
 } from "@/lib/features/filters/filtersets";
+import { getIcon } from "@/lib/features/filters/icons";
+import { filterTitle } from "@/lib/features/filters/filtersetUtils";
 import {
 	getMatchingInvasionFilterset,
 	getMatchingPokemonFilterset,
@@ -79,6 +84,7 @@ export type MapObjectIconProperties = {
 	imageRotation?: number;
 	isUnderlay?: boolean;
 	isAttachedBadge?: boolean;
+	textLabel?: string;
 	renderStateKey?: string;
 	expires: number | null;
 };
@@ -206,6 +212,7 @@ function getCircleFeature(
 function withVisualTransform(baseSize: number, filtersetModifiers: FiltersetModifiers | undefined) {
 	let imageSize = baseSize;
 	let imageRotation: number | undefined = undefined;
+	const colorFilter = filtersetModifiers?.colorFilter;
 
 	if (filtersetModifiers?.scale && filtersetModifiers.scale !== 1) {
 		imageSize *= filtersetModifiers.scale;
@@ -215,7 +222,12 @@ function withVisualTransform(baseSize: number, filtersetModifiers: FiltersetModi
 		imageRotation = filtersetModifiers.rotation;
 	}
 
-	return { imageSize, imageRotation };
+	return { imageSize, imageRotation, colorFilter };
+}
+
+function applyColorFilterUrl(imageUrl: string, colorFilter: string | undefined) {
+	if (!colorFilter) return imageUrl;
+	return getColorFilteredImageUrl(imageUrl, colorFilter);
 }
 
 function addModifierOverlayFeatures(
@@ -324,16 +336,59 @@ function getPokemonPvpMedalRank(data: PokemonData) {
 	return best;
 }
 
-const pvpMedalScaleRatio = 14 / 24;
+const badgeScaleRatio = 14 / 24;
 
-function getPokemonPvpMedalOffset(modifiers: { offsetX: number; offsetY: number }) {
-	// icon-offset scales with icon-size; adjust base offsets to the medal scale first.
-	const edgeOffset = (32 * (1 - pvpMedalScaleRatio)) / pvpMedalScaleRatio;
+function getBadgeOffset(modifiers: { offsetX: number; offsetY: number }) {
+	// icon-offset scales with icon-size; adjust base offsets to the badge scale first.
+	const edgeOffset = (32 * (1 - badgeScaleRatio)) / badgeScaleRatio;
 
 	return [
-		modifiers.offsetX / pvpMedalScaleRatio + edgeOffset,
-		modifiers.offsetY / pvpMedalScaleRatio + edgeOffset
+		modifiers.offsetX / badgeScaleRatio + edgeOffset,
+		modifiers.offsetY / badgeScaleRatio + edgeOffset
 	];
+}
+
+function resolveFiltersetBadgeIconUrl(icon: BaseFilterset["icon"]): string | undefined {
+	if (icon.uicon) {
+		return getIcon(icon.uicon.category, icon.uicon.params);
+	}
+	return undefined;
+}
+
+function getTextLabel(
+	filtersetModifiers: FiltersetModifiers | undefined,
+	filterset: AnyFilterset | undefined
+): string | undefined {
+	if (!filtersetModifiers?.showLabel || !filterset) return undefined;
+	return filterTitle(filterset);
+}
+
+function addFiltersetBadgeFeature(
+	subFeatures: MapObjectFeature[],
+	featureId: string,
+	coordinates: Point["coordinates"],
+	filtersetModifiers: FiltersetModifiers | undefined,
+	filtersetIcon: BaseFilterset["icon"] | undefined,
+	imageSize: number,
+	selectedScale: number,
+	modifiers: { offsetX: number; offsetY: number },
+	expires: number | null
+) {
+	if (!filtersetModifiers?.showBadge || !filtersetIcon) return;
+	const badgeUrl = resolveFiltersetBadgeIconUrl(filtersetIcon);
+	if (!badgeUrl) return;
+
+	subFeatures.push(
+		getIconFeature(featureId, coordinates, {
+			imageUrl: badgeUrl,
+			id: featureId,
+			imageSize: imageSize * badgeScaleRatio,
+			selectedScale: selectedScale,
+			imageOffset: getBadgeOffset(modifiers),
+			isAttachedBadge: true,
+			expires
+		})
+	);
 }
 
 function getFiltersetModifierStateKey(filtersetModifiers: FiltersetModifiers | undefined) {
@@ -467,12 +522,17 @@ export function updateFeatures(mapObjects: MapObjectsStateType) {
 
 	for (const obj of Object.values(mapObjects)) {
 		let iconFiltersetModifiers: FiltersetModifiers | undefined = undefined;
+		let matchedFiltersetIcon: BaseFilterset["icon"] | undefined = undefined;
+		let matchedFiltersetRef: AnyFilterset | undefined = undefined;
 
 		if (obj.type === MapObjectType.POKEMON) {
-			iconFiltersetModifiers = getMatchingPokemonFilterset(
+			const matchedFilterset = getMatchingPokemonFilterset(
 				obj as PokemonData,
 				pokemonFiltersets
-			)?.modifiers;
+			);
+			iconFiltersetModifiers = matchedFilterset?.modifiers;
+			matchedFiltersetIcon = matchedFilterset?.icon;
+			matchedFiltersetRef = matchedFilterset;
 			if (!shouldRegeneratePokemonFeatures(obj as PokemonData, iconFiltersetModifiers)) continue;
 		} else if (features[obj.type][obj.mapId]) {
 			continue;
@@ -547,18 +607,39 @@ export function updateFeatures(mapObjects: MapObjectsStateType) {
 						questImageOffset
 					);
 
-					subFeatures.push(
-						getIconFeature(mapId, [obj.lon, obj.lat], {
-							imageUrl: getIconReward(reward.type, getRewardIconInfo(reward)),
-							imageSize: questVisual.imageSize,
-							selectedScale: selectedScale,
-							imageOffset: questImageOffset,
-							...(questVisual.imageRotation !== undefined && {
-								imageRotation: questVisual.imageRotation
-							}),
-							id: obj.mapId,
-							expires: obj.alternative_quest_expiry ?? null
-						})
+					{
+						const questLabel = getTextLabel(
+							matchingQuestFilterset?.modifiers,
+							matchingQuestFilterset
+						);
+						subFeatures.push(
+							getIconFeature(mapId, [obj.lon, obj.lat], {
+								imageUrl: applyColorFilterUrl(
+									getIconReward(reward.type, getRewardIconInfo(reward)),
+									questVisual.colorFilter
+								),
+								imageSize: questVisual.imageSize,
+								selectedScale: selectedScale,
+								imageOffset: questImageOffset,
+								...(questVisual.imageRotation !== undefined && {
+									imageRotation: questVisual.imageRotation
+								}),
+								...(questLabel !== undefined && { textLabel: questLabel }),
+								id: obj.mapId,
+								expires: obj.alternative_quest_expiry ?? null
+							})
+						);
+					}
+					addFiltersetBadgeFeature(
+						subFeatures,
+						`${mapId}-badge`,
+						[obj.lon, obj.lat],
+						matchingQuestFilterset?.modifiers,
+						matchingQuestFilterset?.icon,
+						questVisual.imageSize,
+						selectedScale,
+						{ offsetX: questImageOffset[0], offsetY: questImageOffset[1] },
+						obj.alternative_quest_expiry ?? null
 					);
 				}
 				if (obj.quest_target && obj.quest_rewards) {
@@ -600,18 +681,39 @@ export function updateFeatures(mapObjects: MapObjectsStateType) {
 						questImageOffset
 					);
 
+					{
+					const questLabel = getTextLabel(
+						matchingQuestFilterset?.modifiers,
+						matchingQuestFilterset
+					);
 					subFeatures.push(
 						getIconFeature(mapId, [obj.lon, obj.lat], {
-							imageUrl: getIconReward(reward.type, getRewardIconInfo(reward)),
+							imageUrl: applyColorFilterUrl(
+								getIconReward(reward.type, getRewardIconInfo(reward)),
+								questVisual.colorFilter
+							),
 							imageSize: questVisual.imageSize,
 							selectedScale: selectedScale,
 							imageOffset: questImageOffset,
 							...(questVisual.imageRotation !== undefined && {
 								imageRotation: questVisual.imageRotation
 							}),
+							...(questLabel !== undefined && { textLabel: questLabel }),
 							id: obj.mapId,
 							expires: obj.quest_expiry ?? null
 						})
+					);
+				}
+					addFiltersetBadgeFeature(
+						subFeatures,
+						`${mapId}-badge`,
+						[obj.lon, obj.lat],
+						matchingQuestFilterset?.modifiers,
+						matchingQuestFilterset?.icon,
+						questVisual.imageSize,
+						selectedScale,
+						{ offsetX: questImageOffset[0], offsetY: questImageOffset[1] },
+						obj.quest_expiry ?? null
 					);
 				}
 			}
@@ -662,18 +764,39 @@ export function updateFeatures(mapObjects: MapObjectsStateType) {
 					invasionImageOffset
 				);
 
-				subFeatures.push(
-					getIconFeature(mapId, [obj.lon, obj.lat], {
-						imageUrl: getIconInvasion(incident.character, incident.confirmed),
-						imageSize: invasionVisual.imageSize,
-						selectedScale: selectedScale,
-						imageOffset: invasionImageOffset,
-						...(invasionVisual.imageRotation !== undefined && {
-							imageRotation: invasionVisual.imageRotation
-						}),
-						id: obj.mapId,
-						expires: incident.expiration
-					})
+				{
+					const invasionLabel = getTextLabel(
+						matchingInvasionFilterset?.modifiers,
+						matchingInvasionFilterset
+					);
+					subFeatures.push(
+						getIconFeature(mapId, [obj.lon, obj.lat], {
+							imageUrl: applyColorFilterUrl(
+								getIconInvasion(incident.character, incident.confirmed),
+								invasionVisual.colorFilter
+							),
+							imageSize: invasionVisual.imageSize,
+							selectedScale: selectedScale,
+							imageOffset: invasionImageOffset,
+							...(invasionVisual.imageRotation !== undefined && {
+								imageRotation: invasionVisual.imageRotation
+							}),
+							...(invasionLabel !== undefined && { textLabel: invasionLabel }),
+							id: obj.mapId,
+							expires: incident.expiration
+						})
+					);
+				}
+				addFiltersetBadgeFeature(
+					subFeatures,
+					`${mapId}-badge`,
+					[obj.lon, obj.lat],
+					matchingInvasionFilterset?.modifiers,
+					matchingInvasionFilterset?.icon,
+					invasionVisual.imageSize,
+					selectedScale,
+					{ offsetX: invasionImageOffset[0], offsetY: invasionImageOffset[1] },
+					incident.expiration
 				);
 				index += 1;
 			}
@@ -715,18 +838,39 @@ export function updateFeatures(mapObjects: MapObjectsStateType) {
 						raidImageOffset
 					);
 
-					subFeatures.push(
-						getIconFeature(mapId, [obj.lon, obj.lat], {
-							imageUrl: getIconPokemon(getRaidPokemon(obj)),
-							imageSize: raidVisual.imageSize,
-							selectedScale: selectedScale,
-							imageOffset: raidImageOffset,
-							...(raidVisual.imageRotation !== undefined && {
-								imageRotation: raidVisual.imageRotation
-							}),
-							id: obj.mapId,
-							expires: obj.raid_end_timestamp ?? null
-						})
+					{
+						const raidLabel = getTextLabel(
+							matchingRaidFilterset?.modifiers,
+							matchingRaidFilterset
+						);
+						subFeatures.push(
+							getIconFeature(mapId, [obj.lon, obj.lat], {
+								imageUrl: applyColorFilterUrl(
+									getIconPokemon(getRaidPokemon(obj)),
+									raidVisual.colorFilter
+								),
+								imageSize: raidVisual.imageSize,
+								selectedScale: selectedScale,
+								imageOffset: raidImageOffset,
+								...(raidVisual.imageRotation !== undefined && {
+									imageRotation: raidVisual.imageRotation
+								}),
+								...(raidLabel !== undefined && { textLabel: raidLabel }),
+								id: obj.mapId,
+								expires: obj.raid_end_timestamp ?? null
+							})
+						);
+					}
+					addFiltersetBadgeFeature(
+						subFeatures,
+						`${mapId}-badge`,
+						[obj.lon, obj.lat],
+						matchingRaidFilterset?.modifiers,
+						matchingRaidFilterset?.icon,
+						raidVisual.imageSize,
+						selectedScale,
+						{ offsetX: raidImageOffset[0], offsetY: raidImageOffset[1] },
+						obj.raid_end_timestamp ?? null
 					);
 				} else {
 					const mapId = obj.mapId + "-raidegg-" + obj.raid_spawn_timestamp;
@@ -756,18 +900,39 @@ export function updateFeatures(mapObjects: MapObjectsStateType) {
 						raidImageOffset
 					);
 
-					subFeatures.push(
-						getIconFeature(mapId, [obj.lon, obj.lat], {
-							imageUrl: getIconRaidEgg(obj.raid_level ?? 0),
-							imageSize: raidVisual.imageSize,
-							selectedScale: selectedScale,
-							imageOffset: raidImageOffset,
-							...(raidVisual.imageRotation !== undefined && {
-								imageRotation: raidVisual.imageRotation
-							}),
-							id: obj.mapId,
-							expires: obj.raid_battle_timestamp ?? null
-						})
+					{
+						const raidLabel = getTextLabel(
+							matchingRaidFilterset?.modifiers,
+							matchingRaidFilterset
+						);
+						subFeatures.push(
+							getIconFeature(mapId, [obj.lon, obj.lat], {
+								imageUrl: applyColorFilterUrl(
+									getIconRaidEgg(obj.raid_level ?? 0),
+									raidVisual.colorFilter
+								),
+								imageSize: raidVisual.imageSize,
+								selectedScale: selectedScale,
+								imageOffset: raidImageOffset,
+								...(raidVisual.imageRotation !== undefined && {
+									imageRotation: raidVisual.imageRotation
+								}),
+								...(raidLabel !== undefined && { textLabel: raidLabel }),
+								id: obj.mapId,
+								expires: obj.raid_battle_timestamp ?? null
+							})
+						);
+					}
+					addFiltersetBadgeFeature(
+						subFeatures,
+						`${mapId}-badge`,
+						[obj.lon, obj.lat],
+						matchingRaidFilterset?.modifiers,
+						matchingRaidFilterset?.icon,
+						raidVisual.imageSize,
+						selectedScale,
+						{ offsetX: raidImageOffset[0], offsetY: raidImageOffset[1] },
+						obj.raid_battle_timestamp ?? null
 					);
 				}
 			}
@@ -903,9 +1068,14 @@ export function updateFeatures(mapObjects: MapObjectsStateType) {
 				iconFiltersetModifiers
 			);
 
+			const textLabel = getTextLabel(iconFiltersetModifiers, matchedFiltersetRef);
+
 			subFeatures.push(
 				getIconFeature(obj.mapId, [obj.lon, obj.lat], {
-					imageUrl: overwriteIcon ?? getIconForMap(obj),
+					imageUrl: applyColorFilterUrl(
+						overwriteIcon ?? getIconForMap(obj),
+						iconVisual.colorFilter
+					),
 					id: obj.mapId,
 					imageSize: iconVisual.imageSize,
 					selectedScale: selectedScale,
@@ -916,21 +1086,43 @@ export function updateFeatures(mapObjects: MapObjectsStateType) {
 					...(pokemonRenderStateKey !== undefined && {
 						renderStateKey: pokemonRenderStateKey
 					}),
+					...(textLabel !== undefined && { textLabel }),
 					expires
 				})
 			);
 
-			if (pokemonMedalRank > 0) {
+			const badgeOffset = getBadgeOffset(modifiers);
+			const badgeSize = iconVisual.imageSize * badgeScaleRatio;
+			let hasBadge = false;
+
+			if (iconFiltersetModifiers?.showBadge && matchedFiltersetIcon) {
+				const badgeUrl = resolveFiltersetBadgeIconUrl(matchedFiltersetIcon);
+				if (badgeUrl) {
+					subFeatures.push(
+						getIconFeature(`${obj.mapId}-filterset-badge`, [obj.lon, obj.lat], {
+							imageUrl: badgeUrl,
+							id: obj.mapId,
+							imageSize: badgeSize,
+							selectedScale: selectedScale,
+							imageOffset: badgeOffset,
+							isAttachedBadge: true,
+							expires
+						})
+					);
+					hasBadge = true;
+				}
+			}
+
+			if (!hasBadge && pokemonMedalRank > 0) {
 				const medalIcon = getIconRankMedal(pokemonMedalRank);
 				if (medalIcon) {
-					// PvP medals are secondary runtime badges, not part of filter modifier transforms.
 					subFeatures.push(
 						getIconFeature(`${obj.mapId}-pvp-medal-${pokemonMedalRank}`, [obj.lon, obj.lat], {
 							imageUrl: medalIcon,
 							id: obj.mapId,
-							imageSize: iconVisual.imageSize * pvpMedalScaleRatio,
+							imageSize: badgeSize,
 							selectedScale: selectedScale,
-							imageOffset: getPokemonPvpMedalOffset(modifiers),
+							imageOffset: badgeOffset,
 							isAttachedBadge: true,
 							expires
 						})

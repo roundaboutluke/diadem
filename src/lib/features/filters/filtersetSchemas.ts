@@ -17,7 +17,10 @@ const FiltersetModifiersSchema = z
 				color: z.string(),
 				opacity: z.number().min(0).max(1).optional()
 			})
-			.optional()
+			.optional(),
+		colorFilter: z.enum(["negative", "grayscale", "sepia"]).optional(),
+		showBadge: z.boolean().optional(),
+		showLabel: z.boolean().optional()
 	})
 	.optional();
 

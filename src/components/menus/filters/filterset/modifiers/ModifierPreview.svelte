@@ -19,10 +19,12 @@
 	let {
 		modifiers = undefined,
 		iconUrl = undefined,
+		filtersetTitle = undefined,
 		compact = false
 	}: {
 		modifiers?: FiltersetModifiers;
 		iconUrl?: string;
+		filtersetTitle?: string;
 		compact?: boolean;
 	} = $props();
 
@@ -104,6 +106,7 @@
 			focusBaseImageSize: companionLayout.imageSize,
 			focusImageOffset: companionLayout.imageOffset,
 			modifiers,
+			filtersetTitle,
 			companionIconUrls,
 			companionImageSize: companionLayout.imageSize,
 			companionImageOffset: companionLayout.imageOffset
@@ -171,7 +174,18 @@
 						],
 						"icon-allow-overlap": true,
 						"icon-offset": ["get", "imageOffset"],
-						"icon-rotate": ["coalesce", ["get", "imageRotation"], 0]
+						"icon-rotate": ["coalesce", ["get", "imageRotation"], 0],
+						"text-field": ["coalesce", ["get", "textLabel"], ""],
+						"text-anchor": "top",
+						"text-offset": [0, 2.2],
+						"text-size": 11,
+						"text-allow-overlap": true,
+						"text-font": ["Open Sans Bold", "Arial Unicode MS Bold"]
+					}}
+					paint={{
+						"text-color": "#ffffff",
+						"text-halo-color": "#000000",
+						"text-halo-width": 1.5
 					}}
 				/>
 			</GeoJSON>

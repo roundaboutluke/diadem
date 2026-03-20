@@ -232,5 +232,11 @@
 	"modifier_scale": "Escala",
 	"modifier_rotation": "Rotação",
 	"modifier_priority_hint": "Se varios filtros corresponderem, o ultimo filtro ativado controla o visual.",
-	"modifier_none": "Qualquer"
+	"modifier_none": "Nenhum",
+	"modifier_color_filter": "Filtro de cor",
+	"modifier_color_filter_negative": "Negativo",
+	"modifier_color_filter_grayscale": "P/B",
+	"modifier_color_filter_sepia": "Sépia",
+	"modifier_show_badge": "Mostrar emblema",
+	"modifier_show_label": "Mostrar rótulo"
 }

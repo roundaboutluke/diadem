@@ -8,7 +8,8 @@ import {
 } from "@/lib/features/filters/modifierPresets";
 import {
 	getModifierOverlayIconUrl,
-	getModifierOverlayImageSize
+	getModifierOverlayImageSize,
+	getColorFilteredImageUrl
 } from "@/lib/map/modifierOverlayIcons";
 
 type PreviewFeatureLayer = "underlay" | "icon";
@@ -19,6 +20,7 @@ export type ModifierPreviewFeatureProperties = {
 	imageSize: number;
 	imageOffset?: number[];
 	imageRotation?: number;
+	textLabel?: string;
 };
 
 type PreviewMarker = {
@@ -27,6 +29,7 @@ type PreviewMarker = {
 	imageSize: number;
 	imageOffset: number[];
 	imageRotation?: number;
+	textLabel?: string;
 	layer: PreviewFeatureLayer;
 };
 
@@ -36,6 +39,7 @@ type ModifierPreviewFeatureCollectionArgs = {
 	focusBaseImageSize: number;
 	focusImageOffset: number[];
 	modifiers?: FiltersetModifiers;
+	filtersetTitle?: string;
 	companionIconUrls: string[];
 	companionImageSize: number;
 	companionImageOffset: number[];
@@ -61,6 +65,9 @@ function getPreviewFeature(marker: PreviewMarker): Feature<Point, ModifierPrevie
 			imageOffset: marker.imageOffset,
 			...(marker.imageRotation !== undefined && {
 				imageRotation: marker.imageRotation
+			}),
+			...(marker.textLabel !== undefined && {
+				textLabel: marker.textLabel
 			})
 		}
 	};
@@ -76,6 +83,7 @@ export function buildModifierPreviewFeatureCollection({
 	focusBaseImageSize,
 	focusImageOffset,
 	modifiers,
+	filtersetTitle,
 	companionIconUrls,
 	companionImageSize,
 	companionImageOffset
@@ -118,13 +126,20 @@ export function buildModifierPreviewFeatureCollection({
 		);
 	}
 
+	const filteredFocusIconUrl = modifiers?.colorFilter
+		? getColorFilteredImageUrl(focusIconUrl, modifiers.colorFilter)
+		: focusIconUrl;
+
+	const textLabel = modifiers?.showLabel && filtersetTitle ? filtersetTitle : undefined;
+
 	features.push(
 		getPreviewFeature({
 			coordinates: center,
-			imageUrl: focusIconUrl,
+			imageUrl: filteredFocusIconUrl,
 			imageSize: focusImageSize,
 			imageOffset: focusImageOffset,
 			imageRotation: modifiers?.rotation ?? undefined,
+			textLabel,
 			layer: "icon"
 		})
 	);

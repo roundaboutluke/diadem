@@ -1,12 +1,15 @@
 <script lang="ts">
-	import type { AnyFilterset } from "@/lib/features/filters/filtersets";
+	import type { AnyFilterset, ColorFilterType } from "@/lib/features/filters/filtersets";
 	import MenuTitle from "@/components/menus/MenuTitle.svelte";
 	import Switch from "@/components/ui/input/Switch.svelte";
 	import Slider from "@/components/ui/input/slider/Slider.svelte";
+	import SliderSteps from "@/components/ui/input/slider/SliderSteps.svelte";
 	import Card from "@/components/ui/Card.svelte";
 	import * as m from "@/lib/paraglide/messages";
 	import ColorSwatches from "@/components/menus/filters/filterset/modifiers/ColorSwatches.svelte";
 	import ModifierPreview from "@/components/menus/filters/filterset/modifiers/ModifierPreview.svelte";
+	import RadioGroup from "@/components/ui/input/selectgroup/RadioGroup.svelte";
+	import SelectGroupItem from "@/components/ui/input/selectgroup/SelectGroupItem.svelte";
 	import {
 		DEFAULT_BACKGROUND_COLOR,
 		DEFAULT_GLOW_COLOR,
@@ -14,6 +17,7 @@
 		MODIFIER_GLOW_OPACITY,
 		MODIFIER_GLOW_RADIUS
 	} from "@/lib/features/filters/modifierPresets";
+	import { filterTitle } from "@/lib/features/filters/filtersetUtils";
 
 	let {
 		data,
@@ -23,8 +27,15 @@
 		iconUrl?: string;
 	} = $props();
 
-	let glowEnabled = $derived(Boolean(data.modifiers?.glow));
-	let backgroundEnabled = $derived(Boolean(data.modifiers?.background));
+	type VisualMode = "none" | "glow" | "background";
+
+	let visualMode = $derived<VisualMode>(
+		data.modifiers?.glow ? "glow" : data.modifiers?.background ? "background" : "none"
+	);
+
+	let activeColor = $derived(
+		data.modifiers?.glow?.color ?? data.modifiers?.background?.color ?? DEFAULT_GLOW_COLOR
+	);
 
 	function ensureModifiers() {
 		if (!data.modifiers) data.modifiers = {};
@@ -36,43 +47,87 @@
 			!data.modifiers.glow &&
 			!data.modifiers.background &&
 			!data.modifiers.scale &&
-			!data.modifiers.rotation
+			!data.modifiers.rotation &&
+			!data.modifiers.colorFilter &&
+			!data.modifiers.showBadge &&
+			!data.modifiers.showLabel
 		) {
 			delete data.modifiers;
 		}
 	}
 
-	function getDefaultGlow() {
+	function getDefaultGlow(color?: string) {
 		return {
-			color: DEFAULT_GLOW_COLOR,
+			color: color ?? DEFAULT_GLOW_COLOR,
 			radius: MODIFIER_GLOW_RADIUS,
 			opacity: MODIFIER_GLOW_OPACITY
 		};
 	}
 
-	function getDefaultBackground() {
+	function getDefaultBackground(color?: string) {
 		return {
-			color: DEFAULT_BACKGROUND_COLOR,
+			color: color ?? DEFAULT_BACKGROUND_COLOR,
 			opacity: MODIFIER_BACKGROUND_OPACITY
 		};
 	}
 
-	function toggleGlow(enabled: boolean) {
+	function onVisualModeChange(mode: VisualMode) {
+		const currentColor = activeColor;
+
+		if (data.modifiers) {
+			delete data.modifiers.glow;
+			delete data.modifiers.background;
+		}
+
+		if (mode === "none") {
+			cleanupModifiers();
+			return;
+		}
+
+		ensureModifiers();
+		if (mode === "glow") {
+			data.modifiers!.glow = getDefaultGlow(currentColor);
+		} else {
+			data.modifiers!.background = getDefaultBackground(currentColor);
+		}
+	}
+
+	function onColorChange(color: string) {
+		if (data.modifiers?.glow) {
+			data.modifiers.glow = { ...data.modifiers.glow, color };
+		} else if (data.modifiers?.background) {
+			data.modifiers.background = { ...data.modifiers.background, color };
+		}
+	}
+
+	function onColorFilterChange(value: string) {
+		if (value === "none") {
+			if (data.modifiers) {
+				delete data.modifiers.colorFilter;
+				cleanupModifiers();
+			}
+			return;
+		}
+		ensureModifiers();
+		data.modifiers!.colorFilter = value as ColorFilterType;
+	}
+
+	function toggleBadge(enabled: boolean) {
 		if (enabled) {
 			ensureModifiers();
-			data.modifiers!.glow = getDefaultGlow();
+			data.modifiers!.showBadge = true;
 		} else if (data.modifiers) {
-			delete data.modifiers.glow;
+			delete data.modifiers.showBadge;
 			cleanupModifiers();
 		}
 	}
 
-	function toggleBackground(enabled: boolean) {
+	function toggleLabel(enabled: boolean) {
 		if (enabled) {
 			ensureModifiers();
-			data.modifiers!.background = getDefaultBackground();
+			data.modifiers!.showLabel = true;
 		} else if (data.modifiers) {
-			delete data.modifiers.background;
+			delete data.modifiers.showLabel;
 			cleanupModifiers();
 		}
 	}
@@ -107,84 +162,112 @@
 </script>
 
 <div class="space-y-3 pb-2">
-	<ModifierPreview modifiers={data.modifiers} {iconUrl} />
+	<ModifierPreview modifiers={data.modifiers} {iconUrl} filtersetTitle={filterTitle(data)} />
 
 	<Card class="p-3 space-y-3">
-		<div class="flex items-center justify-between gap-2">
-			<MenuTitle title={m.modifier_glow()} />
-			<Switch checked={glowEnabled} onCheckedChange={toggleGlow} />
-		</div>
-		{#if data.modifiers?.glow}
+		<MenuTitle title={m.modifier_visual()} />
+		<RadioGroup
+			value={visualMode}
+			onValueChange={(value) => onVisualModeChange(value as VisualMode)}
+			class="self-center"
+		>
+			<SelectGroupItem class="p-2 w-full" value="none">
+				{m.modifier_none()}
+			</SelectGroupItem>
+			<SelectGroupItem class="p-2 w-full" value="glow">
+				{m.modifier_glow()}
+			</SelectGroupItem>
+			<SelectGroupItem class="p-2 w-full" value="background">
+				{m.modifier_background()}
+			</SelectGroupItem>
+		</RadioGroup>
+		{#if visualMode !== "none"}
 			<div class="space-y-2">
-				<p class="text-sm text-muted-foreground">{m.modifier_glow_color()}</p>
-				<ColorSwatches
-					selected={data.modifiers.glow.color}
-					onchange={(color) => {
-						if (data.modifiers?.glow) {
-							data.modifiers.glow = { ...getDefaultGlow(), ...data.modifiers.glow, color };
-						}
-					}}
-				/>
-				<Slider
-					title={m.modifier_glow_intensity()}
-					min={0.2}
-					max={1}
-					step={0.05}
-					value={data.modifiers.glow.opacity ?? MODIFIER_GLOW_OPACITY}
-					onchange={(value) => {
-						if (data.modifiers?.glow) {
-							data.modifiers.glow = {
-								...getDefaultGlow(),
-								...data.modifiers.glow,
-								opacity: Number(value.toFixed(2))
-							};
-						}
-					}}
-				/>
+				<ColorSwatches selected={activeColor} onchange={onColorChange} />
+				{#if data.modifiers?.glow}
+					<Slider
+						title={m.modifier_glow_intensity()}
+						min={0.2}
+						max={1}
+						step={0.05}
+						value={data.modifiers.glow.opacity ?? MODIFIER_GLOW_OPACITY}
+						onchange={(value) => {
+							if (data.modifiers?.glow) {
+								data.modifiers.glow = {
+									...data.modifiers.glow,
+									opacity: Number(value.toFixed(2))
+								};
+							}
+						}}
+					/>
+				{/if}
 			</div>
 		{/if}
 	</Card>
 
 	<Card class="p-3 space-y-3">
-		<div class="flex items-center justify-between gap-2">
-			<MenuTitle title={m.modifier_background()} />
-			<Switch checked={backgroundEnabled} onCheckedChange={toggleBackground} />
-		</div>
-		{#if data.modifiers?.background}
-			<div class="space-y-2">
-				<p class="text-sm text-muted-foreground">{m.modifier_background_color()}</p>
-				<ColorSwatches
-					selected={data.modifiers.background.color}
-					onchange={(color) => {
-						if (data.modifiers?.background) {
-							data.modifiers.background = {
-								...getDefaultBackground(),
-								...data.modifiers.background,
-								color
-							};
-						}
-					}}
-				/>
-			</div>
-		{/if}
-	</Card>
-
-	<Card class="p-3">
-		<Slider
-			title={m.modifier_scale()}
-			min={0.5}
-			max={2}
-			step={0.05}
+		<MenuTitle title={m.modifier_scale()} />
+		<SliderSteps
 			value={data.modifiers?.scale ?? 1}
 			onchange={setScale}
+			steps={[0.75, 1, 1.25, 1.5]}
+			labels={{
+				0.75: "S",
+				1: "M",
+				1.25: "L",
+				1.5: "XL"
+			}}
 		/>
-		<Slider
-			title={m.modifier_rotation()}
-			min={0}
-			max={360}
-			step={5}
+		<MenuTitle title={m.modifier_rotation()} />
+		<SliderSteps
 			value={data.modifiers?.rotation ?? 0}
 			onchange={setRotation}
+			steps={[0, 90, 180, 270]}
+			labels={{
+				0: "0°",
+				90: "90°",
+				180: "180°",
+				270: "270°"
+			}}
 		/>
+	</Card>
+
+	<Card class="p-3 space-y-3">
+		<MenuTitle title={m.modifier_color_filter()} />
+		<RadioGroup
+			value={data.modifiers?.colorFilter ?? "none"}
+			onValueChange={onColorFilterChange}
+			class="self-center"
+		>
+			<SelectGroupItem class="p-2 w-full" value="none">
+				{m.modifier_none()}
+			</SelectGroupItem>
+			<SelectGroupItem class="p-2 w-full" value="negative">
+				{m.modifier_color_filter_negative()}
+			</SelectGroupItem>
+			<SelectGroupItem class="p-2 w-full" value="grayscale">
+				{m.modifier_color_filter_grayscale()}
+			</SelectGroupItem>
+			<SelectGroupItem class="p-2 w-full" value="sepia">
+				{m.modifier_color_filter_sepia()}
+			</SelectGroupItem>
+		</RadioGroup>
+	</Card>
+
+	<Card class="p-3 space-y-3">
+		<div class="flex items-center justify-between gap-2">
+			<MenuTitle title={m.modifier_show_badge()} />
+			<Switch
+				checked={data.modifiers?.showBadge ?? false}
+				onCheckedChange={toggleBadge}
+			/>
+		</div>
+		<div class="flex items-center justify-between gap-2">
+			<MenuTitle title={m.modifier_show_label()} />
+			<Switch
+				checked={data.modifiers?.showLabel ?? false}
+				onCheckedChange={toggleLabel}
+			/>
+		</div>
 	</Card>
 </div>
