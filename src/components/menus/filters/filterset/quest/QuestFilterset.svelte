@@ -169,6 +169,7 @@
 					<ModifierPreview
 						modifiers={data.modifiers}
 						iconUrl={getModifierPreviewIcon(data)}
+						filterset={data}
 						compact
 					/>
 					{#snippet page(thisData: FiltersetQuest)}

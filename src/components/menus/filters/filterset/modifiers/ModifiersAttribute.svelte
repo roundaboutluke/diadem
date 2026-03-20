@@ -17,9 +17,6 @@
 		MODIFIER_GLOW_OPACITY,
 		MODIFIER_GLOW_RADIUS
 	} from "@/lib/features/filters/modifierPresets";
-	import { filterTitle } from "@/lib/features/filters/filtersetUtils";
-	import { getIcon } from "@/lib/features/filters/icons";
-	import { getEmojiImageUrl } from "@/lib/map/modifierOverlayIcons";
 
 	let {
 		data,
@@ -37,14 +34,6 @@
 
 	let activeColor = $derived(
 		data.modifiers?.glow?.color ?? data.modifiers?.background?.color ?? DEFAULT_GLOW_COLOR
-	);
-
-	let badgeIconUrl = $derived(
-		data.icon.uicon
-			? getIcon(data.icon.uicon.category, data.icon.uicon.params)
-			: data.icon.emoji
-				? getEmojiImageUrl(data.icon.emoji)
-				: undefined
 	);
 
 	function ensureModifiers() {
@@ -172,7 +161,7 @@
 </script>
 
 <div class="space-y-3 pb-2">
-	<ModifierPreview modifiers={data.modifiers} {iconUrl} filtersetTitle={filterTitle(data)} {badgeIconUrl} />
+	<ModifierPreview modifiers={data.modifiers} {iconUrl} filterset={data} />
 
 	<Card class="p-3 space-y-3">
 		<MenuTitle title={m.modifier_visual()} />
@@ -192,7 +181,7 @@
 			</SelectGroupItem>
 		</RadioGroup>
 		{#if visualMode !== "none"}
-			<div class="space-y-2 pt-1">
+			<div class="space-y-2 pt-2">
 				<ColorSwatches selected={activeColor} onchange={onColorChange} />
 				{#if data.modifiers?.glow}
 					<Slider

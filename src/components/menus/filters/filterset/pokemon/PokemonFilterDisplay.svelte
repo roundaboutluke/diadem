@@ -73,7 +73,7 @@
 			<div class="bg-border h-px w-full"></div>
 		</div>
 		<div class="w-full">
-			<ModifierPreview modifiers={data.modifiers} iconUrl={previewIconUrl} />
+			<ModifierPreview modifiers={data.modifiers} iconUrl={previewIconUrl} filterset={data} />
 		</div>
 	{/if}
 </FilterDisplay>

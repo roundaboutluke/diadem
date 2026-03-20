@@ -221,7 +221,7 @@
 
 			<AttributesOverview>
 				<Attribute label={m.modifier_visual()}>
-					<ModifierPreview modifiers={data.modifiers} iconUrl={previewIconUrl} compact />
+					<ModifierPreview modifiers={data.modifiers} iconUrl={previewIconUrl} filterset={data} compact />
 					{#snippet page(thisData: FiltersetPokemon)}
 						<ModifiersAttribute data={thisData} iconUrl={previewIconUrl} />
 					{/snippet}

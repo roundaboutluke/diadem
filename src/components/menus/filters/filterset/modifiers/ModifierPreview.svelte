@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { GeoJSON, MapLibre, SymbolLayer } from "svelte-maplibre";
-	import type { FiltersetModifiers } from "@/lib/features/filters/filtersets";
+	import type { AnyFilterset, FiltersetModifiers } from "@/lib/features/filters/filtersets";
 	import type maplibre from "maplibre-gl";
 	import { ensureMapImages } from "@/lib/map/images";
 	import {
@@ -12,6 +12,9 @@
 	import { getUserSettings } from "@/lib/services/userSettings.svelte";
 	import { getIconPokemon, getUiconSetDetails } from "@/lib/services/uicons.svelte";
 	import { getMapStyle, mapStyleFromId } from "@/lib/utils/mapStyle";
+	import { getIcon } from "@/lib/features/filters/icons";
+	import { getEmojiImageUrl } from "@/lib/map/modifierOverlayIcons";
+	import { filterTitle } from "@/lib/features/filters/filtersetUtils";
 	import type { FeatureCollection, Point } from "geojson";
 
 	type PreviewCenter = [number, number];
@@ -19,16 +22,23 @@
 	let {
 		modifiers = undefined,
 		iconUrl = undefined,
-		filtersetTitle = undefined,
-		badgeIconUrl = undefined,
+		filterset = undefined,
 		compact = false
 	}: {
 		modifiers?: FiltersetModifiers;
 		iconUrl?: string;
-		filtersetTitle?: string;
-		badgeIconUrl?: string;
+		filterset?: AnyFilterset;
 		compact?: boolean;
 	} = $props();
+
+	let badgeIconUrl = $derived.by(() => {
+		if (!filterset?.icon) return undefined;
+		if (filterset.icon.uicon) return getIcon(filterset.icon.uicon.category, filterset.icon.uicon.params);
+		if (filterset.icon.emoji) return getEmojiImageUrl(filterset.icon.emoji);
+		return undefined;
+	});
+
+	let resolvedFiltersetTitle = $derived(filterset ? filterTitle(filterset) : undefined);
 
 	const previewZoom = 18;
 	const companionPokemon = [
@@ -108,7 +118,7 @@
 			focusBaseImageSize: companionLayout.imageSize,
 			focusImageOffset: companionLayout.imageOffset,
 			modifiers,
-			filtersetTitle,
+			filtersetTitle: resolvedFiltersetTitle,
 			badgeIconUrl,
 			companionIconUrls,
 			companionImageSize: companionLayout.imageSize,
