@@ -172,6 +172,39 @@
 	</div>
 
 	<Card class="p-3 space-y-3">
+		<div class="flex items-center justify-between gap-2">
+			<MenuTitle title={m.modifier_show_badge()} />
+			<Switch
+				checked={data.modifiers?.showBadge ?? false}
+				onCheckedChange={toggleBadge}
+			/>
+		</div>
+		<div class="flex items-center justify-between gap-2">
+			<MenuTitle title={m.modifier_show_label()} />
+			<Switch
+				checked={!!data.modifiers?.showLabel}
+				onCheckedChange={toggleLabel}
+			/>
+		</div>
+		{#if data.modifiers?.showLabel}
+			<Input
+				class="w-full"
+				value={data.modifiers.showLabel}
+				onchange={(e) => {
+					if (data.modifiers) {
+						const value = e.target?.value?.trim();
+						if (value) {
+							data.modifiers.showLabel = value;
+						} else {
+							data.modifiers.showLabel = filterTitle(data);
+						}
+					}
+				}}
+			/>
+		{/if}
+	</Card>
+
+	<Card class="p-3 space-y-3">
 		<MenuTitle title={m.modifier_visual()} />
 		<RadioGroup
 			value={visualMode}
@@ -248,38 +281,5 @@
 				270: "270°"
 			}}
 		/>
-	</Card>
-
-	<Card class="p-3 space-y-3">
-		<div class="flex items-center justify-between gap-2">
-			<MenuTitle title={m.modifier_show_badge()} />
-			<Switch
-				checked={data.modifiers?.showBadge ?? false}
-				onCheckedChange={toggleBadge}
-			/>
-		</div>
-		<div class="flex items-center justify-between gap-2">
-			<MenuTitle title={m.modifier_show_label()} />
-			<Switch
-				checked={!!data.modifiers?.showLabel}
-				onCheckedChange={toggleLabel}
-			/>
-		</div>
-		{#if data.modifiers?.showLabel}
-			<Input
-				class="w-full"
-				value={data.modifiers.showLabel}
-				onchange={(e) => {
-					if (data.modifiers) {
-						const value = e.target?.value?.trim();
-						if (value) {
-							data.modifiers.showLabel = value;
-						} else {
-							data.modifiers.showLabel = filterTitle(data);
-						}
-					}
-				}}
-			/>
-		{/if}
 	</Card>
 </div>
