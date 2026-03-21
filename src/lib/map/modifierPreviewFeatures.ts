@@ -9,8 +9,7 @@ import {
 import {
 	getModifierOverlayIconUrl,
 	getModifierOverlayImageSize,
-	BADGE_SCALE_RATIO,
-	getBadgeOffset
+	BADGE_SCALE_RATIO
 } from "@/lib/map/modifierOverlayIcons";
 
 type PreviewFeatureLayer = "underlay" | "icon" | "badge";
@@ -142,12 +141,19 @@ export function buildModifierPreviewFeatureCollection({
 	);
 
 	if (modifiers?.showBadge && badgeIconUrl) {
+		// Badge source images are not resized to 64px like on the main map,
+		// so halve the scale to compensate for the larger native resolution.
+		const previewBadgeScale = BADGE_SCALE_RATIO * 0.5;
+		const badgeEdgeOffset = (32 * (1 - previewBadgeScale)) / previewBadgeScale;
 		features.push(
 			getPreviewFeature({
 				coordinates: center,
 				imageUrl: badgeIconUrl,
-				imageSize: focusImageSize * BADGE_SCALE_RATIO,
-				imageOffset: getBadgeOffset(focusImageOffset[0], focusImageOffset[1]),
+				imageSize: focusImageSize * previewBadgeScale,
+				imageOffset: [
+					focusImageOffset[0] / previewBadgeScale + badgeEdgeOffset,
+					focusImageOffset[1] / previewBadgeScale + badgeEdgeOffset
+				],
 				layer: "badge"
 			})
 		);

@@ -12,7 +12,7 @@
 	import { getUserSettings } from "@/lib/services/userSettings.svelte";
 	import { getIconPokemon, getUiconSetDetails } from "@/lib/services/uicons.svelte";
 	import { getMapStyle, mapStyleFromId } from "@/lib/utils/mapStyle";
-	import { getIcon } from "@/lib/features/filters/icons";
+	import { getIcon, IconCategory } from "@/lib/features/filters/icons";
 	import { getEmojiImageUrl } from "@/lib/map/modifierOverlayIcons";
 	import type { FeatureCollection, Point } from "geojson";
 
@@ -99,7 +99,13 @@
 	);
 
 	let companionLayout = $derived(getPokemonPreviewLayout());
-	let focusIconUrl = $derived(iconUrl ?? "");
+	let focusIconUrl = $derived.by(() => {
+		if (filterset?.icon?.uicon?.category === IconCategory.POKEMON) {
+			return getIcon(IconCategory.POKEMON, filterset.icon.uicon.params);
+		}
+		if (iconUrl) return iconUrl;
+		return getIconPokemon({ pokemon_id: 25, form: 0 });
+	});
 	let companionIconUrls = $derived(
 		companionPokemon.map((pokemon) =>
 			getIconPokemon({ pokemon_id: pokemon.pokemon_id, form: pokemon.form })

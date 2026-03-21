@@ -33,9 +33,7 @@
 	let previewIconUrl = $derived.by(() => {
 		const pokemon = data?.pokemon;
 		const selected = pokemon?.[pokemon.length - 1];
-		if (!selected) {
-			return getIconPokemon({ pokemon_id: 0, form: 0 });
-		}
+		if (!selected) return undefined;
 		return getIconPokemon({
 			pokemon_id: selected.pokemon_id,
 			form: selected.form_id
