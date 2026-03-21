@@ -228,7 +228,7 @@
 	"modifier_glow_intensity": "Intensidade do brilho",
 	"modifier_background": "Fundo",
 	"modifier_background_color": "Cor de fundo",
-	"modifier_background_intensity": "Intensidade do fundo",
+	"modifier_background_intensity": "Transparência do fundo",
 	"modifier_scale": "Escala",
 	"modifier_rotation": "Rotação",
 	"modifier_priority_hint": "Se varios filtros corresponderem, o ultimo filtro ativado controla o visual.",
