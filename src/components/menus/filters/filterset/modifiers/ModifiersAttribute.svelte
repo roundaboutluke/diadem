@@ -2,7 +2,6 @@
 	import type { AnyFilterset } from "@/lib/features/filters/filtersets";
 	import MenuTitle from "@/components/menus/MenuTitle.svelte";
 	import Switch from "@/components/ui/input/Switch.svelte";
-	import Slider from "@/components/ui/input/slider/Slider.svelte";
 	import SliderSteps from "@/components/ui/input/slider/SliderSteps.svelte";
 	import Card from "@/components/ui/Card.svelte";
 	import Input from "@/components/ui/input/Input.svelte";
@@ -100,6 +99,24 @@
 		}
 	}
 
+	function setGlowIntensity(value: number) {
+		if (data.modifiers?.glow) {
+			data.modifiers.glow = {
+				...data.modifiers.glow,
+				opacity: value
+			};
+		}
+	}
+
+	function setBackgroundOpacity(value: number) {
+		if (data.modifiers?.background) {
+			data.modifiers.background = {
+				...data.modifiers.background,
+				opacity: value
+			};
+		}
+	}
+
 	function toggleBadge(enabled: boolean) {
 		if (enabled) {
 			ensureModifiers();
@@ -150,7 +167,9 @@
 </script>
 
 <div class="space-y-3 pb-2">
-	<ModifierPreview modifiers={data.modifiers} {iconUrl} filterset={data} />
+	<div class="sticky top-0 z-10">
+		<ModifierPreview modifiers={data.modifiers} {iconUrl} filterset={data} />
+	</div>
 
 	<Card class="p-3 space-y-3">
 		<MenuTitle title={m.modifier_visual()} />
@@ -173,19 +192,30 @@
 			<div class="space-y-2 pt-3">
 				<ColorSwatches selected={activeColor} onchange={onColorChange} />
 				{#if data.modifiers?.glow}
-					<Slider
-						title={m.modifier_glow_intensity()}
-						min={0.2}
-						max={1}
-						step={0.05}
+					<MenuTitle title={m.modifier_glow_intensity()} />
+					<SliderSteps
 						value={data.modifiers.glow.opacity ?? MODIFIER_GLOW_OPACITY}
-						onchange={(value) => {
-							if (data.modifiers?.glow) {
-								data.modifiers.glow = {
-									...data.modifiers.glow,
-									opacity: Number(value.toFixed(2))
-								};
-							}
+						onchange={setGlowIntensity}
+						steps={[0.25, 0.5, 0.75, 1]}
+						labels={{
+							0.25: "25%",
+							0.5: "50%",
+							0.75: "75%",
+							1: "100%"
+						}}
+					/>
+				{/if}
+				{#if data.modifiers?.background}
+					<MenuTitle title={m.modifier_background_intensity()} />
+					<SliderSteps
+						value={data.modifiers.background.opacity ?? MODIFIER_BACKGROUND_OPACITY}
+						onchange={setBackgroundOpacity}
+						steps={[0.25, 0.5, 0.75, 1]}
+						labels={{
+							0.25: "25%",
+							0.5: "50%",
+							0.75: "75%",
+							1: "100%"
 						}}
 					/>
 				{/if}
