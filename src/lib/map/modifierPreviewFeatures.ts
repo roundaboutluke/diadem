@@ -78,7 +78,6 @@ function getCompanionCoordinates(center: Point["coordinates"], bearing: number, 
 	return destination(point(center), distanceMeters / 1000, bearing).geometry.coordinates as Point["coordinates"];
 }
 
-
 export function buildModifierPreviewFeatureCollection({
 	center,
 	focusIconUrl,

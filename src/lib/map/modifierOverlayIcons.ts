@@ -114,4 +114,3 @@ export function getEmojiImageUrl(emoji: string): string {
 	emojiImageCache.set(emoji, url);
 	return url;
 }
-

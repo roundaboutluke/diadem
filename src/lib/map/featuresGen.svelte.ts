@@ -307,29 +307,6 @@ function getModifiers(iconSet: UiconSet | undefined, type: UiconSetModifierType)
 	return { scale, offsetY, offsetX, spacing };
 }
 
-function getBestPvpLeagueRank(entries: PokemonData["pvp"]["great"] | PokemonData["pvp"]["ultra"]) {
-	if (!entries?.length) return 0;
-
-	const ranks = entries
-		.map((entry) => entry.rank)
-		.filter((rank) => Number.isInteger(rank) && rank > 0);
-	if (!ranks.length) return 0;
-	return Math.min(...ranks);
-}
-
-function getPokemonPvpMedalRank(data: PokemonData) {
-	const ranks = [
-		getBestPvpLeagueRank(data.pvp?.great),
-		getBestPvpLeagueRank(data.pvp?.ultra)
-	].filter((rank) => rank > 0);
-
-	if (!ranks.length) return 0;
-
-	const best = Math.min(...ranks);
-	if (best < 1 || best > 3) return 0;
-	return best;
-}
-
 function resolveFiltersetBadgeIconUrl(icon: BaseFilterset["icon"]): string | undefined {
 	if (icon.uicon) {
 		return getIcon(icon.uicon.category, icon.uicon.params);
@@ -390,7 +367,6 @@ function getPokemonFeatureStateKey(
 ) {
 	return [
 		data.expire_timestamp ?? "",
-		getPokemonPvpMedalRank(data),
 		getFiltersetModifierStateKey(filtersetModifiers)
 	].join("|");
 }
@@ -656,25 +632,25 @@ export function updateFeatures(mapObjects: MapObjectsStateType) {
 						questImageOffset
 					);
 
-					{
-					const questLabel = getTextLabel(
-						matchingQuestFilterset?.modifiers
-					);
-					subFeatures.push(
-						getIconFeature(mapId, [obj.lon, obj.lat], {
-							imageUrl: getIconReward(reward.type, getRewardIconInfo(reward)),
-							imageSize: questVisual.imageSize,
-							selectedScale: selectedScale,
-							imageOffset: questImageOffset,
-							...(questVisual.imageRotation !== undefined && {
-								imageRotation: questVisual.imageRotation
-							}),
-							...(questLabel !== undefined && { textLabel: questLabel }),
-							id: obj.mapId,
-							expires: obj.quest_expiry ?? null
-						})
-					);
-				}
+						{
+						const questLabel = getTextLabel(
+							matchingQuestFilterset?.modifiers
+						);
+						subFeatures.push(
+							getIconFeature(mapId, [obj.lon, obj.lat], {
+								imageUrl: getIconReward(reward.type, getRewardIconInfo(reward)),
+								imageSize: questVisual.imageSize,
+								selectedScale: selectedScale,
+								imageOffset: questImageOffset,
+								...(questVisual.imageRotation !== undefined && {
+									imageRotation: questVisual.imageRotation
+								}),
+								...(questLabel !== undefined && { textLabel: questLabel }),
+								id: obj.mapId,
+								expires: obj.quest_expiry ?? null
+							})
+						);
+					}
 					addFiltersetBadgeFeature(
 						subFeatures,
 						`${mapId}-badge`,
