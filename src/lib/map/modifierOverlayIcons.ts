@@ -81,6 +81,16 @@ export function getModifierOverlayImageSize(baseImageSize: number, scaleMultipli
 	return (iconRadius * scaleMultiplier * 2) / OVERLAY_ICON_SIZE;
 }
 
+export const BADGE_SCALE_RATIO = 14 / 24;
+
+export function getBadgeOffset(baseOffsetX: number, baseOffsetY: number) {
+	const edgeOffset = (32 * (1 - BADGE_SCALE_RATIO)) / BADGE_SCALE_RATIO;
+	return [
+		baseOffsetX / BADGE_SCALE_RATIO + edgeOffset,
+		baseOffsetY / BADGE_SCALE_RATIO + edgeOffset
+	];
+}
+
 const emojiImageCache = new Map<string, string>();
 
 export function getEmojiImageUrl(emoji: string): string {

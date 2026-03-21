@@ -8,7 +8,9 @@ import {
 } from "@/lib/features/filters/modifierPresets";
 import {
 	getModifierOverlayIconUrl,
-	getModifierOverlayImageSize
+	getModifierOverlayImageSize,
+	BADGE_SCALE_RATIO,
+	getBadgeOffset
 } from "@/lib/map/modifierOverlayIcons";
 
 type PreviewFeatureLayer = "underlay" | "icon" | "badge";
@@ -76,15 +78,6 @@ function getCompanionCoordinates(center: Point["coordinates"], bearing: number, 
 	return destination(point(center), distanceMeters / 1000, bearing).geometry.coordinates as Point["coordinates"];
 }
 
-const badgeScaleRatio = 14 / 24;
-
-function getBadgeOffset(baseOffset: number[]) {
-	const edgeOffset = (32 * (1 - badgeScaleRatio)) / badgeScaleRatio;
-	return [
-		baseOffset[0] / badgeScaleRatio + edgeOffset,
-		baseOffset[1] / badgeScaleRatio + edgeOffset
-	];
-}
 
 export function buildModifierPreviewFeatureCollection({
 	center,
@@ -154,8 +147,8 @@ export function buildModifierPreviewFeatureCollection({
 			getPreviewFeature({
 				coordinates: center,
 				imageUrl: badgeIconUrl,
-				imageSize: focusImageSize * badgeScaleRatio,
-				imageOffset: getBadgeOffset(focusImageOffset),
+				imageSize: focusImageSize * BADGE_SCALE_RATIO,
+				imageOffset: getBadgeOffset(focusImageOffset[0], focusImageOffset[1]),
 				layer: "badge"
 			})
 		);

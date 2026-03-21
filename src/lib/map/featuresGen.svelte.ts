@@ -5,7 +5,6 @@ import {
 	getIconGym,
 	getIconInvasion,
 	getIconPokemon,
-	getIconRankMedal,
 	getIconRaidEgg,
 	getIconReward
 } from "@/lib/services/uicons.svelte.js";
@@ -41,10 +40,11 @@ import { shouldDisplayNest } from "@/lib/utils/nestUtils";
 import {
 	getModifierOverlayIconUrl,
 	getModifierOverlayImageSize,
-	getEmojiImageUrl
+	getEmojiImageUrl,
+	BADGE_SCALE_RATIO,
+	getBadgeOffset
 } from "@/lib/map/modifierOverlayIcons";
 import type {
-	AnyFilterset,
 	BaseFilterset,
 	FiltersetInvasion,
 	FiltersetModifiers,
@@ -330,18 +330,6 @@ function getPokemonPvpMedalRank(data: PokemonData) {
 	return best;
 }
 
-const badgeScaleRatio = 14 / 24;
-
-function getBadgeOffset(modifiers: { offsetX: number; offsetY: number }) {
-	// icon-offset scales with icon-size; adjust base offsets to the badge scale first.
-	const edgeOffset = (32 * (1 - badgeScaleRatio)) / badgeScaleRatio;
-
-	return [
-		modifiers.offsetX / badgeScaleRatio + edgeOffset,
-		modifiers.offsetY / badgeScaleRatio + edgeOffset
-	];
-}
-
 function resolveFiltersetBadgeIconUrl(icon: BaseFilterset["icon"]): string | undefined {
 	if (icon.uicon) {
 		return getIcon(icon.uicon.category, icon.uicon.params);
@@ -376,9 +364,9 @@ function addFiltersetBadgeFeature(
 		getIconFeature(featureId, coordinates, {
 			imageUrl: badgeUrl,
 			id: featureId,
-			imageSize: imageSize * badgeScaleRatio,
+			imageSize: imageSize * BADGE_SCALE_RATIO,
 			selectedScale: selectedScale,
-			imageOffset: getBadgeOffset(modifiers),
+			imageOffset: getBadgeOffset(modifiers.offsetX, modifiers.offsetY),
 			isAttachedBadge: true,
 			expires
 		})
@@ -517,7 +505,6 @@ export function updateFeatures(mapObjects: MapObjectsStateType) {
 	for (const obj of Object.values(mapObjects)) {
 		let iconFiltersetModifiers: FiltersetModifiers | undefined = undefined;
 		let matchedFiltersetIcon: BaseFilterset["icon"] | undefined = undefined;
-		let matchedFiltersetRef: AnyFilterset | undefined = undefined;
 
 		if (obj.type === MapObjectType.POKEMON) {
 			const matchedFilterset = getMatchingPokemonFilterset(
@@ -526,7 +513,6 @@ export function updateFeatures(mapObjects: MapObjectsStateType) {
 			);
 			iconFiltersetModifiers = matchedFilterset?.modifiers;
 			matchedFiltersetIcon = matchedFilterset?.icon;
-			matchedFiltersetRef = matchedFilterset;
 			if (!shouldRegeneratePokemonFeatures(obj as PokemonData, iconFiltersetModifiers)) continue;
 		} else if (features[obj.type][obj.mapId]) {
 			continue;
@@ -539,7 +525,6 @@ export function updateFeatures(mapObjects: MapObjectsStateType) {
 		let showThis: boolean = true;
 		const modifiers = getModifiers(userIconSet, iconType);
 		let expires = null;
-		let pokemonMedalRank = 0;
 		let pokemonRenderStateKey: string | undefined = undefined;
 
 		const subFeatures: MapObjectFeature[] = [];
@@ -913,7 +898,6 @@ export function updateFeatures(mapObjects: MapObjectsStateType) {
 		} else if (obj.type === MapObjectType.POKEMON) {
 			if (obj.expire_timestamp && obj.expire_timestamp < timestamp) continue;
 			expires = obj.expire_timestamp;
-			pokemonMedalRank = getPokemonPvpMedalRank(obj as PokemonData);
 			pokemonRenderStateKey = getPokemonFeatureStateKey(obj as PokemonData, iconFiltersetModifiers);
 		} else if (obj.type === MapObjectType.STATION) {
 			showThis = false;
@@ -1062,34 +1046,14 @@ export function updateFeatures(mapObjects: MapObjectsStateType) {
 				})
 			);
 
-			const badgeOffset = getBadgeOffset(modifiers);
-			const badgeSize = iconVisual.imageSize * badgeScaleRatio;
-			let hasBadge = false;
-
 			if (iconFiltersetModifiers?.showBadge && matchedFiltersetIcon) {
+				const badgeOffset = getBadgeOffset(modifiers.offsetX, modifiers.offsetY);
+				const badgeSize = iconVisual.imageSize * BADGE_SCALE_RATIO;
 				const badgeUrl = resolveFiltersetBadgeIconUrl(matchedFiltersetIcon);
 				if (badgeUrl) {
 					subFeatures.push(
 						getIconFeature(`${obj.mapId}-filterset-badge`, [obj.lon, obj.lat], {
 							imageUrl: badgeUrl,
-							id: obj.mapId,
-							imageSize: badgeSize,
-							selectedScale: selectedScale,
-							imageOffset: badgeOffset,
-							isAttachedBadge: true,
-							expires
-						})
-					);
-					hasBadge = true;
-				}
-			}
-
-			if (!hasBadge && pokemonMedalRank > 0) {
-				const medalIcon = getIconRankMedal(pokemonMedalRank);
-				if (medalIcon) {
-					subFeatures.push(
-						getIconFeature(`${obj.mapId}-pvp-medal-${pokemonMedalRank}`, [obj.lon, obj.lat], {
-							imageUrl: medalIcon,
 							id: obj.mapId,
 							imageSize: badgeSize,
 							selectedScale: selectedScale,
