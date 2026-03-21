@@ -45,8 +45,8 @@ type ModifierPreviewFeatureCollectionArgs = {
 };
 
 const companionPositions = [
-	{ bearing: 305, distanceMeters: 24 },
-	{ bearing: 125, distanceMeters: 22 },
+	{ bearing: 295, distanceMeters: 24 },
+	{ bearing: 80, distanceMeters: 22 },
 	{ bearing: 220, distanceMeters: 15 }
 ] as const;
 
