@@ -29,8 +29,6 @@ export type FiltersetTitle = {
 	title?: string;
 } & Message;
 
-export type ColorFilterType = "negative" | "grayscale" | "sepia";
-
 export type FiltersetModifiers = {
 	glow?: {
 		color: string;
@@ -43,9 +41,8 @@ export type FiltersetModifiers = {
 		color: string;
 		opacity?: number;
 	};
-	colorFilter?: ColorFilterType;
 	showBadge?: boolean;
-	showLabel?: boolean;
+	showLabel?: string;
 };
 
 export type BaseFilterset = {

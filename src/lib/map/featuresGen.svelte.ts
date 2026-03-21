@@ -41,7 +41,6 @@ import { shouldDisplayNest } from "@/lib/utils/nestUtils";
 import {
 	getModifierOverlayIconUrl,
 	getModifierOverlayImageSize,
-	getColorFilteredImageUrl,
 	getEmojiImageUrl
 } from "@/lib/map/modifierOverlayIcons";
 import type {
@@ -54,7 +53,6 @@ import type {
 	FiltersetRaid
 } from "@/lib/features/filters/filtersets";
 import { getIcon } from "@/lib/features/filters/icons";
-import { filterTitle } from "@/lib/features/filters/filtersetUtils";
 import {
 	getMatchingInvasionFilterset,
 	getMatchingPokemonFilterset,
@@ -155,12 +153,7 @@ function getIconFeature(
 ): MapObjectIconFeature {
 	let imageUrl = properties.imageUrl;
 	if (!imageUrl.startsWith("data:")) {
-		const cfMatch = imageUrl.match(/(\|\|cf-(?:negative|grayscale|sepia))$/);
-		if (cfMatch) {
-			imageUrl = resize(imageUrl.slice(0, -cfMatch[1].length), { width: 64 }) + cfMatch[1];
-		} else {
-			imageUrl = resize(imageUrl, { width: 64 });
-		}
+		imageUrl = resize(imageUrl, { width: 64 });
 	}
 
 	return {
@@ -219,7 +212,6 @@ function getCircleFeature(
 function withVisualTransform(baseSize: number, filtersetModifiers: FiltersetModifiers | undefined) {
 	let imageSize = baseSize;
 	let imageRotation: number | undefined = undefined;
-	const colorFilter = filtersetModifiers?.colorFilter;
 
 	if (filtersetModifiers?.scale && filtersetModifiers.scale !== 1) {
 		imageSize *= filtersetModifiers.scale;
@@ -229,12 +221,7 @@ function withVisualTransform(baseSize: number, filtersetModifiers: FiltersetModi
 		imageRotation = filtersetModifiers.rotation;
 	}
 
-	return { imageSize, imageRotation, colorFilter };
-}
-
-function applyColorFilterUrl(imageUrl: string, colorFilter: string | undefined) {
-	if (!colorFilter) return imageUrl;
-	return getColorFilteredImageUrl(imageUrl, colorFilter);
+	return { imageSize, imageRotation };
 }
 
 function addModifierOverlayFeatures(
@@ -365,12 +352,9 @@ function resolveFiltersetBadgeIconUrl(icon: BaseFilterset["icon"]): string | und
 	return undefined;
 }
 
-function getTextLabel(
-	filtersetModifiers: FiltersetModifiers | undefined,
-	filterset: AnyFilterset | undefined
-): string | undefined {
-	if (!filtersetModifiers?.showLabel || !filterset) return undefined;
-	return filterTitle(filterset);
+function getTextLabel(filtersetModifiers: FiltersetModifiers | undefined): string | undefined {
+	if (!filtersetModifiers?.showLabel) return undefined;
+	return filtersetModifiers.showLabel;
 }
 
 function addFiltersetBadgeFeature(
@@ -619,15 +603,11 @@ export function updateFeatures(mapObjects: MapObjectsStateType) {
 
 					{
 						const questLabel = getTextLabel(
-							matchingQuestFilterset?.modifiers,
-							matchingQuestFilterset
+							matchingQuestFilterset?.modifiers
 						);
 						subFeatures.push(
 							getIconFeature(mapId, [obj.lon, obj.lat], {
-								imageUrl: applyColorFilterUrl(
-									getIconReward(reward.type, getRewardIconInfo(reward)),
-									questVisual.colorFilter
-								),
+								imageUrl: getIconReward(reward.type, getRewardIconInfo(reward)),
 								imageSize: questVisual.imageSize,
 								selectedScale: selectedScale,
 								imageOffset: questImageOffset,
@@ -693,15 +673,11 @@ export function updateFeatures(mapObjects: MapObjectsStateType) {
 
 					{
 					const questLabel = getTextLabel(
-						matchingQuestFilterset?.modifiers,
-						matchingQuestFilterset
+						matchingQuestFilterset?.modifiers
 					);
 					subFeatures.push(
 						getIconFeature(mapId, [obj.lon, obj.lat], {
-							imageUrl: applyColorFilterUrl(
-								getIconReward(reward.type, getRewardIconInfo(reward)),
-								questVisual.colorFilter
-							),
+							imageUrl: getIconReward(reward.type, getRewardIconInfo(reward)),
 							imageSize: questVisual.imageSize,
 							selectedScale: selectedScale,
 							imageOffset: questImageOffset,
@@ -776,15 +752,11 @@ export function updateFeatures(mapObjects: MapObjectsStateType) {
 
 				{
 					const invasionLabel = getTextLabel(
-						matchingInvasionFilterset?.modifiers,
-						matchingInvasionFilterset
+						matchingInvasionFilterset?.modifiers
 					);
 					subFeatures.push(
 						getIconFeature(mapId, [obj.lon, obj.lat], {
-							imageUrl: applyColorFilterUrl(
-								getIconInvasion(incident.character, incident.confirmed),
-								invasionVisual.colorFilter
-							),
+							imageUrl: getIconInvasion(incident.character, incident.confirmed),
 							imageSize: invasionVisual.imageSize,
 							selectedScale: selectedScale,
 							imageOffset: invasionImageOffset,
@@ -850,15 +822,11 @@ export function updateFeatures(mapObjects: MapObjectsStateType) {
 
 					{
 						const raidLabel = getTextLabel(
-							matchingRaidFilterset?.modifiers,
-							matchingRaidFilterset
+							matchingRaidFilterset?.modifiers
 						);
 						subFeatures.push(
 							getIconFeature(mapId, [obj.lon, obj.lat], {
-								imageUrl: applyColorFilterUrl(
-									getIconPokemon(getRaidPokemon(obj)),
-									raidVisual.colorFilter
-								),
+								imageUrl: getIconPokemon(getRaidPokemon(obj)),
 								imageSize: raidVisual.imageSize,
 								selectedScale: selectedScale,
 								imageOffset: raidImageOffset,
@@ -912,15 +880,11 @@ export function updateFeatures(mapObjects: MapObjectsStateType) {
 
 					{
 						const raidLabel = getTextLabel(
-							matchingRaidFilterset?.modifiers,
-							matchingRaidFilterset
+							matchingRaidFilterset?.modifiers
 						);
 						subFeatures.push(
 							getIconFeature(mapId, [obj.lon, obj.lat], {
-								imageUrl: applyColorFilterUrl(
-									getIconRaidEgg(obj.raid_level ?? 0),
-									raidVisual.colorFilter
-								),
+								imageUrl: getIconRaidEgg(obj.raid_level ?? 0),
 								imageSize: raidVisual.imageSize,
 								selectedScale: selectedScale,
 								imageOffset: raidImageOffset,
@@ -1078,14 +1042,11 @@ export function updateFeatures(mapObjects: MapObjectsStateType) {
 				iconFiltersetModifiers
 			);
 
-			const textLabel = getTextLabel(iconFiltersetModifiers, matchedFiltersetRef);
+			const textLabel = getTextLabel(iconFiltersetModifiers);
 
 			subFeatures.push(
 				getIconFeature(obj.mapId, [obj.lon, obj.lat], {
-					imageUrl: applyColorFilterUrl(
-						overwriteIcon ?? getIconForMap(obj),
-						iconVisual.colorFilter
-					),
+					imageUrl: overwriteIcon ?? getIconForMap(obj),
 					id: obj.mapId,
 					imageSize: iconVisual.imageSize,
 					selectedScale: selectedScale,

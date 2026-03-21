@@ -233,10 +233,6 @@
 	"modifier_rotation": "Rotación",
 	"modifier_priority_hint": "Si coinciden varios filtros, el ultimo filtro habilitado controla el aspecto visual.",
 	"modifier_none": "Ninguno",
-	"modifier_color_filter": "Filtro de color",
-	"modifier_color_filter_negative": "Negativo",
-	"modifier_color_filter_grayscale": "B/N",
-	"modifier_color_filter_sepia": "Sepia",
 	"modifier_show_badge": "Mostrar insignia",
 	"modifier_show_label": "Mostrar etiqueta"
 }

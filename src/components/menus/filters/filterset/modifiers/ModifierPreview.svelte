@@ -14,7 +14,6 @@
 	import { getMapStyle, mapStyleFromId } from "@/lib/utils/mapStyle";
 	import { getIcon } from "@/lib/features/filters/icons";
 	import { getEmojiImageUrl } from "@/lib/map/modifierOverlayIcons";
-	import { filterTitle } from "@/lib/features/filters/filtersetUtils";
 	import type { FeatureCollection, Point } from "geojson";
 
 	type PreviewCenter = [number, number];
@@ -37,8 +36,6 @@
 		if (filterset.icon.emoji) return getEmojiImageUrl(filterset.icon.emoji);
 		return undefined;
 	});
-
-	let resolvedFiltersetTitle = $derived(filterset ? filterTitle(filterset) : undefined);
 
 	const previewZoom = 18;
 	const companionPokemon = [
@@ -118,7 +115,6 @@
 			focusBaseImageSize: companionLayout.imageSize,
 			focusImageOffset: companionLayout.imageOffset,
 			modifiers,
-			filtersetTitle: resolvedFiltersetTitle,
 			badgeIconUrl,
 			companionIconUrls,
 			companionImageSize: companionLayout.imageSize,

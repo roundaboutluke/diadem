@@ -1,6 +1,5 @@
 import type maplibre from "maplibre-gl";
 import { getLoadedImages, setLoadedImage } from "@/lib/map/loadedImages.svelte";
-import { applyColorFilter, parseColorFilteredUrl } from "@/lib/map/modifierOverlayIcons";
 
 export async function ensureMapImage(map: maplibre.Map, url: string) {
 	if (!url) return;
@@ -8,18 +7,12 @@ export async function ensureMapImage(map: maplibre.Map, url: string) {
 
 	let imageData = getLoadedImages()[url];
 	if (!imageData) {
-		const colorFilter = parseColorFilteredUrl(url);
-		if (colorFilter) {
-			await ensureMapImage(map, colorFilter.sourceUrl);
-			const sourceData = getLoadedImages()[colorFilter.sourceUrl];
-			if (sourceData) {
-				imageData = await applyColorFilter(sourceData, colorFilter.filter);
-				setLoadedImage(url, imageData);
-			}
-		} else {
+		try {
 			const image = await map.loadImage(url);
 			imageData = image.data;
 			setLoadedImage(url, imageData);
+		} catch (e) {
+			// URL may not be directly loadable (e.g. virtual URL)
 		}
 	}
 

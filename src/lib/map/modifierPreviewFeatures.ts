@@ -8,8 +8,7 @@ import {
 } from "@/lib/features/filters/modifierPresets";
 import {
 	getModifierOverlayIconUrl,
-	getModifierOverlayImageSize,
-	getColorFilteredImageUrl
+	getModifierOverlayImageSize
 } from "@/lib/map/modifierOverlayIcons";
 
 type PreviewFeatureLayer = "underlay" | "icon" | "badge";
@@ -39,7 +38,6 @@ type ModifierPreviewFeatureCollectionArgs = {
 	focusBaseImageSize: number;
 	focusImageOffset: number[];
 	modifiers?: FiltersetModifiers;
-	filtersetTitle?: string;
 	badgeIconUrl?: string;
 	companionIconUrls: string[];
 	companionImageSize: number;
@@ -94,7 +92,6 @@ export function buildModifierPreviewFeatureCollection({
 	focusBaseImageSize,
 	focusImageOffset,
 	modifiers,
-	filtersetTitle,
 	badgeIconUrl,
 	companionIconUrls,
 	companionImageSize,
@@ -138,16 +135,12 @@ export function buildModifierPreviewFeatureCollection({
 		);
 	}
 
-	const filteredFocusIconUrl = modifiers?.colorFilter
-		? getColorFilteredImageUrl(focusIconUrl, modifiers.colorFilter)
-		: focusIconUrl;
-
-	const textLabel = modifiers?.showLabel && filtersetTitle ? filtersetTitle : undefined;
+	const textLabel = modifiers?.showLabel ?? undefined;
 
 	features.push(
 		getPreviewFeature({
 			coordinates: center,
-			imageUrl: filteredFocusIconUrl,
+			imageUrl: focusIconUrl,
 			imageSize: focusImageSize,
 			imageOffset: focusImageOffset,
 			imageRotation: modifiers?.rotation ?? undefined,

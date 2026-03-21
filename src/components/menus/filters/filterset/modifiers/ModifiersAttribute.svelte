@@ -1,10 +1,11 @@
 <script lang="ts">
-	import type { AnyFilterset, ColorFilterType } from "@/lib/features/filters/filtersets";
+	import type { AnyFilterset } from "@/lib/features/filters/filtersets";
 	import MenuTitle from "@/components/menus/MenuTitle.svelte";
 	import Switch from "@/components/ui/input/Switch.svelte";
 	import Slider from "@/components/ui/input/slider/Slider.svelte";
 	import SliderSteps from "@/components/ui/input/slider/SliderSteps.svelte";
 	import Card from "@/components/ui/Card.svelte";
+	import Input from "@/components/ui/input/Input.svelte";
 	import * as m from "@/lib/paraglide/messages";
 	import ColorSwatches from "@/components/menus/filters/filterset/modifiers/ColorSwatches.svelte";
 	import ModifierPreview from "@/components/menus/filters/filterset/modifiers/ModifierPreview.svelte";
@@ -17,6 +18,7 @@
 		MODIFIER_GLOW_OPACITY,
 		MODIFIER_GLOW_RADIUS
 	} from "@/lib/features/filters/modifierPresets";
+	import { filterTitle } from "@/lib/features/filters/filtersetUtils";
 
 	let {
 		data,
@@ -47,7 +49,6 @@
 			!data.modifiers.background &&
 			!data.modifiers.scale &&
 			!data.modifiers.rotation &&
-			!data.modifiers.colorFilter &&
 			!data.modifiers.showBadge &&
 			!data.modifiers.showLabel
 		) {
@@ -99,18 +100,6 @@
 		}
 	}
 
-	function onColorFilterChange(value: string) {
-		if (value === "none") {
-			if (data.modifiers) {
-				delete data.modifiers.colorFilter;
-				cleanupModifiers();
-			}
-			return;
-		}
-		ensureModifiers();
-		data.modifiers!.colorFilter = value as ColorFilterType;
-	}
-
 	function toggleBadge(enabled: boolean) {
 		if (enabled) {
 			ensureModifiers();
@@ -124,7 +113,7 @@
 	function toggleLabel(enabled: boolean) {
 		if (enabled) {
 			ensureModifiers();
-			data.modifiers!.showLabel = true;
+			data.modifiers!.showLabel = filterTitle(data);
 		} else if (data.modifiers) {
 			delete data.modifiers.showLabel;
 			cleanupModifiers();
@@ -181,7 +170,7 @@
 			</SelectGroupItem>
 		</RadioGroup>
 		{#if visualMode !== "none"}
-			<div class="space-y-2 pt-2">
+			<div class="space-y-2 pt-3">
 				<ColorSwatches selected={activeColor} onchange={onColorChange} />
 				{#if data.modifiers?.glow}
 					<Slider
@@ -232,28 +221,6 @@
 	</Card>
 
 	<Card class="p-3 space-y-3">
-		<MenuTitle title={m.modifier_color_filter()} />
-		<RadioGroup
-			value={data.modifiers?.colorFilter ?? "none"}
-			onValueChange={onColorFilterChange}
-			class="self-center"
-		>
-			<SelectGroupItem class="p-2 w-full" value="none">
-				{m.modifier_none()}
-			</SelectGroupItem>
-			<SelectGroupItem class="p-2 w-full" value="negative">
-				{m.modifier_color_filter_negative()}
-			</SelectGroupItem>
-			<SelectGroupItem class="p-2 w-full" value="grayscale">
-				{m.modifier_color_filter_grayscale()}
-			</SelectGroupItem>
-			<SelectGroupItem class="p-2 w-full" value="sepia">
-				{m.modifier_color_filter_sepia()}
-			</SelectGroupItem>
-		</RadioGroup>
-	</Card>
-
-	<Card class="p-3 space-y-3">
 		<div class="flex items-center justify-between gap-2">
 			<MenuTitle title={m.modifier_show_badge()} />
 			<Switch
@@ -264,9 +231,25 @@
 		<div class="flex items-center justify-between gap-2">
 			<MenuTitle title={m.modifier_show_label()} />
 			<Switch
-				checked={data.modifiers?.showLabel ?? false}
+				checked={!!data.modifiers?.showLabel}
 				onCheckedChange={toggleLabel}
 			/>
 		</div>
+		{#if data.modifiers?.showLabel}
+			<Input
+				class="w-full"
+				value={data.modifiers.showLabel}
+				onchange={(e) => {
+					if (data.modifiers) {
+						const value = e.target?.value?.trim();
+						if (value) {
+							data.modifiers.showLabel = value;
+						} else {
+							data.modifiers.showLabel = filterTitle(data);
+						}
+					}
+				}}
+			/>
+		{/if}
 	</Card>
 </div>
