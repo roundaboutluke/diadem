@@ -14,6 +14,7 @@
 	import { getMapStyle, mapStyleFromId } from "@/lib/utils/mapStyle";
 	import { getIcon, IconCategory } from "@/lib/features/filters/icons";
 	import { getEmojiImageUrl } from "@/lib/map/modifierOverlayIcons";
+	import { resize } from "@/lib/services/assets";
 	import type { FeatureCollection, Point } from "geojson";
 
 	type PreviewCenter = [number, number];
@@ -100,15 +101,19 @@
 
 	let companionLayout = $derived(getPokemonPreviewLayout());
 	let focusIconUrl = $derived.by(() => {
+		let url: string;
 		if (filterset?.icon?.uicon?.category === IconCategory.POKEMON) {
-			return getIcon(IconCategory.POKEMON, filterset.icon.uicon.params);
+			url = getIcon(IconCategory.POKEMON, filterset.icon.uicon.params);
+		} else if (iconUrl) {
+			url = iconUrl;
+		} else {
+			url = getIconPokemon({ pokemon_id: 25, form: 0 });
 		}
-		if (iconUrl) return iconUrl;
-		return getIconPokemon({ pokemon_id: 25, form: 0 });
+		return resize(url, { width: 64 });
 	});
 	let companionIconUrls = $derived(
 		companionPokemon.map((pokemon) =>
-			getIconPokemon({ pokemon_id: pokemon.pokemon_id, form: pokemon.form })
+			resize(getIconPokemon({ pokemon_id: pokemon.pokemon_id, form: pokemon.form }), { width: 64 })
 		)
 	);
 
