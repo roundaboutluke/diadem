@@ -33,7 +33,9 @@
 
 	let badgeIconUrl = $derived.by(() => {
 		if (!filterset?.icon) return undefined;
-		if (filterset.icon.uicon) return getIcon(filterset.icon.uicon.category, filterset.icon.uicon.params);
+		if (filterset.icon.uicon) {
+			return resize(getIcon(filterset.icon.uicon.category, filterset.icon.uicon.params), { width: 64 });
+		}
 		if (filterset.icon.emoji) return getEmojiImageUrl(filterset.icon.emoji);
 		return undefined;
 	});
