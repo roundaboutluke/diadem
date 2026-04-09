@@ -69,13 +69,13 @@ export type Incident = {
 	style: number;
 	character: number;
 	updated: number;
-	confirmed: boolean;
-	slot_1_pokemon_id?: number;
-	slot_1_form?: number;
-	slot_2_pokemon_id?: number;
-	slot_2_form?: number;
-	slot_3_pokemon_id?: number;
-	slot_3_form?: number;
+	confirmed: boolean | number;
+	slot_1_pokemon_id?: number | null;
+	slot_1_form?: number | null;
+	slot_2_pokemon_id?: number | null;
+	slot_2_form?: number | null;
+	slot_3_pokemon_id?: number | null;
+	slot_3_form?: number | null;
 };
 
 export type QuestData = {

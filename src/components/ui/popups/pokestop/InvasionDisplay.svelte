@@ -7,15 +7,16 @@
 	import { getIconInvasion, getIconPokemon } from "@/lib/services/uicons.svelte.js";
 	import * as m from "@/lib/paraglide/messages";
 	import {
-		getInvasionCatchable,
-		getInvasionLineup,
+		getConfirmedInvasionCatchable,
+		getInvasionDisplayCatchable,
+		getInvasionDisplayLineup,
 		getInvasionPokemon,
-		hasInvasionLineup
+		hasInvasionDisplayLineup
 	} from "@/lib/features/masterStats.svelte";
 	import type { InvasionPokemonStats } from "@/lib/server/api/queryStats";
 	import { hasLoadedFeature, LoadedFeature } from "@/lib/services/initialLoad.svelte";
 	import IconValue from "@/components/ui/popups/common/IconValue.svelte";
-	import { ShieldHalf, Tally1, Trophy } from "lucide-svelte";
+	import { Trophy } from "lucide-svelte";
 
 	let {
 		expanded,
@@ -25,15 +26,10 @@
 		incident: Incident;
 	} = $props();
 
-	const hasLineup = $derived(hasInvasionLineup(incident.character));
-	const lineup = $derived(getInvasionLineup(incident.character));
-	const catchables = $derived(getInvasionCatchable(incident.character) ?? []);
-
-	function isCatchable(pokemon: { pokemon_id: number; form: number }) {
-		return catchables.some((entry) => {
-			return entry.pokemon_id === pokemon.pokemon_id && entry.form === pokemon.form;
-		});
-	}
+	const confirmedCatchables = $derived(getConfirmedInvasionCatchable(incident));
+	const hasLineup = $derived(hasInvasionDisplayLineup(incident));
+	const lineup = $derived(getInvasionDisplayLineup(incident));
+	const catchables = $derived(getInvasionDisplayCatchable(incident));
 </script>
 
 {#snippet lineupSlot(slotLineup: InvasionPokemonStats[], num: number | undefined)}
@@ -48,10 +44,10 @@
 
 		<div
 			class="flex flex-wrap border border-border rounded-sm w-fit h-9"
-			class:dark:border-yellow-800={slotLineup[0].encounter && num}
-			class:dark:bg-yellow-950={slotLineup[0].encounter && num}
-			class:border-indigo-300={slotLineup[0].encounter && num}
-			class:bg-indigo-100={slotLineup[0].encounter && num}
+			class:dark:border-yellow-800={slotLineup[0]?.encounter && num}
+			class:dark:bg-yellow-950={slotLineup[0]?.encounter && num}
+			class:border-indigo-300={slotLineup[0]?.encounter && num}
+			class:bg-indigo-100={slotLineup[0]?.encounter && num}
 		>
 			{#each slotLineup as slotMon (`${slotMon.pokemon_id}-${slotMon.form}`)}
 				{@const pokemon = getInvasionPokemon(slotMon)}
@@ -87,10 +83,14 @@
 			{#if catchables.length > 1}
 				<p class="text-muted-foreground mb-0.5">
 					<IconValue Icon={Trophy}>
-						{m.invasion_x_possible_rewards({ x: catchables.length })}
+						{#if confirmedCatchables.length > 0}
+							{m.rewards()}
+						{:else}
+							{m.invasion_x_possible_rewards({ x: catchables.length })}
+						{/if}
 					</IconValue>
 				</p>
-				{@render lineupSlot(catchables, undefined, false)}
+				{@render lineupSlot(catchables, undefined)}
 			{/if}
 		{/if}
 
@@ -114,9 +114,15 @@
 
 		{#if hasLineup && expanded}
 			<div class="mt-1.5 space-y-1">
-				{@render lineupSlot(lineup?.first ?? [], 1)}
-				{@render lineupSlot(lineup?.second ?? [], 2)}
-				{@render lineupSlot(lineup?.third ?? [], 3)}
+				{#if (lineup?.first?.length ?? 0) > 0}
+					{@render lineupSlot(lineup?.first ?? [], 1)}
+				{/if}
+				{#if (lineup?.second?.length ?? 0) > 0}
+					{@render lineupSlot(lineup?.second ?? [], 2)}
+				{/if}
+				{#if (lineup?.third?.length ?? 0) > 0}
+					{@render lineupSlot(lineup?.third ?? [], 3)}
+				{/if}
 			</div>
 		{/if}
 	{/snippet}

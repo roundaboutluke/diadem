@@ -6,7 +6,7 @@ import type {
 } from "@/lib/types/mapObjectData/pokestop";
 import { currentTimestamp } from "@/lib/utils/currentTimestamp";
 import { isCurrentSelectedOverwrite } from "@/lib/mapObjects/currentSelectedState.svelte";
-import { getInvasionCatchable, hasInvasionLineup } from "@/lib/features/masterStats.svelte";
+import { getInvasionDisplayCatchable } from "@/lib/features/masterStats.svelte";
 import { QuestArType } from "@/lib/features/filters/filterUtilsQuest";
 import {
 	getActivePokestopFilter,
@@ -32,9 +32,8 @@ export function matchInvasionFilterset(
 	for (const invasionFilter of invasionFilters) {
 		if (invasionFilter.characters?.includes(incident.character)) return invasionFilter;
 
-		if (!hasInvasionLineup(incident.character)) continue;
-
-		const catchableRewards = getInvasionCatchable(incident.character) ?? [];
+		const catchableRewards = getInvasionDisplayCatchable(incident);
+		if (catchableRewards.length === 0) continue;
 
 		if (
 			invasionFilter.rewards?.find((r) => {
