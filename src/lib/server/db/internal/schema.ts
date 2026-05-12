@@ -14,16 +14,18 @@ import type { Perms } from "@/lib/utils/features";
 export const user = mysqlTable(
 	"user",
 	{
+		// Better Auth columns
 		id: varchar("id", { length: 255 }).primaryKey(),
 		name: varchar("name", { length: 255 }).notNull(),
 		email: varchar("email", { length: 255 }).notNull(),
 		emailVerified: boolean("email_verified").notNull(),
 		image: text("image"),
+		createdAt: datetime("created_at").notNull(),
+		updatedAt: datetime("updated_at").notNull(),
+		// Diadem additionalFields — permissions/userSettings are nullable because the adapter inserts without them
 		discordId: varchar("discord_id", { length: 255 }).notNull().unique(),
 		permissions: json("permissions"),
-		userSettings: json("user_settings"),
-		createdAt: datetime("created_at").notNull(),
-		updatedAt: datetime("updated_at").notNull()
+		userSettings: json("user_settings")
 	},
 	(table) => ({
 		emailUnique: uniqueIndex("user_email_unique").on(table.email)
@@ -36,7 +38,7 @@ export const session = mysqlTable(
 		id: varchar("id", { length: 255 }).primaryKey(),
 		userId: varchar("user_id", { length: 255 })
 			.notNull()
-			.references(() => user.id),
+			.references(() => user.id, { onDelete: "cascade" }),
 		expiresAt: datetime("expires_at").notNull(),
 		token: varchar("token", { length: 255 }).notNull(),
 		ipAddress: text("ip_address"),
@@ -61,7 +63,7 @@ export const account = mysqlTable(
 		providerId: varchar("provider_id", { length: 255 }).notNull(),
 		userId: varchar("user_id", { length: 255 })
 			.notNull()
-			.references(() => user.id),
+			.references(() => user.id, { onDelete: "cascade" }),
 		accessToken: text("access_token"),
 		refreshToken: text("refresh_token"),
 		idToken: text("id_token"),
@@ -97,4 +99,7 @@ export const verification = mysqlTable(
 	})
 );
 
+// `userSettings` stays `unknown` here — its structured type lives in a
+// `.svelte.ts` module that imports `$app/environment`, which would drag
+// SvelteKit into Drizzle migration tooling.
 export type User = typeof user.$inferSelect & { permissions: Perms };

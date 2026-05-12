@@ -1,10 +1,9 @@
 import { json } from "@sveltejs/kit";
-import { getServerConfig } from "@/lib/services/config/config.server";
 import { isAuthFeatureEnabled, isAuthRequiredEnabled } from "@/lib/server/auth/betterAuth";
+import { getServerConfig } from "@/lib/services/config/config.server";
 import type { SupportedFeatures } from "@/lib/services/supportedFeatures";
-import type { RequestHandler } from "./$types";
 
-export const GET: RequestHandler = async ({ locals }) => {
+export async function GET({ locals }) {
 	const config = getServerConfig();
 	const authEnabled = isAuthFeatureEnabled();
 	const authRequired = isAuthRequiredEnabled();
@@ -22,4 +21,4 @@ export const GET: RequestHandler = async ({ locals }) => {
 			Boolean(config.nominatim?.url) &&
 			(!Boolean(config.pelias?.url) || Boolean(config.photon?.url)) // supported if nomatim is set and pelias is not the provider
 	} as SupportedFeatures);
-};
+}

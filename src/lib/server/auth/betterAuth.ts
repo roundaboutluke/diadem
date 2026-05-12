@@ -1,16 +1,18 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { parseSetCookieHeader } from "better-auth/cookies";
+import { sveltekitCookies } from "better-auth/svelte-kit";
+import { getRequestEvent } from "$app/server";
 import type { RequestEvent } from "@sveltejs/kit";
 import { getTableColumns, getTableName, sql } from "drizzle-orm";
 
+import { SESSION_REFRESH, SESSION_TTL } from "@/lib/constants";
 import { db } from "@/lib/server/db/internal";
 import { account, session, user, verification } from "@/lib/server/db/internal/schema";
-import { generateUserId } from "@/lib/server/auth/auth";
+import { generateAuthRecordId } from "@/lib/server/auth/authRecords";
 import { getServerConfig } from "@/lib/services/config/config.server";
 import { getLogger } from "@/lib/utils/logger";
 
-const log = getLogger("better-auth");
+const log = getLogger("auth");
 
 const authTables = [user, session, account, verification] as const;
 const authConfig = getServerConfig().auth;
@@ -25,93 +27,54 @@ const authSecret =
 
 const authErrors: string[] = [];
 
-let authBaseUrl: string | null = null;
-if (!rawAuthBaseUrl) {
-	authErrors.push("server.auth.baseUrl is required");
-} else {
+export const authBaseUrl = parseAuthBaseUrl(rawAuthBaseUrl, authErrors);
+
+function parseAuthBaseUrl(raw: string | undefined, errors: string[]): string | null {
+	if (!raw) {
+		errors.push("server.auth.baseUrl is required");
+		return null;
+	}
 	try {
-		const parsed = new URL(rawAuthBaseUrl);
-		const isOriginOnly =
-			(parsed.protocol === "http:" || parsed.protocol === "https:") &&
-			parsed.pathname === "/" &&
-			!parsed.search &&
-			!parsed.hash;
-		if (!isOriginOnly) throw new Error();
-		authBaseUrl = parsed.origin;
+		const parsed = new URL(raw);
+		if (parsed.protocol !== "http:" && parsed.protocol !== "https:") throw new Error();
+		return parsed.origin;
 	} catch {
-		authErrors.push(
-			"server.auth.baseUrl must be an absolute URL with scheme + host only, e.g. https://map.co"
-		);
+		errors.push("server.auth.baseUrl must be an absolute http(s) URL, e.g. https://map.co");
+		return null;
 	}
 }
 
-if (!authSecret) authErrors.push("server.auth.secret (or BETTER_AUTH_SECRET env)");
-if (!discordClientId) authErrors.push("server.auth.discord.clientId");
-if (!discordClientSecret) authErrors.push("server.auth.discord.clientSecret");
+if (!authSecret) authErrors.push("server.auth.secret (or BETTER_AUTH_SECRET env) is required");
+if (!discordClientId) authErrors.push("server.auth.discord.clientId is required");
+if (!discordClientSecret) authErrors.push("server.auth.discord.clientSecret is required");
 
-if (authConfig.enabled && authErrors.length > 0) {
-	throw new Error(
-		`[AUTH_STARTUP_ERROR] Better Auth config is invalid:\n  - ${authErrors.join("\n  - ")}\n` +
-			"Set the values and restart, or set server.auth.enabled=false."
-	);
-}
+const isFeatureEnabled = Boolean(authConfig.enabled);
+const canConstructAuth = isFeatureEnabled && authErrors.length === 0;
 
-export const IS_BETTER_AUTH_ENABLED = Boolean(authConfig.enabled);
-
-function hasMysqlCode(error: unknown, code: string, errno: number): boolean {
-	if (!error || typeof error !== "object") return false;
-	const e = error as { code?: string; errno?: number };
-	return e.code === code || e.errno === errno;
-}
-const isMissingTableError = (error: unknown) => hasMysqlCode(error, "ER_NO_SUCH_TABLE", 1146);
-const isMissingColumnError = (error: unknown) => hasMysqlCode(error, "ER_BAD_FIELD_ERROR", 1054);
+const isMissingTableError = (e: { code?: string; errno?: number } | null | undefined) =>
+	e?.code === "ER_NO_SUCH_TABLE" || e?.errno === 1146;
+const isMissingColumnError = (e: { code?: string; errno?: number } | null | undefined) =>
+	e?.code === "ER_BAD_FIELD_ERROR" || e?.errno === 1054;
 
 async function assertBetterAuthSchemaReady() {
-	const missingTables: string[] = [];
-	for (const table of authTables) {
-		const tableName = getTableName(table);
+	const missing: string[] = [];
+	for (const t of authTables) {
+		const tableName = getTableName(t);
+		const cols = Object.values(getTableColumns(t))
+			.map((c) => `\`${c.name}\``)
+			.join(", ");
 		try {
-			await db.execute(sql.raw(`SELECT 1 FROM \`${tableName}\` LIMIT 1`));
-		} catch (error) {
-			if (isMissingTableError(error)) {
-				missingTables.push(tableName);
-				continue;
-			}
-
-			throw new Error(
-				`[AUTH_STARTUP_ERROR] Failed checking Better Auth schema readiness: ${error}`
-			);
+			await db.execute(sql.raw(`SELECT ${cols} FROM \`${tableName}\` LIMIT 0`));
+		} catch (e) {
+			const err = e as { code?: string; errno?: number };
+			if (isMissingTableError(err) || isMissingColumnError(err)) missing.push(tableName);
+			else throw new Error(`[AUTH_STARTUP_ERROR] Schema probe failed: ${e}`);
 		}
 	}
-
-	const missingColumns: string[] = [];
-	for (const table of authTables) {
-		const tableName = getTableName(table);
-		if (missingTables.includes(tableName)) continue;
-
-		for (const column of Object.values(getTableColumns(table))) {
-			try {
-				await db.execute(sql.raw(`SELECT \`${column.name}\` FROM \`${tableName}\` LIMIT 1`));
-			} catch (error) {
-				if (isMissingColumnError(error)) {
-					missingColumns.push(`${tableName}.${column.name}`);
-					continue;
-				}
-
-				throw new Error(
-					`[AUTH_STARTUP_ERROR] Failed checking Better Auth schema readiness: ${error}`
-				);
-			}
-		}
-	}
-
-	if (missingTables.length > 0 || missingColumns.length > 0) {
-		const missingTableMessage =
-			missingTables.length > 0 ? `Missing tables: ${missingTables.join(", ")}. ` : "";
-		const missingColumnMessage =
-			missingColumns.length > 0 ? `Missing columns: ${missingColumns.join(", ")}. ` : "";
+	if (missing.length > 0) {
 		throw new Error(
-			`[AUTH_STARTUP_ERROR] Better Auth schema is incomplete. ${missingTableMessage}${missingColumnMessage}` +
+			`[AUTH_STARTUP_ERROR] Better Auth schema is incomplete. ` +
+				`Missing tables or columns in: ${missing.join(", ")}. ` +
 				"Run your DB migration before starting the app."
 		);
 	}
@@ -119,14 +82,20 @@ async function assertBetterAuthSchemaReady() {
 
 let startupReadinessPromise: Promise<void> | null = null;
 export async function assertBetterAuthStartupReadiness() {
-	if (!IS_BETTER_AUTH_ENABLED) return;
+	if (!authConfig.enabled) return;
+	if (authErrors.length > 0) {
+		throw new Error(
+			`[AUTH_STARTUP_ERROR] Better Auth config is invalid:\n  - ${authErrors.join("\n  - ")}\n` +
+				"Set the values and restart, or set server.auth.enabled=false."
+		);
+	}
 	if (!startupReadinessPromise) {
 		startupReadinessPromise = assertBetterAuthSchemaReady();
 	}
 	await startupReadinessPromise;
 }
 
-export const auth = IS_BETTER_AUTH_ENABLED
+export const auth = canConstructAuth
 	? betterAuth({
 			secret: authSecret!,
 			baseURL: authBaseUrl!,
@@ -145,12 +114,12 @@ export const auth = IS_BETTER_AUTH_ENABLED
 			trustedOrigins: [authBaseUrl!],
 			advanced: {
 				database: {
-					generateId: () => generateUserId()
+					generateId: () => generateAuthRecordId()
 				}
 			},
 			session: {
-				expiresIn: 60 * 60 * 24 * 30,
-				updateAge: 60 * 60 * 24 * 15
+				expiresIn: SESSION_TTL,
+				updateAge: SESSION_REFRESH
 			},
 			account: {
 				encryptOAuthTokens: true
@@ -174,12 +143,15 @@ export const auth = IS_BETTER_AUTH_ENABLED
 					mapProfileToUser: (profile) => ({
 						discordId: profile.id,
 						name: profile.global_name || profile.username,
+						// synthetic email — we don't request the email scope; `.local` ensures no delivery
 						email: `${profile.id}@discord.diadem.local`,
 						emailVerified: true,
 						image: profile.image_url || undefined
 					})
 				}
-			}
+			},
+			// sveltekitCookies must be the last plugin so it wraps cookie-setting from the others
+			plugins: [sveltekitCookies(getRequestEvent)]
 		})
 	: null;
 
@@ -188,108 +160,78 @@ export type BetterAuthSession = AuthInstance["$Infer"]["Session"];
 export type BetterAuthSessionData = BetterAuthSession["session"];
 export type BetterAuthUserData = BetterAuthSession["user"];
 
+export const discordClientCredentials =
+	discordClientId && discordClientSecret
+		? { clientId: discordClientId, clientSecret: discordClientSecret }
+		: null;
+
 export function isAuthFeatureEnabled() {
-	return IS_BETTER_AUTH_ENABLED;
+	return isFeatureEnabled;
 }
 
 export function isAuthRequiredEnabled() {
-	return isAuthFeatureEnabled() && !authConfig.optional;
+	return isFeatureEnabled && !authConfig.optional;
 }
 
-export function getAuthBaseUrl() {
-	return authBaseUrl;
-}
+type SignInSocialResult = { url?: string; redirect: boolean };
 
-function applyAuthCookies(event: RequestEvent, headers: Headers) {
-	const setCookieHeader = headers.get("set-cookie");
-	if (!setCookieHeader) return;
-
-	for (const [name, { value, ...options }] of parseSetCookieHeader(setCookieHeader)) {
-		try {
-			event.cookies.set(name, value, {
-				sameSite: options.samesite,
-				path: options.path || "/",
-				expires: options.expires,
-				secure: options.secure,
-				httpOnly: options.httponly,
-				domain: options.domain,
-				maxAge: options["max-age"]
-			});
-		} catch (error) {
-			log.warning(`Failed to set auth cookie ${name}: ${error}`);
-		}
+async function callAuth<T>(
+	label: string,
+	level: "warning" | "error",
+	fn: (a: AuthInstance) => Promise<T>
+): Promise<T | null> {
+	if (!auth) return null;
+	try {
+		return await fn(auth);
+	} catch (e) {
+		log[level]("%s failed: %s", label, e);
+		return null;
 	}
 }
 
-export async function signInWithDiscord(
+export function signInWithDiscord(
 	event: RequestEvent,
 	options: { callbackURL: string; errorCallbackURL: string }
-) {
-	if (!auth) return null;
-	try {
-		const result = await auth.api.signInSocial({
-			body: {
-				provider: "discord",
-				callbackURL: options.callbackURL,
-				newUserCallbackURL: options.callbackURL,
-				errorCallbackURL: options.errorCallbackURL,
-				disableRedirect: true
-			},
-			headers: event.request.headers,
-			returnHeaders: true
-		});
-		applyAuthCookies(event, result.headers);
-		return result.response as { url?: string; redirect: boolean };
-	} catch (error) {
-		log.warning(`Sign-in with Discord failed: ${error}`);
-		return null;
-	}
+): Promise<SignInSocialResult | null> {
+	return callAuth(
+		"Sign-in with Discord",
+		"warning",
+		(a) =>
+			a.api.signInSocial({
+				body: {
+					provider: "discord",
+					callbackURL: options.callbackURL,
+					newUserCallbackURL: options.callbackURL,
+					errorCallbackURL: options.errorCallbackURL,
+					disableRedirect: true
+				},
+				headers: event.request.headers
+			}) as Promise<SignInSocialResult>
+	);
 }
 
-export async function signOut(event: RequestEvent) {
-	if (!auth) return false;
-	try {
-		const result = await auth.api.signOut({
-			headers: event.request.headers,
-			returnHeaders: true
-		});
-		applyAuthCookies(event, result.headers);
-		return true;
-	} catch (error) {
-		log.warning(`Sign-out failed: ${error}`);
-		return false;
-	}
+export async function signOut(event: RequestEvent): Promise<boolean> {
+	// no auth = already signed out
+	if (!auth) return true;
+	const result = await callAuth("Sign-out", "warning", (a) =>
+		a.api.signOut({ headers: event.request.headers })
+	);
+	return result !== null;
 }
 
-export async function getAuthSession(event: RequestEvent): Promise<BetterAuthSession | null> {
-	if (!auth) return null;
-	try {
-		const result = await auth.api.getSession({
-			headers: event.request.headers,
-			returnHeaders: true
-		});
-		applyAuthCookies(event, result.headers);
-		return result.response;
-	} catch (error) {
-		log.warning(`Failed to read auth session: ${error}`);
-		return null;
-	}
+export function getAuthSession(event: RequestEvent): Promise<BetterAuthSession | null> {
+	// error-level: a failure here silently logs every user out
+	return callAuth("Read auth session", "error", (a) =>
+		a.api.getSession({ headers: event.request.headers })
+	);
 }
 
 export async function getDiscordAccessToken(event: RequestEvent): Promise<string | null> {
-	if (!auth) return null;
-	try {
-		const result = await auth.api.getAccessToken({
+	const result = await callAuth("Fetch Discord access token", "warning", (a) =>
+		a.api.getAccessToken({
 			headers: event.request.headers,
-			body: {
-				providerId: "discord"
-			},
-			returnHeaders: true
-		});
-		applyAuthCookies(event, result.headers);
-		return result.response.accessToken || null;
-	} catch (error) {
-		log.warning(`Failed to fetch Discord access token from Better Auth: ${error}`);
-		return null;
-	}
+			body: { providerId: "discord" }
+		})
+	);
+	return result?.accessToken ?? null;
 }

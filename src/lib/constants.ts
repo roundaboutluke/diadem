@@ -39,14 +39,19 @@ export const POKEMON_MIN_RANK = 15;
 export const SELECTED_MAP_OBJECT_SCALE = 2;
 
 /**
- * Interval to refresh Discord Auth (seconds)
- */
-export const DISCORD_REFRESH_INTERVAL = 60 * 60 * 24;
-
-/**
  * Interval to update a user's permissions (i.e. what roles they have) (seconds)
  */
 export const PERMISSION_UPDATE_INTERVAL = 5 * 60;
+
+/**
+ * Better Auth session lifetime (seconds)
+ */
+export const SESSION_TTL = 60 * 60 * 24 * 30;
+
+/**
+ * How often to refresh an active Better Auth session (seconds)
+ */
+export const SESSION_REFRESH = 60 * 60 * 24 * 15;
 
 /**
  * How long to keep a shiny rate for a pokemon (in seconds)

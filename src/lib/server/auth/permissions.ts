@@ -1,8 +1,7 @@
 import { type KojiFeatures } from "@/lib/features/koji";
 import { fetchKojiGeofences } from "@/lib/server/api/kojiApi";
-import { setPermissions } from "@/lib/server/auth/auth";
-import { type DiscordGuildData, getGuildMemberInfo } from "@/lib/server/auth/discordDetails";
-import { type User } from "@/lib/server/db/internal/schema";
+import { setPermissions } from "@/lib/server/auth/authRecords";
+import { type GuildMembership, getGuildMemberInfo } from "@/lib/server/auth/discordApi";
 import { getServerConfig } from "@/lib/services/config/config.server";
 import type { Permissions as ConfigRule } from "@/lib/services/config/configTypes";
 import type { FeaturesKey, PermArea, Perms } from "@/lib/utils/features";
@@ -10,47 +9,48 @@ import { getLogger } from "@/lib/utils/logger";
 
 const log = getLogger("permissions");
 
-export type PermissionUser = {
-	id: string;
-	permissions: unknown;
-};
+export type PermissionUser = { id: string };
 
-let initializedEveryonePerms: boolean = false;
+// Process-lifetime memoized; a config reload requires a restart.
+let initializedEveryonePerms = false;
 let everyonePerms: Perms = { everywhere: [], areas: [] };
 
 function addFeatures(featureArray: FeaturesKey[], features: FeaturesKey[] | undefined) {
 	if (!features) return;
+	for (const feature of features) {
+		if (!featureArray.includes(feature)) featureArray.push(feature);
+	}
+}
 
-	features.forEach((feature) => {
-		if (!featureArray.includes(feature)) {
-			featureArray.push(feature);
+function applyAreaFeatures(
+	ruleAreas: string[],
+	ruleFeatures: FeaturesKey[] | undefined,
+	perms: Perms,
+	geofences: KojiFeatures
+) {
+	for (const ruleArea of ruleAreas) {
+		let area = perms.areas.find((a) => a.name === ruleArea);
+		if (!area) {
+			const kojiFeature = geofences.find(
+				(f) => f.properties.name.toLowerCase() === ruleArea.toLowerCase()
+			);
+			if (!kojiFeature) {
+				log.error(
+					`Configured area "${ruleArea}" has no matching Koji area; ignoring its permissions.`
+				);
+				continue;
+			}
+			area = { name: ruleArea, features: [], polygon: kojiFeature.geometry } satisfies PermArea;
+			perms.areas.push(area);
 		}
-	});
+		addFeatures(area.features, ruleFeatures);
+	}
 }
 
 function handleRule(rule: ConfigRule, perms: Perms, geofences: KojiFeatures | undefined) {
-	if (rule.areas && !geofences) return;
-
 	if (rule.areas) {
-		for (const ruleArea of rule.areas) {
-			let area: PermArea | undefined = perms.areas.find((a) => ruleArea === a.name);
-			if (!area) {
-				const kojiFeature = geofences!.find(
-					(f) => f.properties.name.toLowerCase() === ruleArea.toLowerCase()
-				);
-				if (!kojiFeature) {
-					console.error(
-						`You configured area ${ruleArea} in your config permissions, but there's no Koji area with that name. Permissions for this area are ignored`
-					);
-					continue;
-				}
-
-				area = { name: ruleArea, features: [], polygon: kojiFeature.geometry };
-				perms.areas.push(area);
-			}
-
-			addFeatures(area!.features, rule.features);
-		}
+		if (!geofences) return;
+		applyAreaFeatures(rule.areas, rule.features, perms, geofences);
 	} else {
 		addFeatures(perms.everywhere, rule.features);
 	}
@@ -85,16 +85,14 @@ export async function updatePermissions(
 	accessToken: string,
 	thisFetch: typeof fetch
 ) {
-	const guildCache: { [key: string]: DiscordGuildData } = {};
+	const guildCache: { [key: string]: GuildMembership } = {};
 	const authConfig = getServerConfig().auth;
 	const permConfig = getServerConfig().permissions;
 	const canCheckGuildRules = accessToken.trim().length > 0;
 
 	const geofences = await getGeofences(thisFetch);
 
-	const permissions: Perms = JSON.parse(
-		JSON.stringify(await getEveryonePerms(thisFetch, geofences))
-	);
+	const permissions: Perms = structuredClone(await getEveryonePerms(thisFetch, geofences));
 
 	if (permConfig && authConfig.enabled) {
 		for (const rule of permConfig) {
@@ -105,25 +103,22 @@ export async function updatePermissions(
 					continue;
 				}
 
-				let guild = guildCache[rule.guildId];
-				if (!guild) {
-					const lookup = await getGuildMemberInfo(rule.guildId, accessToken);
-					if (!lookup) {
+				let membership = guildCache[rule.guildId];
+				if (!membership) {
+					membership = await getGuildMemberInfo(rule.guildId, accessToken);
+					if (!membership.ok) {
 						log.warning(
-							`discord guild lookup failed for user ${user.id}; treating guild ${rule.guildId} as non-member`
+							`discord guild lookup failed for user ${user.id} (status ${membership.status}); treating guild ${rule.guildId} as non-member`
 						);
-						guild = { roles: [] };
-					} else {
-						guild = lookup;
 					}
-					guildCache[rule.guildId] = guild;
+					guildCache[rule.guildId] = membership;
 				}
 
-				const roles = guild.roles ?? [];
-				if (!rule.roleId && guild.user) {
-					ruleApplies = true;
-				} else if (rule.roleId && roles.includes(rule.roleId)) {
-					ruleApplies = true;
+				// An empty roleId means "membership alone qualifies"; otherwise
+				// the user must hold the specific role.
+				if (membership.ok && membership.member) {
+					if (!rule.roleId) ruleApplies = true;
+					else if (membership.roles.includes(rule.roleId)) ruleApplies = true;
 				}
 			}
 

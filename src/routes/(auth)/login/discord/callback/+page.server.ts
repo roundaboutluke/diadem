@@ -1,36 +1,19 @@
 import type { PageServerLoad } from "./$types";
+import { isAuthRequiredEnabled } from "@/lib/server/auth/betterAuth";
 import { getClientConfig } from "@/lib/services/config/config.server";
 import { getMapPath } from "@/lib/utils/getMapPath";
-import { isAuthRequiredEnabled } from "@/lib/server/auth/betterAuth";
+import { sanitizeRedirectPath } from "@/lib/utils/sanitizeRedirectPath";
 
-function sanitizeRedirectPath(redirectPath: string | null | undefined, fallback: string) {
-	if (!redirectPath) return fallback;
-	if (!redirectPath.startsWith("/") || redirectPath.startsWith("//")) return fallback;
-	return redirectPath;
-}
-
-export const load: PageServerLoad = async (event) => {
-	const redirectLink = sanitizeRedirectPath(
+export const load: PageServerLoad = (event) => {
+	const redir = sanitizeRedirectPath(
 		event.url.searchParams.get("redir"),
 		isAuthRequiredEnabled() ? "/" : getMapPath(getClientConfig())
 	);
 
-	const response: { error: string | undefined; redir: string; name: string } = {
-		error: undefined,
-		redir: redirectLink,
-		name: ""
-	};
-
-	if (event.url.searchParams.get("error") === "1") {
-		response.error = "Discord Login failed";
-		return response;
+	if (event.url.searchParams.has("error") || !event.locals.authUser) {
+		return { error: true, redir, name: "" };
 	}
 
-	if (!event.locals.user || !event.locals.authUser) {
-		response.error = "Discord Login failed";
-		return response;
-	}
-
-	response.name = event.locals.authUser.name || event.locals.authUser.email || "";
-	return response;
+	// don't fall through to email — it's the synthetic <discord_id>@discord.diadem.local
+	return { error: false, redir, name: event.locals.authUser.name || "" };
 };

@@ -1,7 +1,7 @@
 import { PERMISSION_UPDATE_INTERVAL } from "@/lib/constants";
 import { locales, serverAsyncLocalStorage } from "@/lib/paraglide/runtime";
 import { paraglideMiddleware } from "@/lib/paraglide/server";
-import { getOrCreateUserFromDiscordId } from "@/lib/server/auth/auth";
+import { getUserFromDiscordId } from "@/lib/server/auth/authRecords";
 import {
 	assertBetterAuthStartupReadiness,
 	auth,
@@ -15,7 +15,6 @@ import { getServerLogger } from "@/lib/server/logging";
 import { setConfig } from "@/lib/services/config/config";
 import { getClientConfig } from "@/lib/services/config/config.server";
 import { getDisallowedPaths } from "@/lib/utils/disallowedPaths";
-import type { Perms } from "@/lib/utils/features";
 import { setServerLoggerFactory } from "@/lib/utils/logger";
 import TTLCache from "@isaacs/ttlcache";
 import { building } from "$app/environment";
@@ -45,21 +44,33 @@ const paraglideHandle: Handle = ({ event, resolve }) =>
 		});
 	});
 
-const permissionCache: TTLCache<string, undefined> = new TTLCache({
+// clone on every return path so locals.perms can't be mutated cross-request
+const userCache: TTLCache<string, User> = new TTLCache({
 	ttl: PERMISSION_UPDATE_INTERVAL * 1000
 });
+const userResolveInFlight = new Map<string, Promise<User>>();
 const authLogger = getServerLogger("auth");
-const permissionUpdateInFlight = new Map<string, Promise<Perms>>();
 
-function updatePermissionsLocked(user: User, accessToken: string, thisFetch: typeof fetch) {
-	let updatePromise = permissionUpdateInFlight.get(user.id);
-	if (!updatePromise) {
-		updatePromise = updatePermissions(user, accessToken, thisFetch).finally(() => {
-			permissionUpdateInFlight.delete(user.id);
-		});
-		permissionUpdateInFlight.set(user.id, updatePromise);
+async function resolveUserAndPerms(
+	event: Parameters<Handle>[0]["event"],
+	discordId: string
+): Promise<User> {
+	const cached = userCache.get(discordId);
+	if (cached) return structuredClone(cached);
+
+	let promise = userResolveInFlight.get(discordId);
+	if (!promise) {
+		promise = (async () => {
+			const user = await getUserFromDiscordId(discordId);
+			if (!user) throw new Error(`No user row for authenticated discordId ${discordId}`);
+			const accessToken = await getDiscordAccessToken(event);
+			user.permissions = await updatePermissions(user, accessToken ?? "", event.fetch);
+			userCache.set(discordId, user);
+			return user;
+		})().finally(() => userResolveInFlight.delete(discordId));
+		userResolveInFlight.set(discordId, promise);
 	}
-	return updatePromise;
+	return promise.then((u) => structuredClone(u));
 }
 
 const handleBetterAuth: Handle = async ({ event, resolve }) => {
@@ -68,31 +79,23 @@ const handleBetterAuth: Handle = async ({ event, resolve }) => {
 };
 
 const handleAuth: Handle = async ({ event, resolve }) => {
-	event.locals.perms = await getEveryonePerms(event.fetch);
+	// clone the memoized everyone-perms so locals.perms doesn't alias
+	event.locals.perms = structuredClone(await getEveryonePerms(event.fetch));
 	event.locals.user = null;
 	event.locals.session = null;
 	event.locals.authUser = null;
 
-	if (!isAuthFeatureEnabled()) {
-		return resolve(event);
-	}
+	if (!isAuthFeatureEnabled()) return resolve(event);
 
 	const authSession = await getAuthSession(event);
-	if (!authSession?.session || !authSession.user) {
-		return resolve(event);
-	}
+	if (!authSession) return resolve(event);
 
-	const discordId = authSession.user.discordId;
-	if (!discordId) {
-		authLogger.warning("Authenticated user has no discordId in Better Auth session");
+	let user: User;
+	try {
+		user = await resolveUserAndPerms(event, authSession.user.discordId);
+	} catch (e) {
+		authLogger.error(`Failed to resolve user for discordId ${authSession.user.discordId}: ${e}`);
 		return resolve(event);
-	}
-
-	const user = await getOrCreateUserFromDiscordId(discordId);
-	if (!permissionCache.has(user.id)) {
-		const accessToken = await getDiscordAccessToken(event);
-		user.permissions = await updatePermissionsLocked(user, accessToken ?? "", event.fetch);
-		permissionCache.set(user.id, undefined);
 	}
 
 	event.locals.user = user;

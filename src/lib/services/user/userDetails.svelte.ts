@@ -1,4 +1,4 @@
-import type { DiscordUser } from "@/lib/server/auth/discordDetails";
+import type { DiscordUser } from "@/lib/server/auth/discordApi";
 
 import type { Perms } from "@/lib/utils/features";
 
