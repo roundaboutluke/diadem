@@ -1,8 +1,8 @@
 diff --git a/api.js b/api.js
-index 44ccfaa28b23166c174db6aa8f82c204d5983518..e8fafc5a318ecdf75b48af6adf499c2000d2b2c1 100644
+index f4ecb91959f62fc938416a0585458c0a710af161..b6aca8de6d2a8bbb8a84965fdb06da9eb6ebbdde 100644
 --- a/api.js
 +++ b/api.js
-@@ -40950,9 +40950,9 @@ AND
+@@ -25345,9 +25345,9 @@ AND
          progressCallback("checks", checksCount, "fetching");
        }
        for (const checkConstraintRow of checkConstraints) {
@@ -16,10 +16,10 @@ index 44ccfaa28b23166c174db6aa8f82c204d5983518..e8fafc5a318ecdf75b48af6adf499c20
          tableInResult.checkConstraint[constraintName] = {
            name: constraintName,
 diff --git a/api.mjs b/api.mjs
-index d52ed68b1a8da7e334b1d2e08b4298cd3a9597df..ccc947a32e5ba6e638a0de024f7992b841bebc8e 100644
+index a940272dfb05accf57a472c46c52652ec9ad0080..cc6a98df0a6c96cc944989664496e1f3a1adee9d 100644
 --- a/api.mjs
 +++ b/api.mjs
-@@ -40955,9 +40955,9 @@ AND
+@@ -25374,9 +25374,9 @@ AND
          progressCallback("checks", checksCount, "fetching");
        }
        for (const checkConstraintRow of checkConstraints) {
@@ -33,10 +33,10 @@ index d52ed68b1a8da7e334b1d2e08b4298cd3a9597df..ccc947a32e5ba6e638a0de024f7992b8
          tableInResult.checkConstraint[constraintName] = {
            name: constraintName,
 diff --git a/bin.cjs b/bin.cjs
-index 70941f2a5aec6dcd1218e8a699fb5aafb4025f35..cb0eda41aafa397a51f4d75e5f5df9a1142dd4c4 100755
+index 07274ea6f53fd54a129b3d338892feda6e995cff..167634083758b4500215205867e28cb5c2f2f6d1 100755
 --- a/bin.cjs
 +++ b/bin.cjs
-@@ -18240,9 +18240,9 @@ AND
+@@ -16683,9 +16683,9 @@ AND
          progressCallback("checks", checksCount, "fetching");
        }
        for (const checkConstraintRow of checkConstraints) {
