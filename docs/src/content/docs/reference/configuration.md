@@ -290,11 +290,15 @@ showToolsMenu = true
 coverageMap = true
 scout = true
 customTools = false
+compactTools = false
 ```
 
 Enables/disables the different tools. `showToolsMenu` disables the Tools menu altogether.
 `customTools` renders `src/components/custom/Tools.svelte` at the bottom of the drawer —
 see [Extending Diadem](/guides/extending/#custom-tools-drawer-entries).
+`compactTools` switches every tool entry (built-in and custom) to a single-row card without
+the map preview pane — useful when your custom tools don't have previews and the default
+showcase cards feel oversized.
 
 ## `client.mapPositions`
 
