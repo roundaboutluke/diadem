@@ -12,7 +12,9 @@ export function GET() {
 		name,
 		short_name: name,
 		description: general.description,
-		start_url: "/",
+		// With a custom home page, launch the installed app straight into the
+		// map (/map); otherwise / already is the map.
+		start_url: general.customHome ? "/map" : "/",
 		scope: "/",
 		display: "standalone",
 		background_color: "#0a0a0a",
