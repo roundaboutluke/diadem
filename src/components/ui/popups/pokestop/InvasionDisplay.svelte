@@ -60,13 +60,7 @@
 		useConfirmedSlots ? confirmedSlots : [undefined, undefined, undefined]
 	);
 
-	function isConfirmedMon(mon: ConfirmedMon, confirmed: ConfirmedMon | undefined) {
-		return Boolean(
-			confirmed && mon.pokemon_id === confirmed.pokemon_id && mon.form === confirmed.form
-		);
-	}
-
-	// Primary-type colour for a lineup mon, used to tint the lineup boxes/cells.
+	// Primary-type colour for a lineup mon, used to tint the whole lineup row.
 	function typeColorOf(mon: { pokemon_id: number; form: number } | undefined): string | undefined {
 		if (!mon) return undefined;
 		return getTypeColor(getMasterPokemon(mon.pokemon_id, mon.form)?.types?.[0]);
@@ -84,6 +78,7 @@
 			: (slotLineup[0]?.encounter ?? false)
 		: false}
 	{@const boxColor = typeColorOf(confirmedMon ?? slotLineup[0])}
+	{@const displayMons = confirmedMon ? [confirmedMon] : slotLineup}
 	<div class="flex gap-1">
 		{#if num}
 			<div class="border border-border rounded-sm flex justify-center items-center h-9 px-1.5">
@@ -96,16 +91,11 @@
 		<div
 			class="flex flex-wrap border border-border rounded-sm w-fit h-9 overflow-hidden"
 			style:border-color={boxColor}
-			style:background-color={highlight && boxColor ? `${boxColor}26` : undefined}
+			style:background-color={boxColor ? `${boxColor}${highlight ? "4d" : "26"}` : undefined}
 		>
-			{#each slotLineup as slotMon (`${slotMon.pokemon_id}-${slotMon.form}`)}
+			{#each displayMons as slotMon (`${slotMon.pokemon_id}-${slotMon.form}`)}
 				{@const pokemon = getInvasionPokemon(slotMon)}
-				{@const monColor = typeColorOf(slotMon)}
-				<div
-					class="p-1 size-8"
-					style:background-color={monColor ? `${monColor}33` : undefined}
-					class:opacity-30={confirmedMon && !isConfirmedMon(slotMon, confirmedMon)}
-				>
+				<div class="p-1 size-8">
 					<ImagePopup src={getIconPokemon(pokemon)} alt={mPokemon(pokemon)} />
 				</div>
 			{/each}
