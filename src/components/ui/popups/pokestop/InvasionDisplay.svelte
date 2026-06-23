@@ -34,9 +34,47 @@
 			return entry.pokemon_id === pokemon.pokemon_id && entry.form === pokemon.form;
 		});
 	}
+
+	// Confirmed invasions carry the actually-scanned lineup in the incident's
+	// slot_N columns. With the current single-scan system only slot 1 is
+	// populated (slots 2/3 stay NULL), so drive the highlight from this data to
+	// emphasise only the confirmed slot(s) instead of every generic reward slot.
+	// Unconfirmed invasions keep the generic `encounter`-based highlight.
+	type ConfirmedMon = { pokemon_id: number; form: number };
+
+	const confirmedSlots = $derived<(ConfirmedMon | undefined)[]>([
+		incident.slot_1_pokemon_id
+			? { pokemon_id: incident.slot_1_pokemon_id, form: incident.slot_1_form ?? 0 }
+			: undefined,
+		incident.slot_2_pokemon_id
+			? { pokemon_id: incident.slot_2_pokemon_id, form: incident.slot_2_form ?? 0 }
+			: undefined,
+		incident.slot_3_pokemon_id
+			? { pokemon_id: incident.slot_3_pokemon_id, form: incident.slot_3_form ?? 0 }
+			: undefined
+	]);
+	const useConfirmedSlots = $derived(Boolean(incident.confirmed) && confirmedSlots.some(Boolean));
+	const slotConfirmations = $derived(
+		useConfirmedSlots ? confirmedSlots : [undefined, undefined, undefined]
+	);
+
+	function isConfirmedMon(mon: ConfirmedMon, confirmed: ConfirmedMon | undefined) {
+		return Boolean(
+			confirmed && mon.pokemon_id === confirmed.pokemon_id && mon.form === confirmed.form
+		);
+	}
 </script>
 
-{#snippet lineupSlot(slotLineup: InvasionPokemonStats[], num: number | undefined)}
+{#snippet lineupSlot(
+	slotLineup: InvasionPokemonStats[],
+	num: number | undefined,
+	confirmedMon?: ConfirmedMon
+)}
+	{@const highlight = num
+		? useConfirmedSlots
+			? Boolean(confirmedMon)
+			: (slotLineup[0]?.encounter ?? false)
+		: false}
 	<div class="flex gap-1">
 		{#if num}
 			<div class="border border-border rounded-sm flex justify-center items-center h-9 px-1.5">
@@ -48,14 +86,17 @@
 
 		<div
 			class="flex flex-wrap border border-border rounded-sm w-fit h-9"
-			class:dark:border-yellow-800={slotLineup[0].encounter && num}
-			class:dark:bg-yellow-950={slotLineup[0].encounter && num}
-			class:border-indigo-300={slotLineup[0].encounter && num}
-			class:bg-indigo-100={slotLineup[0].encounter && num}
+			class:dark:border-yellow-800={highlight}
+			class:dark:bg-yellow-950={highlight}
+			class:border-indigo-300={highlight}
+			class:bg-indigo-100={highlight}
 		>
 			{#each slotLineup as slotMon (`${slotMon.pokemon_id}-${slotMon.form}`)}
 				{@const pokemon = getInvasionPokemon(slotMon)}
-				<div class="p-1 size-8">
+				<div
+					class="p-1 size-8"
+					class:opacity-30={confirmedMon && !isConfirmedMon(slotMon, confirmedMon)}
+				>
 					<ImagePopup src={getIconPokemon(pokemon)} alt={mPokemon(pokemon)} />
 				</div>
 			{/each}
@@ -112,9 +153,9 @@
 
 		{#if hasLineup && expanded}
 			<div class="mt-1.5 space-y-1">
-				{@render lineupSlot(lineup?.first ?? [], 1)}
-				{@render lineupSlot(lineup?.second ?? [], 2)}
-				{@render lineupSlot(lineup?.third ?? [], 3)}
+				{@render lineupSlot(lineup?.first ?? [], 1, slotConfirmations[0])}
+				{@render lineupSlot(lineup?.second ?? [], 2, slotConfirmations[1])}
+				{@render lineupSlot(lineup?.third ?? [], 3, slotConfirmations[2])}
 			</div>
 		{/if}
 	{/snippet}
