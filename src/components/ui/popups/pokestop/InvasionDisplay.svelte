@@ -13,6 +13,8 @@
 		hasInvasionLineup
 	} from "@/lib/features/masterStats.svelte";
 	import type { InvasionPokemonStats } from "@/lib/server/api/queryStats";
+	import { getMasterPokemon } from "@/lib/services/masterfile";
+	import { getTypeColor } from "@/lib/utils/typeColors";
 	import { hasLoadedFeature, LoadedFeature } from "@/lib/services/initialLoad.svelte";
 	import IconValue from "@/components/ui/popups/common/IconValue.svelte";
 	import { ShieldHalf, Tally1, Trophy } from "lucide-svelte";
@@ -63,6 +65,12 @@
 			confirmed && mon.pokemon_id === confirmed.pokemon_id && mon.form === confirmed.form
 		);
 	}
+
+	// Primary-type colour for a lineup mon, used to tint the lineup boxes/cells.
+	function typeColorOf(mon: { pokemon_id: number; form: number } | undefined): string | undefined {
+		if (!mon) return undefined;
+		return getTypeColor(getMasterPokemon(mon.pokemon_id, mon.form)?.types?.[0]);
+	}
 </script>
 
 {#snippet lineupSlot(
@@ -75,6 +83,7 @@
 			? Boolean(confirmedMon)
 			: (slotLineup[0]?.encounter ?? false)
 		: false}
+	{@const boxColor = typeColorOf(confirmedMon ?? slotLineup[0])}
 	<div class="flex gap-1">
 		{#if num}
 			<div class="border border-border rounded-sm flex justify-center items-center h-9 px-1.5">
@@ -85,16 +94,16 @@
 		{/if}
 
 		<div
-			class="flex flex-wrap border border-border rounded-sm w-fit h-9"
-			class:dark:border-yellow-800={highlight}
-			class:dark:bg-yellow-950={highlight}
-			class:border-indigo-300={highlight}
-			class:bg-indigo-100={highlight}
+			class="flex flex-wrap border border-border rounded-sm w-fit h-9 overflow-hidden"
+			style:border-color={boxColor}
+			style:background-color={highlight && boxColor ? `${boxColor}26` : undefined}
 		>
 			{#each slotLineup as slotMon (`${slotMon.pokemon_id}-${slotMon.form}`)}
 				{@const pokemon = getInvasionPokemon(slotMon)}
+				{@const monColor = typeColorOf(slotMon)}
 				<div
 					class="p-1 size-8"
+					style:background-color={monColor ? `${monColor}33` : undefined}
 					class:opacity-30={confirmedMon && !isConfirmedMon(slotMon, confirmedMon)}
 				>
 					<ImagePopup src={getIconPokemon(pokemon)} alt={mPokemon(pokemon)} />
