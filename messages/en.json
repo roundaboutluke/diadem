@@ -527,5 +527,7 @@
 	"search_hint_wayfarer": "Try searching for Pokéstops, addresses or areas",
 	"search_no_results_generic": "Nothing came up",
 	"coordinates": "Coordinates",
-	"lasts_until": "Lasts until"
+	"lasts_until": "Lasts until",
+	"install_app": "Install app",
+	"install_app_description": "Add to your home screen"
 }

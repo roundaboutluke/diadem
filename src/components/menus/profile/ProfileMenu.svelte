@@ -5,6 +5,7 @@
 	import SectionIcons from "@/components/menus/profile/SectionIcons.svelte";
 	import SectionAdvanced from "@/components/menus/profile/SectionAdvanced.svelte";
 	import SignInButton from "@/components/ui/user/SignInButton.svelte";
+	import InstallButton from "@/components/menus/profile/InstallButton.svelte";
 </script>
 
 <div class="space-y-2">
@@ -17,4 +18,5 @@
 	<SectionAppearance />
 	<SectionIcons />
 	<SectionAdvanced />
+	<InstallButton />
 </div>
