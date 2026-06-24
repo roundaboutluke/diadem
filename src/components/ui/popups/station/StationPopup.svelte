@@ -22,6 +22,7 @@
 	} from "lucide-svelte";
 	import TimeWithCountdown from "@/components/ui/popups/common/TimeWithCountdown.svelte";
 	import Countdown from "@/components/utils/Countdown.svelte";
+	import RemoteRaidButton from "@/components/ui/popups/common/RemoteRaidButton.svelte";
 	import { currentTimestamp } from "@/lib/utils/currentTimestamp";
 	import {
 		calculateMaxBattleCp,
@@ -105,6 +106,10 @@
 			</IconValue>
 
 			<!--		<StationedPokemonDisplay stationed={data.stationed_pokemon} />-->
+
+			{#if data.battle_pokemon_id}
+				<RemoteRaidButton kind="bread" fortId={data.id} lat={data.lat} lon={data.lon} />
+			{/if}
 		{/if}
 
 		<IconValue Icon={Clock}>

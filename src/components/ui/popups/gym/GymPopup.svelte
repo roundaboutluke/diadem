@@ -12,6 +12,7 @@
 	import IconValue from "@/components/ui/popups/common/IconValue.svelte";
 	import UpdatedTimes from "@/components/ui/popups/common/UpdatedTimes.svelte";
 	import GymDefenderOverview from "@/components/ui/popups/gym/GymDefenderOverview.svelte";
+	import RemoteRaidButton from "@/components/ui/popups/common/RemoteRaidButton.svelte";
 	import {
 		getCurrentSelectedData,
 		getCurrentSelectedMapId
@@ -165,6 +166,9 @@
 	{#snippet content()}
 		<div class="[&>*:last-child]:mb-3">
 			{@render raidDisplay(true)}
+			{#if hasActiveRaid(data) && isRaidHatched(data) && data.raid_pokemon_id}
+				<RemoteRaidButton kind="raid" fortId={data.id} lat={data.lat} lon={data.lon} />
+			{/if}
 			{@render memberOverview()}
 			{#if !isFortOutdated(data.updated) && data.defenders?.length}
 				<GymDefenderOverview defenders={data.defenders} />
