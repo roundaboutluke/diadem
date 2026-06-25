@@ -36,6 +36,8 @@ export type RemoteRaidPhase =
 	| "in_lobby"
 	| "busy"
 	| "no_link"
+	| "needs_login"
+	| "needs_setup"
 	| "not_found"
 	| "error";
 
@@ -153,6 +155,10 @@ export class RemoteRaidFlow {
 			const linkRes = await fetch(`${HOOPA_BASE}/linkcable`, {
 				headers: { accept: "application/json" }
 			});
+			if (linkRes.status === 401) {
+				this.phase = "needs_login";
+				return;
+			}
 			if (!linkRes.ok) {
 				this.phase = "error";
 				this.detail = await errorMessage(linkRes, "Couldn't reach Hoopa");
@@ -187,6 +193,13 @@ export class RemoteRaidFlow {
 			}
 			if (res.status === 404) {
 				this.phase = "not_found";
+				return;
+			}
+			if (res.status === 400) {
+				// Backend gate (subscriber pending, quiet hours) — informational,
+				// not a hard failure. Surface the message + a path to set up Hoopa.
+				this.phase = "needs_setup";
+				this.detail = await errorMessage(res, "Finish setting up Hoopa first");
 				return;
 			}
 			if (!res.ok) {

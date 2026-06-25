@@ -546,5 +546,7 @@
 	"remote_raid_cancel": "Cancel",
 	"remote_raid_cancelling": "Cancelling…",
 	"remote_raid_in_lobby": "{count} in lobby",
-	"remote_raid_invited_count": "{count} invited"
+	"remote_raid_invited_count": "{count} invited",
+	"remote_raid_needs_login": "Log in to remote raid.",
+	"remote_raid_login": "Log in"
 }

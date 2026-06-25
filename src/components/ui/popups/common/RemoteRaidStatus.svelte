@@ -48,6 +48,23 @@
 					{m.remote_raid_connect()}
 				</a>
 			</p>
+		{:else if flow.phase === "needs_login"}
+			<p class="text-muted-foreground">
+				{m.remote_raid_needs_login()}
+				<a
+					href="/login/discord"
+					class="font-medium text-primary underline-offset-4 hover:underline"
+				>
+					{m.remote_raid_login()}
+				</a>
+			</p>
+		{:else if flow.phase === "needs_setup"}
+			<p class="text-muted-foreground">
+				{flow.detail}
+				<a href="/hoopa" class="font-medium text-primary underline-offset-4 hover:underline">
+					{m.remote_raid_connect()}
+				</a>
+			</p>
 		{:else if flow.phase === "busy"}
 			<p class="text-muted-foreground">
 				{flow.detail || m.remote_raid_busy()}
