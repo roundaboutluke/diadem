@@ -128,9 +128,16 @@ export class RemoteRaidFlow {
 			const res = await fetch(`${HOOPA_BASE}/status`, { headers: { accept: "application/json" } });
 			if (!res.ok) return;
 			const data = (await res.json()) as StatusResponse;
-			const lobby = data.session ?? data.joinable_lobby ?? undefined;
-			this.lobbyPlayerCount = lobby?.lobby_player_count;
-			this.invitedCount = lobby?.invited_count;
+			const session = data.session;
+			const live =
+				session?.state === "in_lobby" || session?.state === "in_bread_lobby"
+					? session
+					: (data.joinable_lobby ?? undefined);
+			if (!live) return;
+			// lobby_player_count / invited_count are `omitempty` server-side, so a
+			// real 0 arrives as undefined — default to 0 so the count always shows.
+			this.lobbyPlayerCount = live.lobby_player_count ?? 0;
+			this.invitedCount = live.invited_count ?? 0;
 		} catch {
 			/* ignore transient poll errors */
 		}
