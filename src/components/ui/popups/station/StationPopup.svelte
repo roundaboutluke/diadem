@@ -93,31 +93,38 @@
 		</div>
 
 		{#if data.start_time && data.start_time < currentTimestamp()}
-			{#if data.battle_pokemon_stamina && data.battle_pokemon_cp_multiplier}
-				<IconValue Icon={ChartSpline}>
-					<b>{m.pogo_cp({ cp: calculateMaxBattleCp(data) ?? 0 })}</b>
-					({m.pogo_hp({ hp: formatNumber(data.battle_pokemon_stamina) })},
-					{m.cpm()}: {formatNumber(data.battle_pokemon_cp_multiplier)})
-				</IconValue>
-			{/if}
-			<IconValue Icon={Star}>
-				{m.x_start_max_battle({ level: data.battle_level ?? 0 })}
-			</IconValue>
-			<IconValue Icon={UsersRound}>
-				Stationed: <b>{data.total_stationed_pokemon}</b>/{STATION_SLOTS} (Gmax:
-				<b>{data.total_stationed_gmax}</b>)
-			</IconValue>
+			<div class="flex items-start gap-2">
+				<div class="flex-1">
+					{#if data.battle_pokemon_stamina && data.battle_pokemon_cp_multiplier}
+						<IconValue Icon={ChartSpline}>
+							<b>{m.pogo_cp({ cp: calculateMaxBattleCp(data) ?? 0 })}</b>
+							({m.pogo_hp({ hp: formatNumber(data.battle_pokemon_stamina) })},
+							{m.cpm()}: {formatNumber(data.battle_pokemon_cp_multiplier)})
+						</IconValue>
+					{/if}
+					<IconValue Icon={Star}>
+						{m.x_start_max_battle({ level: data.battle_level ?? 0 })}
+					</IconValue>
+					<IconValue Icon={UsersRound}>
+						Stationed: <b>{data.total_stationed_pokemon}</b>/{STATION_SLOTS} (Gmax:
+						<b>{data.total_stationed_gmax}</b>)
+					</IconValue>
 
-			<!--		<StationedPokemonDisplay stationed={data.stationed_pokemon} />-->
+					<!--		<StationedPokemonDisplay stationed={data.stationed_pokemon} />-->
+				</div>
+
+				{#if data.battle_pokemon_id}
+					<RemoteRaidIcon
+						flow={remoteRaid}
+						kind="bread"
+						fortId={data.id}
+						lat={data.lat}
+						lon={data.lon}
+					/>
+				{/if}
+			</div>
 
 			{#if data.battle_pokemon_id}
-				<RemoteRaidIcon
-					flow={remoteRaid}
-					kind="bread"
-					fortId={data.id}
-					lat={data.lat}
-					lon={data.lon}
-				/>
 				<RemoteRaidStatus flow={remoteRaid} />
 			{/if}
 		{/if}
