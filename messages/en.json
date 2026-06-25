@@ -548,5 +548,8 @@
 	"remote_raid_in_lobby": "{count} in lobby",
 	"remote_raid_invited_count": "{count} invited",
 	"remote_raid_needs_login": "Log in to remote raid.",
-	"remote_raid_login": "Log in"
+	"remote_raid_login": "Log in",
+	"remote_raid_in_queue": "In queue",
+	"remote_raid_queue_position": "#{position}",
+	"remote_raid_queue_hint": "You'll be pulled in when a bot frees up."
 }

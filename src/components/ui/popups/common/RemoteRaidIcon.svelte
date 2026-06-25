@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Loader2, X } from "lucide-svelte";
+	import { Check, Loader2, X } from "lucide-svelte";
 	import * as m from "@/lib/paraglide/messages";
 	import { getIconReward } from "@/lib/services/uicons.svelte.js";
 	import { RewardType } from "@/lib/utils/pokestopUtils";
@@ -30,20 +30,25 @@
 	const passIcon = getIconReward(RewardType.ITEM, { item_id: 1408 });
 
 	const inLobby = $derived(flow.phase === "in_lobby");
-	const pending = $derived(flow.busy || flow.releasing);
+	const queued = $derived(flow.phase === "queued");
+	const pending = $derived(flow.busy || flow.releasing || queued);
 	const label = $derived(
-		inLobby
+		flow.canCancel
 			? m.remote_raid_cancel()
-			: kind === "rsvp"
-				? m.remote_raid_rsvp()
-				: kind === "bread"
-					? m.remote_raid_max_battle()
-					: m.remote_raid_title()
+			: queued
+				? m.remote_raid_in_queue()
+				: inLobby
+					? m.remote_raid_invited()
+					: kind === "rsvp"
+						? m.remote_raid_rsvp()
+						: kind === "bread"
+							? m.remote_raid_max_battle()
+							: m.remote_raid_title()
 	);
 
 	function onclick() {
-		if (inLobby) void flow.release();
-		else void flow.run({ kind, fortId, lat, lon });
+		if (flow.canCancel) void flow.release();
+		else if (!inLobby && !queued) void flow.run({ kind, fortId, lat, lon });
 	}
 </script>
 
@@ -55,12 +60,14 @@
 		title={label}
 		aria-label={label}
 		class="ml-auto flex size-9 shrink-0 items-center justify-center rounded-md border border-border bg-card shadow-sm transition-colors hover:bg-accent/40 disabled:opacity-60"
-		class:text-destructive={inLobby}
+		class:text-destructive={flow.canCancel}
 	>
 		{#if pending}
 			<Loader2 class="size-5 animate-spin text-muted-foreground" />
-		{:else if inLobby}
+		{:else if flow.canCancel}
 			<X class="size-5" />
+		{:else if inLobby}
+			<Check class="size-5 text-green-600 dark:text-green-500" />
 		{:else}
 			<img src={passIcon} alt="" class="size-6" />
 		{/if}

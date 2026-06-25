@@ -13,6 +13,14 @@
 		const id = setInterval(() => void flow.refreshLobby(), 5000);
 		return () => clearInterval(id);
 	});
+
+	// Poll queue position while parked; promotes to in_lobby once hosted.
+	$effect(() => {
+		if (flow.phase !== "queued") return;
+		void flow.refreshQueue();
+		const id = setInterval(() => void flow.refreshQueue(), 5000);
+		return () => clearInterval(id);
+	});
 </script>
 
 {#if flow.phase !== "idle" && flow.phase !== "working"}
@@ -41,6 +49,12 @@
 			<a href="/hoopa" class="text-primary underline-offset-4 hover:underline">
 				{m.remote_raid_open_controller()}
 			</a>
+		{:else if flow.phase === "queued"}
+			<p class="font-medium">
+				{m.remote_raid_in_queue()}{#if flow.queuePosition}
+					· {m.remote_raid_queue_position({ position: flow.queuePosition })}{/if}
+			</p>
+			<p class="text-muted-foreground">{m.remote_raid_queue_hint()}</p>
 		{:else if flow.phase === "no_link"}
 			<p class="text-muted-foreground">
 				{m.remote_raid_no_link()}

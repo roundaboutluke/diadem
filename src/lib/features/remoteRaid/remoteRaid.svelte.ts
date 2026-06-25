@@ -25,14 +25,25 @@ type RaidResponse = {
 	owner_daily_cap_reached?: boolean;
 };
 
+type LobbyView = {
+	raid?: { fort_id?: string };
+	bread?: { station_id?: string };
+	already_invited?: boolean;
+	battle_start_ms?: number;
+	lobby_player_count?: number;
+};
+
 type StatusResponse = {
 	session?: { state?: string; lobby_player_count?: number; invited_count?: number } | null;
 	joinable_lobby?: { lobby_player_count?: number; invited_count?: number } | null;
+	queue_position?: number;
+	lobbies?: LobbyView[];
 };
 
 export type RemoteRaidPhase =
 	| "idle"
 	| "working"
+	| "queued"
 	| "in_lobby"
 	| "busy"
 	| "no_link"
@@ -102,11 +113,22 @@ export class RemoteRaidFlow {
 	/** Live lobby occupancy + invited count, polled from /status while in_lobby. */
 	lobbyPlayerCount = $state<number | undefined>(undefined);
 	invitedCount = $state<number | undefined>(undefined);
+	/** Queue position while parked (all bots busy), polled from /status. */
+	queuePosition = $state<number | undefined>(undefined);
 	/** Session token from the join — used to release/cancel from the map. */
 	private token: string | undefined = undefined;
+	/** Friend code + fort kept while queued so we can poll our position. */
+	private queuedFriendCode: string | undefined = undefined;
+	private queuedFortId: string | undefined = undefined;
 
 	get busy(): boolean {
 		return this.phase === "working";
+	}
+
+	/** Only an owner-held lobby (we have the token) can be cancelled from the
+	 * map; a queue-hosted lobby has no client token. */
+	get canCancel(): boolean {
+		return this.phase === "in_lobby" && this.token !== undefined;
 	}
 
 	reset() {
@@ -119,7 +141,48 @@ export class RemoteRaidFlow {
 		this.releasing = false;
 		this.lobbyPlayerCount = undefined;
 		this.invitedCount = undefined;
+		this.queuePosition = undefined;
 		this.token = undefined;
+		this.queuedFriendCode = undefined;
+		this.queuedFortId = undefined;
+	}
+
+	/** Poll our queue position while parked; promote to in_lobby once a bot has
+	 * hosted us (we appear invited in a lobby at our fort). */
+	async refreshQueue() {
+		if (this.phase !== "queued" || !this.queuedFriendCode) return;
+		try {
+			const res = await fetch(
+				`${HOOPA_BASE}/status?friend_code=${encodeURIComponent(this.queuedFriendCode)}`,
+				{ headers: { accept: "application/json" } }
+			);
+			if (!res.ok) return;
+			const data = (await res.json()) as StatusResponse;
+			const pos = data.queue_position ?? 0;
+			if (pos > 0) {
+				this.queuePosition = pos;
+				return;
+			}
+			// Dequeued. A bot hosting our fort with us invited means we're in.
+			const lobby = (data.lobbies ?? []).find((l) => {
+				const fid = l.raid?.fort_id ?? l.bread?.station_id;
+				return fid === this.queuedFortId && l.already_invited;
+			});
+			if (lobby) {
+				this.invited = true;
+				this.lobbyPlayerCount = lobby.lobby_player_count ?? 0;
+				this.battleStartMs = lobby.battle_start_ms;
+				this.queuePosition = undefined;
+				this.phase = "in_lobby";
+			} else {
+				// Dequeued without a hosted lobby — the raid likely ended before
+				// our turn. Surface as not-found rather than a silent reset.
+				this.queuePosition = undefined;
+				this.phase = "not_found";
+			}
+		} catch {
+			/* ignore transient poll errors */
+		}
 	}
 
 	/** Poll live lobby occupancy from /status while in_lobby (driven by the
@@ -186,6 +249,16 @@ export class RemoteRaidFlow {
 					private: false
 				})
 			});
+			if (res.status === 202) {
+				// All bots busy — parked in the queue. Poll position until a bot
+				// frees up and hosts us.
+				const q = (await readJson<{ queue_position?: number }>(res)) ?? {};
+				this.queuePosition = q.queue_position;
+				this.queuedFriendCode = friendCode;
+				this.queuedFortId = target.fortId;
+				this.phase = "queued";
+				return;
+			}
 			if (res.status === 409) {
 				this.phase = "busy";
 				this.detail = await errorMessage(res, "The bot is busy with another raid");
