@@ -88,12 +88,8 @@
 	{/snippet}
 
 	{#snippet content()}
-		<div class="mb-3">
-			{@render basicInfo()}
-		</div>
-
 		{#if data.start_time && data.start_time < currentTimestamp()}
-			<div class="flex items-start gap-2">
+			<div class="flex items-start gap-2 border-border border-b pb-2 mb-2">
 				<div class="flex-1">
 					{#if data.battle_pokemon_stamina && data.battle_pokemon_cp_multiplier}
 						<IconValue Icon={ChartSpline}>
@@ -128,6 +124,10 @@
 				<RemoteRaidStatus flow={remoteRaid} />
 			{/if}
 		{/if}
+
+		<div class="mb-3">
+			{@render basicInfo()}
+		</div>
 
 		<IconValue Icon={Clock}>
 			{m.last_updated()}: <b><Countdown expireTime={data.updated} /></b>
