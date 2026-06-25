@@ -166,7 +166,6 @@
 	{#snippet content()}
 		<div class="[&>*:last-child]:mb-3">
 			{@render raidDisplay(true)}
-			{@render memberOverview()}
 			{#if hasActiveRaid(data)}
 				<RemoteRaidButton
 					kind={isRaidHatched(data) ? "raid" : "rsvp"}
@@ -175,6 +174,7 @@
 					lon={data.lon}
 				/>
 			{/if}
+			{@render memberOverview()}
 			{#if !isFortOutdated(data.updated) && data.defenders?.length}
 				<GymDefenderOverview defenders={data.defenders} />
 			{/if}
