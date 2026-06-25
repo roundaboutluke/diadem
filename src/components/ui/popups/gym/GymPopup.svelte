@@ -12,7 +12,9 @@
 	import IconValue from "@/components/ui/popups/common/IconValue.svelte";
 	import UpdatedTimes from "@/components/ui/popups/common/UpdatedTimes.svelte";
 	import GymDefenderOverview from "@/components/ui/popups/gym/GymDefenderOverview.svelte";
-	import RemoteRaidButton from "@/components/ui/popups/common/RemoteRaidButton.svelte";
+	import RemoteRaidIcon from "@/components/ui/popups/common/RemoteRaidIcon.svelte";
+	import RemoteRaidStatus from "@/components/ui/popups/common/RemoteRaidStatus.svelte";
+	import { RemoteRaidFlow } from "@/lib/features/remoteRaid/remoteRaid.svelte";
 	import {
 		getCurrentSelectedData,
 		getCurrentSelectedMapId
@@ -34,6 +36,7 @@
 	);
 	useMetadata(() => ({ title: data ? (data.name ?? m.pogo_gym()) : undefined }));
 	let rsvps: Rsvp[] = $derived(JSON.parse(data.rsvps ?? "[]"));
+	const remoteRaid = new RemoteRaidFlow();
 </script>
 
 {#snippet raidDisplay(expanded: boolean)}
@@ -115,6 +118,15 @@
 					</div>
 				{/if}
 			</div>
+			{#if expanded && hasActiveRaid(data)}
+				<RemoteRaidIcon
+					flow={remoteRaid}
+					kind={isRaidHatched(data) ? "raid" : "rsvp"}
+					fortId={data.id}
+					lat={data.lat}
+					lon={data.lon}
+				/>
+			{/if}
 		</div>
 	{/if}
 {/snippet}
@@ -166,14 +178,7 @@
 	{#snippet content()}
 		<div class="[&>*:last-child]:mb-3">
 			{@render raidDisplay(true)}
-			{#if hasActiveRaid(data)}
-				<RemoteRaidButton
-					kind={isRaidHatched(data) ? "raid" : "rsvp"}
-					fortId={data.id}
-					lat={data.lat}
-					lon={data.lon}
-				/>
-			{/if}
+			<RemoteRaidStatus flow={remoteRaid} />
 			{@render memberOverview()}
 			{#if !isFortOutdated(data.updated) && data.defenders?.length}
 				<GymDefenderOverview defenders={data.defenders} />

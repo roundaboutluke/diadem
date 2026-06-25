@@ -22,7 +22,9 @@
 	} from "lucide-svelte";
 	import TimeWithCountdown from "@/components/ui/popups/common/TimeWithCountdown.svelte";
 	import Countdown from "@/components/utils/Countdown.svelte";
-	import RemoteRaidButton from "@/components/ui/popups/common/RemoteRaidButton.svelte";
+	import RemoteRaidIcon from "@/components/ui/popups/common/RemoteRaidIcon.svelte";
+	import RemoteRaidStatus from "@/components/ui/popups/common/RemoteRaidStatus.svelte";
+	import { RemoteRaidFlow } from "@/lib/features/remoteRaid/remoteRaid.svelte";
 	import { currentTimestamp } from "@/lib/utils/currentTimestamp";
 	import {
 		calculateMaxBattleCp,
@@ -36,6 +38,7 @@
 		(getMapObjects()[getCurrentSelectedMapId()] as StationData) ??
 			(getCurrentSelectedData() as StationData)
 	);
+	const remoteRaid = new RemoteRaidFlow();
 </script>
 
 {#snippet basicInfo()}
@@ -108,7 +111,14 @@
 			<!--		<StationedPokemonDisplay stationed={data.stationed_pokemon} />-->
 
 			{#if data.battle_pokemon_id}
-				<RemoteRaidButton kind="bread" fortId={data.id} lat={data.lat} lon={data.lon} />
+				<RemoteRaidIcon
+					flow={remoteRaid}
+					kind="bread"
+					fortId={data.id}
+					lat={data.lat}
+					lon={data.lon}
+				/>
+				<RemoteRaidStatus flow={remoteRaid} />
 			{/if}
 		{/if}
 

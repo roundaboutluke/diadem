@@ -90,6 +90,10 @@ export class RemoteRaidFlow {
 	/** Invite outcome flags for the in_lobby summary. */
 	invited = $state(false);
 	dailyCapReached = $state(false);
+	/** True while a release/cancel request is in flight. */
+	releasing = $state(false);
+	/** Session token from the join — used to release/cancel from the map. */
+	private token: string | undefined = undefined;
 
 	get busy(): boolean {
 		return this.phase === "working";
@@ -102,6 +106,8 @@ export class RemoteRaidFlow {
 		this.autoLeaveMs = undefined;
 		this.invited = false;
 		this.dailyCapReached = false;
+		this.releasing = false;
+		this.token = undefined;
 	}
 
 	async run(target: RemoteRaidTarget) {
@@ -157,6 +163,7 @@ export class RemoteRaidFlow {
 			}
 
 			const raid = await readJson<RaidResponse>(res);
+			this.token = raid.token;
 			persistToken(raid.token, raid.acquired_at);
 			// For an RSVP (unhatched egg) there's no live lobby — the slot ms is
 			// when the egg hatches and the lobby opens, so use it for the countdown.
@@ -172,6 +179,30 @@ export class RemoteRaidFlow {
 			this.detail = error instanceof Error ? error.message : "Remote raid failed";
 		}
 	}
+
+	/** Release/cancel the active session from the map (POST /hoopa/release). */
+	async release() {
+		if (this.phase !== "in_lobby" || !this.token || this.releasing) return;
+		this.releasing = true;
+		this.detail = "";
+		try {
+			const res = await fetch(`${HOOPA_BASE}/release`, {
+				method: "POST",
+				headers: { "content-type": "application/json" },
+				body: JSON.stringify({ token: this.token })
+			});
+			if (res.ok) {
+				clearToken();
+				this.reset();
+			} else {
+				this.detail = await errorMessage(res, "Couldn't cancel the session");
+			}
+		} catch (error) {
+			this.detail = error instanceof Error ? error.message : "Couldn't cancel the session";
+		} finally {
+			this.releasing = false;
+		}
+	}
 }
 
 function persistToken(token: string, acquiredAt: string) {
@@ -180,5 +211,14 @@ function persistToken(token: string, acquiredAt: string) {
 		window.sessionStorage.setItem(TOKEN_ACQUIRED_AT_STORAGE_KEY, acquiredAt);
 	} catch {
 		/* sessionStorage disabled — handoff just won't resume ownership */
+	}
+}
+
+function clearToken() {
+	try {
+		window.sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+		window.sessionStorage.removeItem(TOKEN_ACQUIRED_AT_STORAGE_KEY);
+	} catch {
+		/* ignore */
 	}
 }

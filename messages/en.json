@@ -540,5 +540,9 @@
 	"remote_raid_no_link": "You're not connected to Hoopa yet.",
 	"remote_raid_busy": "The bot is busy with another raid.",
 	"remote_raid_not_found": "Couldn't find this raid in the scan — try the controller.",
-	"remote_raid_failed": "Remote raid failed"
+	"remote_raid_failed": "Remote raid failed",
+	"remote_raid_rsvp": "RSVP",
+	"remote_raid_max_battle": "Remote Max Battle",
+	"remote_raid_cancel": "Cancel",
+	"remote_raid_cancelling": "Cancelling…"
 }
