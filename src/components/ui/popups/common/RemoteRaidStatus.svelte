@@ -4,6 +4,15 @@
 	import type { RemoteRaidFlow } from "@/lib/features/remoteRaid/remoteRaid.svelte";
 
 	let { flow }: { flow: RemoteRaidFlow } = $props();
+
+	// Poll live lobby occupancy while in the lobby; clean up on phase change /
+	// unmount so a closed popup doesn't keep polling.
+	$effect(() => {
+		if (flow.phase !== "in_lobby") return;
+		void flow.refreshLobby();
+		const id = setInterval(() => void flow.refreshLobby(), 5000);
+		return () => clearInterval(id);
+	});
 </script>
 
 {#if flow.phase !== "idle" && flow.phase !== "working"}
@@ -21,6 +30,12 @@
 					<span class="font-semibold">
 						<Countdown expireTime={Math.floor(flow.battleStartMs / 1000)} />
 					</span>
+				</p>
+			{/if}
+			{#if flow.lobbyPlayerCount !== undefined}
+				<p class="text-muted-foreground">
+					{m.remote_raid_in_lobby({ count: flow.lobbyPlayerCount })}
+					{#if flow.invitedCount}· {m.remote_raid_invited_count({ count: flow.invitedCount })}{/if}
 				</p>
 			{/if}
 			<a href="/hoopa" class="text-primary underline-offset-4 hover:underline">

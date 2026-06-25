@@ -544,5 +544,7 @@
 	"remote_raid_rsvp": "RSVP",
 	"remote_raid_max_battle": "Remote Max Battle",
 	"remote_raid_cancel": "Cancel",
-	"remote_raid_cancelling": "Cancelling…"
+	"remote_raid_cancelling": "Cancelling…",
+	"remote_raid_in_lobby": "{count} in lobby",
+	"remote_raid_invited_count": "{count} invited"
 }

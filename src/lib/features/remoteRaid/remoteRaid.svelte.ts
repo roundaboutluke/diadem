@@ -25,6 +25,11 @@ type RaidResponse = {
 	owner_daily_cap_reached?: boolean;
 };
 
+type StatusResponse = {
+	session?: { state?: string; lobby_player_count?: number; invited_count?: number } | null;
+	joinable_lobby?: { lobby_player_count?: number; invited_count?: number } | null;
+};
+
 export type RemoteRaidPhase =
 	| "idle"
 	| "working"
@@ -92,6 +97,9 @@ export class RemoteRaidFlow {
 	dailyCapReached = $state(false);
 	/** True while a release/cancel request is in flight. */
 	releasing = $state(false);
+	/** Live lobby occupancy + invited count, polled from /status while in_lobby. */
+	lobbyPlayerCount = $state<number | undefined>(undefined);
+	invitedCount = $state<number | undefined>(undefined);
 	/** Session token from the join — used to release/cancel from the map. */
 	private token: string | undefined = undefined;
 
@@ -107,7 +115,25 @@ export class RemoteRaidFlow {
 		this.invited = false;
 		this.dailyCapReached = false;
 		this.releasing = false;
+		this.lobbyPlayerCount = undefined;
+		this.invitedCount = undefined;
 		this.token = undefined;
+	}
+
+	/** Poll live lobby occupancy from /status while in_lobby (driven by the
+	 * status component's effect). Best-effort: transient errors are ignored. */
+	async refreshLobby() {
+		if (this.phase !== "in_lobby") return;
+		try {
+			const res = await fetch(`${HOOPA_BASE}/status`, { headers: { accept: "application/json" } });
+			if (!res.ok) return;
+			const data = (await res.json()) as StatusResponse;
+			const lobby = data.session ?? data.joinable_lobby ?? undefined;
+			this.lobbyPlayerCount = lobby?.lobby_player_count;
+			this.invitedCount = lobby?.invited_count;
+		} catch {
+			/* ignore transient poll errors */
+		}
 	}
 
 	async run(target: RemoteRaidTarget) {
