@@ -35,7 +35,7 @@
 </script>
 
 {#if remoteRaidAvailable()}
-	<div class="ml-auto flex shrink-0 flex-col items-end gap-1 text-right">
+	<div class="border-border mt-2 flex flex-col items-end gap-1 border-t pt-2 text-right">
 		<button
 			type="button"
 			onclick={trigger}

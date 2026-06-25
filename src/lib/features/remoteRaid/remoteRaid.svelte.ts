@@ -14,13 +14,14 @@ const HOOPA_BASE = "/hoopa";
 const TOKEN_STORAGE_KEY = "hoopa.session.token";
 const TOKEN_ACQUIRED_AT_STORAGE_KEY = "hoopa.session.acquired_at";
 
-export type RemoteRaidKind = "raid" | "bread";
+export type RemoteRaidKind = "raid" | "bread" | "rsvp";
 
 type RaidResponse = {
 	token: string;
 	acquired_at: string;
 	raid_battle_start_ms?: number;
 	player_join_end_ms?: number;
+	rsvp_timeslot_ms?: number;
 	owner_daily_cap_reached?: boolean;
 };
 
@@ -157,7 +158,9 @@ export class RemoteRaidFlow {
 
 			const raid = await readJson<RaidResponse>(res);
 			persistToken(raid.token, raid.acquired_at);
-			this.battleStartMs = raid.raid_battle_start_ms;
+			// For an RSVP (unhatched egg) there's no live lobby — the slot ms is
+			// when the egg hatches and the lobby opens, so use it for the countdown.
+			this.battleStartMs = raid.raid_battle_start_ms ?? raid.rsvp_timeslot_ms;
 			this.autoLeaveMs = raid.player_join_end_ms;
 			// /raid auto-invites the session owner (us); owner_daily_cap_reached
 			// tells us whether that invite hit POGO's daily remote-raid limit.
