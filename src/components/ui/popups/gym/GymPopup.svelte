@@ -115,6 +115,9 @@
 					</div>
 				{/if}
 			</div>
+			{#if expanded && hasActiveRaid(data) && isRaidHatched(data) && data.raid_pokemon_id}
+				<RemoteRaidButton kind="raid" fortId={data.id} lat={data.lat} lon={data.lon} />
+			{/if}
 		</div>
 	{/if}
 {/snippet}
@@ -166,9 +169,6 @@
 	{#snippet content()}
 		<div class="[&>*:last-child]:mb-3">
 			{@render raidDisplay(true)}
-			{#if hasActiveRaid(data) && isRaidHatched(data) && data.raid_pokemon_id}
-				<RemoteRaidButton kind="raid" fortId={data.id} lat={data.lat} lon={data.lon} />
-			{/if}
 			{@render memberOverview()}
 			{#if !isFortOutdated(data.updated) && data.defenders?.length}
 				<GymDefenderOverview defenders={data.defenders} />

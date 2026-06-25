@@ -35,12 +35,13 @@
 </script>
 
 {#if remoteRaidAvailable()}
-	<div class="mt-2 border-border border-t pt-2">
+	<div class="ml-auto flex shrink-0 flex-col items-end gap-1 text-right">
 		<button
 			type="button"
 			onclick={trigger}
 			disabled={flow.busy}
-			class="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-sm font-medium shadow-sm transition-colors hover:bg-accent/40 disabled:opacity-60"
+			title={m.remote_raid_title()}
+			class="flex items-center gap-2 rounded-md border border-border bg-card px-2.5 py-1.5 text-sm font-medium shadow-sm transition-colors hover:bg-accent/40 disabled:opacity-60"
 		>
 			{#if flow.busy}
 				<Loader2 class="size-5 shrink-0 animate-spin text-muted-foreground" />
@@ -51,7 +52,7 @@
 		</button>
 
 		{#if flow.phase === "in_lobby"}
-			<div class="mt-1.5 text-sm">
+			<div class="text-sm">
 				{#if flow.invited}
 					<p class="font-medium text-green-600 dark:text-green-500">{m.remote_raid_invited()}</p>
 				{/if}
@@ -71,23 +72,23 @@
 				</a>
 			</div>
 		{:else if flow.phase === "no_link"}
-			<p class="mt-1.5 text-sm text-muted-foreground">
+			<p class="text-sm text-muted-foreground">
 				{m.remote_raid_no_link()}
 				<a href="/hoopa" class="font-medium text-primary underline-offset-4 hover:underline">
 					{m.remote_raid_connect()}
 				</a>
 			</p>
 		{:else if flow.phase === "busy"}
-			<p class="mt-1.5 text-sm text-muted-foreground">
+			<p class="text-sm text-muted-foreground">
 				{flow.detail || m.remote_raid_busy()}
 				<a href="/hoopa" class="text-primary underline-offset-4 hover:underline">
 					{m.remote_raid_open_controller()}
 				</a>
 			</p>
 		{:else if flow.phase === "not_found"}
-			<p class="mt-1.5 text-sm text-muted-foreground">{m.remote_raid_not_found()}</p>
+			<p class="text-sm text-muted-foreground">{m.remote_raid_not_found()}</p>
 		{:else if flow.phase === "error"}
-			<p class="mt-1.5 text-sm text-destructive">{flow.detail || m.remote_raid_failed()}</p>
+			<p class="text-sm text-destructive">{flow.detail || m.remote_raid_failed()}</p>
 		{/if}
 	</div>
 {/if}
