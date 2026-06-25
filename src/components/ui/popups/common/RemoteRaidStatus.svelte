@@ -26,7 +26,11 @@
 {#if flow.phase !== "idle" && flow.phase !== "working"}
 	<div class="border-border mb-2 border-b pb-2 text-sm">
 		{#if flow.phase === "in_lobby"}
-			{#if flow.invited}
+			{#if flow.friendRequestSent}
+				<p class="font-medium text-amber-600 dark:text-amber-500">
+					{m.remote_raid_friend_request()}
+				</p>
+			{:else if flow.invited}
 				<p class="font-medium text-green-600 dark:text-green-500">{m.remote_raid_invited()}</p>
 			{/if}
 			{#if flow.dailyCapReached}

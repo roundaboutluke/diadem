@@ -23,6 +23,7 @@ type RaidResponse = {
 	player_join_end_ms?: number;
 	rsvp_timeslot_ms?: number;
 	owner_daily_cap_reached?: boolean;
+	friend_request_sent?: boolean;
 };
 
 type LobbyView = {
@@ -115,11 +116,15 @@ export class RemoteRaidFlow {
 	invitedCount = $state<number | undefined>(undefined);
 	/** Queue position while parked (all bots busy), polled from /status. */
 	queuePosition = $state<number | undefined>(undefined);
+	/** True when a not-yet-friends bot hosted us and sent a friend request —
+	 * the user must accept it in-game before the invite lands. */
+	friendRequestSent = $state(false);
 	/** Session token from the join — used to release/cancel from the map. */
 	private token: string | undefined = undefined;
-	/** Friend code + fort kept while queued so we can poll our position. */
-	private queuedFriendCode: string | undefined = undefined;
-	private queuedFortId: string | undefined = undefined;
+	/** Linked friend code + target fort, kept for pool-correct status polling
+	 * (finding OUR lobby / queue slot across the whole pool). */
+	private friendCode: string | undefined = undefined;
+	private fortId: string | undefined = undefined;
 
 	get busy(): boolean {
 		return this.phase === "working";
@@ -142,18 +147,19 @@ export class RemoteRaidFlow {
 		this.lobbyPlayerCount = undefined;
 		this.invitedCount = undefined;
 		this.queuePosition = undefined;
+		this.friendRequestSent = false;
 		this.token = undefined;
-		this.queuedFriendCode = undefined;
-		this.queuedFortId = undefined;
+		this.friendCode = undefined;
+		this.fortId = undefined;
 	}
 
 	/** Poll our queue position while parked; promote to in_lobby once a bot has
 	 * hosted us (we appear invited in a lobby at our fort). */
 	async refreshQueue() {
-		if (this.phase !== "queued" || !this.queuedFriendCode) return;
+		if (this.phase !== "queued" || !this.friendCode) return;
 		try {
 			const res = await fetch(
-				`${HOOPA_BASE}/status?friend_code=${encodeURIComponent(this.queuedFriendCode)}`,
+				`${HOOPA_BASE}/status?friend_code=${encodeURIComponent(this.friendCode)}`,
 				{ headers: { accept: "application/json" } }
 			);
 			if (!res.ok) return;
@@ -166,7 +172,7 @@ export class RemoteRaidFlow {
 			// Dequeued. A bot hosting our fort with us invited means we're in.
 			const lobby = (data.lobbies ?? []).find((l) => {
 				const fid = l.raid?.fort_id ?? l.bread?.station_id;
-				return fid === this.queuedFortId && l.already_invited;
+				return fid === this.fortId && l.already_invited;
 			});
 			if (lobby) {
 				this.invited = true;
@@ -190,17 +196,36 @@ export class RemoteRaidFlow {
 	async refreshLobby() {
 		if (this.phase !== "in_lobby") return;
 		try {
-			const res = await fetch(`${HOOPA_BASE}/status`, { headers: { accept: "application/json" } });
+			const url = this.friendCode
+				? `${HOOPA_BASE}/status?friend_code=${encodeURIComponent(this.friendCode)}`
+				: `${HOOPA_BASE}/status`;
+			const res = await fetch(url, { headers: { accept: "application/json" } });
 			if (!res.ok) return;
 			const data = (await res.json()) as StatusResponse;
+			// Pool-correct: find OUR lobby across the pool by fort, not the primary
+			// bot's session (which may be hosting someone else entirely).
+			const ours = (data.lobbies ?? []).find((l) => {
+				const fid = l.raid?.fort_id ?? l.bread?.station_id;
+				return fid === this.fortId;
+			});
+			if (ours) {
+				this.lobbyPlayerCount = ours.lobby_player_count ?? 0;
+				if (ours.already_invited) {
+					// A lazy friend-request was accepted and the invite landed.
+					this.invited = true;
+					this.friendRequestSent = false;
+				}
+				return;
+			}
+			// Fallback for a single-bot /status without lobbies[]: the primary
+			// session. lobby_player_count / invited_count are `omitempty`, so a
+			// real 0 arrives as undefined — default to 0 so the count shows.
 			const session = data.session;
 			const live =
 				session?.state === "in_lobby" || session?.state === "in_bread_lobby"
 					? session
 					: (data.joinable_lobby ?? undefined);
 			if (!live) return;
-			// lobby_player_count / invited_count are `omitempty` server-side, so a
-			// real 0 arrives as undefined — default to 0 so the count always shows.
 			this.lobbyPlayerCount = live.lobby_player_count ?? 0;
 			this.invitedCount = live.invited_count ?? 0;
 		} catch {
@@ -212,6 +237,7 @@ export class RemoteRaidFlow {
 		if (this.phase === "working") return;
 		this.reset();
 		this.phase = "working";
+		this.fortId = target.fortId;
 
 		try {
 			// 1) Resolve the user's linked friend code (LinkCable).
@@ -233,6 +259,7 @@ export class RemoteRaidFlow {
 				this.phase = "no_link";
 				return;
 			}
+			this.friendCode = friendCode;
 
 			// 2) One-shot: claim + scan + match this fort + join + auto-invite,
 			// all server-side. Gym joins stay public (private: false); the
@@ -254,8 +281,6 @@ export class RemoteRaidFlow {
 				// frees up and hosts us.
 				const q = (await readJson<{ queue_position?: number }>(res)) ?? {};
 				this.queuePosition = q.queue_position;
-				this.queuedFriendCode = friendCode;
-				this.queuedFortId = target.fortId;
 				this.phase = "queued";
 				return;
 			}
@@ -291,7 +316,10 @@ export class RemoteRaidFlow {
 			// /raid auto-invites the session owner (us); owner_daily_cap_reached
 			// tells us whether that invite hit POGO's daily remote-raid limit.
 			this.dailyCapReached = raid.owner_daily_cap_reached ?? false;
-			this.invited = !this.dailyCapReached;
+			this.friendRequestSent = raid.friend_request_sent ?? false;
+			// A lazy friend-request host hasn't invited us yet — we're in the
+			// lobby (hosted), but the invite only lands once we accept in-game.
+			this.invited = !this.friendRequestSent && !this.dailyCapReached;
 			this.phase = "in_lobby";
 		} catch (error) {
 			this.phase = "error";

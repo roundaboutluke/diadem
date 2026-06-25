@@ -551,5 +551,6 @@
 	"remote_raid_login": "Log in",
 	"remote_raid_in_queue": "In queue",
 	"remote_raid_queue_position": "#{position}",
-	"remote_raid_queue_hint": "You'll be pulled in when a bot frees up."
+	"remote_raid_queue_hint": "You'll be pulled in when a bot frees up.",
+	"remote_raid_friend_request": "This bot sent you a friend request — accept it in Pokémon GO and it'll pull you into the lobby."
 }
