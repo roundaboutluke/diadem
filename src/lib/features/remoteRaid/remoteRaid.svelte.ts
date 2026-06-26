@@ -17,7 +17,9 @@ const TOKEN_ACQUIRED_AT_STORAGE_KEY = "hoopa.session.acquired_at";
 export type RemoteRaidKind = "raid" | "bread" | "rsvp";
 
 type RaidResponse = {
-	token: string;
+	// Absent on a join-existing response (we joined a bot's existing lobby and
+	// don't own the session) — there's then nothing to cancel from the map.
+	token?: string;
 	acquired_at: string;
 	raid_battle_start_ms?: number;
 	player_join_end_ms?: number;
@@ -307,8 +309,12 @@ export class RemoteRaidFlow {
 			}
 
 			const raid = await readJson<RaidResponse>(res);
-			this.token = raid.token;
-			persistToken(raid.token, raid.acquired_at);
+			// A token only comes back when WE hosted; a join-existing response
+			// omits it (someone else's lobby — nothing for us to cancel/own).
+			if (raid.token) {
+				this.token = raid.token;
+				persistToken(raid.token, raid.acquired_at);
+			}
 			// For an RSVP (unhatched egg) there's no live lobby — the slot ms is
 			// when the egg hatches and the lobby opens, so use it for the countdown.
 			this.battleStartMs = raid.raid_battle_start_ms ?? raid.rsvp_timeslot_ms;
