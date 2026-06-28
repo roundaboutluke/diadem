@@ -159,6 +159,21 @@ export class RemoteRaidFlow {
 		this.fortId = undefined;
 	}
 
+	/** Re-attach to a lobby this viewer already owns/joined after the popup
+	 * reopened with a fresh flow. Restores the persisted token (if we hosted it)
+	 * so "Close lobby" works again; without one it just shows the in-lobby state
+	 * (no Close). No-op unless we're idle. */
+	adoptOwnedLobby(fortId: string, battleStartMs: number | undefined, lobbyPlayerCount: number) {
+		if (this.phase !== "idle") return;
+		this.fortId = fortId;
+		this.battleStartMs = battleStartMs;
+		this.lobbyPlayerCount = lobbyPlayerCount;
+		this.invited = true;
+		const token = readPersistedToken();
+		if (token) this.token = token;
+		this.phase = "in_lobby";
+	}
+
 	/** Poll our queue position while parked; promote to in_lobby once a bot has
 	 * hosted us (we appear invited in a lobby at our fort). */
 	async refreshQueue() {
@@ -381,5 +396,13 @@ function clearToken() {
 		window.sessionStorage.removeItem(TOKEN_ACQUIRED_AT_STORAGE_KEY);
 	} catch {
 		/* ignore */
+	}
+}
+
+function readPersistedToken(): string | undefined {
+	try {
+		return window.sessionStorage.getItem(TOKEN_STORAGE_KEY) ?? undefined;
+	} catch {
+		return undefined;
 	}
 }

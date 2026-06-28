@@ -66,7 +66,7 @@
 				? m.remote_raid_closing()
 				: flow.busy
 					? m.remote_raid_working()
-					: activeLobby
+					: activeLobby && !activeLobby.alreadyInvited
 						? m.remote_raid_join_lobby()
 						: kind === "rsvp"
 							? m.remote_raid_rsvp()
@@ -93,6 +93,15 @@
 		void flow.refreshQueue();
 		const id = setInterval(() => void flow.refreshQueue(), 5000);
 		return () => clearInterval(id);
+	});
+
+	// This fort already has a lobby we're in (we hosted it or joined earlier) —
+	// re-attach on (re)open instead of offering to join again. Restores Close if
+	// we hold the token.
+	$effect(() => {
+		if (flow.phase === "idle" && activeLobby?.alreadyInvited) {
+			flow.adoptOwnedLobby(fortId, activeLobby.battleStartMs, activeLobby.lobbyPlayerCount);
+		}
 	});
 
 	// Chip vocabulary — rounded-full, icon + short text, tinted by meaning.
@@ -129,9 +138,10 @@
 			</Button>
 		{/if}
 
-		{#if flow.phase === "idle" && activeLobby}
-			<!-- Someone's already hosting a lobby here — preview it so the button
-				above reads "Join lobby". -->
+		{#if flow.phase === "idle" && activeLobby && !activeLobby.alreadyInvited}
+			<!-- Someone else is hosting a lobby here — preview it so the button
+				above reads "Join lobby". (A lobby we're already in is adopted into
+				the in-lobby state by the effect above instead.) -->
 			<div class="flex flex-wrap items-center gap-1.5 text-xs">
 				<span class="{chip} {chipPrimary}">{m.remote_raid_lobby_in_progress()}</span>
 				{#if activeLobby.lobbyPlayerCount}

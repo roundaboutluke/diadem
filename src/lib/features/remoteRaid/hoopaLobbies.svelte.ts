@@ -14,6 +14,8 @@ export type HoopaActiveLobby = {
 	lobbyPlayerCount: number;
 	battleStartMs?: number;
 	pokemonId?: number;
+	/** True when the viewer is already invited to / hosting this lobby. */
+	alreadyInvited: boolean;
 };
 
 type LobbyFort = {
@@ -29,6 +31,7 @@ type LobbyView = {
 	bread?: LobbyFort;
 	lobby_player_count?: number;
 	battle_start_ms?: number;
+	already_invited?: boolean;
 };
 
 const POLL_INTERVAL_MS = 12_000;
@@ -37,13 +40,36 @@ let lobbies = $state<HoopaActiveLobby[]>([]);
 let timer: ReturnType<typeof setInterval> | null = null;
 let subscribers = 0;
 
+// The viewer's linked friend code, fetched once so /status can flag which
+// lobbies they're already in (already_invited) — stops us offering "Join" on a
+// lobby they host or have already joined.
+let friendCode: string | undefined;
+let friendCodeFetched = false;
+
+async function ensureFriendCode() {
+	if (friendCodeFetched) return;
+	friendCodeFetched = true;
+	try {
+		const res = await fetch(`${HOOPA_BASE}/linkcable`, { headers: { accept: "application/json" } });
+		if (!res.ok) return;
+		const link = (await res.json()) as { friend_code?: string } | null;
+		friendCode = link?.friend_code;
+	} catch {
+		/* not linked / unavailable — already_invited just stays false */
+	}
+}
+
 async function poll() {
 	if (!remoteRaidAvailable()) {
 		if (lobbies.length) lobbies = [];
 		return;
 	}
+	await ensureFriendCode();
 	try {
-		const res = await fetch(`${HOOPA_BASE}/status`, { headers: { accept: "application/json" } });
+		const url = friendCode
+			? `${HOOPA_BASE}/status?friend_code=${encodeURIComponent(friendCode)}`
+			: `${HOOPA_BASE}/status`;
+		const res = await fetch(url, { headers: { accept: "application/json" } });
 		if (!res.ok) return;
 		const data = (await res.json()) as { lobbies?: LobbyView[] };
 		lobbies = (data.lobbies ?? [])
@@ -58,7 +84,8 @@ async function poll() {
 					kind: (l.kind as HoopaActiveLobby["kind"]) ?? "raid",
 					lobbyPlayerCount: l.lobby_player_count ?? 0,
 					battleStartMs: l.battle_start_ms,
-					pokemonId: fort.pokemon_id
+					pokemonId: fort.pokemon_id,
+					alreadyInvited: l.already_invited ?? false
 				};
 			})
 			.filter((l): l is HoopaActiveLobby => l !== null);
