@@ -1,5 +1,13 @@
 <script lang="ts">
-	import { Check, Clock, Hourglass, Loader2, Settings, Users, X } from "lucide-svelte";
+	import {
+		Clock,
+		Hourglass,
+		Loader2,
+		LogOut,
+		Settings,
+		UserRoundCheck,
+		UsersRound
+	} from "lucide-svelte";
 	import * as m from "@/lib/paraglide/messages";
 	import Button from "@/components/ui/input/Button.svelte";
 	import Countdown from "@/components/utils/Countdown.svelte";
@@ -90,7 +98,7 @@
 	<div class="border-border mb-2 flex flex-col gap-2 border-b pb-2">
 		{#if showButton}
 			<Button
-				variant={flow.canCancel ? "outline" : "secondary"}
+				variant={flow.canCancel ? "outline" : "default"}
 				class="w-full rounded-full"
 				disabled={buttonPending}
 				{onclick}
@@ -98,7 +106,7 @@
 				{#if buttonPending}
 					<Loader2 class="size-4 animate-spin" />
 				{:else if flow.canCancel}
-					<X class="size-4" />
+					<LogOut class="size-4" />
 				{:else}
 					<img src={passIcon} alt="" class="size-5" />
 				{/if}
@@ -113,7 +121,7 @@
 						<span class="{chip} {chipAmber}">{m.remote_raid_chip_accept()}</span>
 					{:else if flow.invited}
 						<span class="{chip} {chipGreen}">
-							<Check class="size-3" />
+							<UserRoundCheck class="size-3" />
 							{m.remote_raid_chip_invited()}
 						</span>
 					{/if}
@@ -128,7 +136,7 @@
 					{/if}
 					{#if flow.lobbyPlayerCount !== undefined}
 						<span class="{chip} {chipMuted}">
-							<Users class="size-3" />
+							<UsersRound class="size-3" />
 							{flow.lobbyPlayerCount}{#if flow.invitedCount}
 								· {m.remote_raid_invited_count({ count: flow.invitedCount })}{/if}
 						</span>
