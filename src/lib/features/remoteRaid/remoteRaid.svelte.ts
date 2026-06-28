@@ -41,6 +41,7 @@ type StatusResponse = {
 	joinable_lobby?: { lobby_player_count?: number; invited_count?: number } | null;
 	queue_position?: number;
 	lobbies?: LobbyView[];
+	pool?: { total?: number };
 };
 
 export type RemoteRaidPhase =
@@ -118,6 +119,8 @@ export class RemoteRaidFlow {
 	invitedCount = $state<number | undefined>(undefined);
 	/** Queue position while parked (all bots busy), polled from /status. */
 	queuePosition = $state<number | undefined>(undefined);
+	/** Rough estimated wait while queued (seconds) — position ÷ pool size. */
+	queueEtaSeconds = $state<number | undefined>(undefined);
 	/** True when a not-yet-friends bot hosted us and sent a friend request —
 	 * the user must accept it in-game before the invite lands. */
 	friendRequestSent = $state(false);
@@ -149,6 +152,7 @@ export class RemoteRaidFlow {
 		this.lobbyPlayerCount = undefined;
 		this.invitedCount = undefined;
 		this.queuePosition = undefined;
+		this.queueEtaSeconds = undefined;
 		this.friendRequestSent = false;
 		this.token = undefined;
 		this.friendCode = undefined;
@@ -169,6 +173,10 @@ export class RemoteRaidFlow {
 			const pos = data.queue_position ?? 0;
 			if (pos > 0) {
 				this.queuePosition = pos;
+				// Rough ETA: each bot frees ~once per lobby window (~2 min), so the
+				// queue drains ~poolTotal slots per window. Honest-ish ballpark.
+				const poolTotal = Math.max(1, data.pool?.total ?? 1);
+				this.queueEtaSeconds = Math.ceil(pos / poolTotal) * 120;
 				return;
 			}
 			// Dequeued. A bot hosting our fort with us invited means we're in.

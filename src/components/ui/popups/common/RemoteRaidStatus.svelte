@@ -56,7 +56,12 @@
 		{:else if flow.phase === "queued"}
 			<p class="font-medium">
 				{m.remote_raid_in_queue()}{#if flow.queuePosition}
-					· {m.remote_raid_queue_position({ position: flow.queuePosition })}{/if}
+					· {m.remote_raid_queue_position({
+						position: flow.queuePosition
+					})}{/if}{#if flow.queueEtaSeconds}
+					· {m.remote_raid_queue_eta({
+						minutes: Math.max(1, Math.ceil(flow.queueEtaSeconds / 60))
+					})}{/if}
 			</p>
 			<p class="text-muted-foreground">{m.remote_raid_queue_hint()}</p>
 		{:else if flow.phase === "no_link"}
