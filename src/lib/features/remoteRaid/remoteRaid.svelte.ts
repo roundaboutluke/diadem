@@ -8,7 +8,7 @@
 // is mirrored into the same sessionStorage keys the controller page reads so an
 // "Open controller" handoff resumes ownership.
 
-const HOOPA_BASE = "/hoopa";
+export const HOOPA_BASE = "/hoopa";
 
 // Shared with the hoopa controller page (hoopa.api.ts) for the handoff.
 const TOKEN_STORAGE_KEY = "hoopa.session.token";

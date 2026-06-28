@@ -19,6 +19,11 @@
 		type RemoteRaidFlow,
 		type RemoteRaidKind
 	} from "@/lib/features/remoteRaid/remoteRaid.svelte";
+	import {
+		ensureHoopaLobbyPolling,
+		getActiveHoopaLobby
+	} from "@/lib/features/remoteRaid/hoopaLobbies.svelte";
+	import { onMount } from "svelte";
 
 	let {
 		flow,
@@ -35,9 +40,14 @@
 	} = $props();
 
 	ensureRemoteRaidProbe();
+	onMount(() => ensureHoopaLobbyPolling());
 
 	// In-game Remote Raid Pass item icon (wwm-uicons rewards/items/1408).
 	const passIcon = getIconReward(RewardType.ITEM, { item_id: 1408 });
+
+	// A live Hoopa lobby already at this fort (someone else hosting) — lets us
+	// offer "Join lobby" and preview its state before the user clicks.
+	const activeLobby = $derived(getActiveHoopaLobby(fortId));
 
 	const inLobby = $derived(flow.phase === "in_lobby");
 	const queued = $derived(flow.phase === "queued");
@@ -56,11 +66,13 @@
 				? m.remote_raid_closing()
 				: flow.busy
 					? m.remote_raid_working()
-					: kind === "rsvp"
-						? m.remote_raid_rsvp()
-						: kind === "bread"
-							? m.remote_raid_max_battle()
-							: m.remote_raid_title()
+					: activeLobby
+						? m.remote_raid_join_lobby()
+						: kind === "rsvp"
+							? m.remote_raid_rsvp()
+							: kind === "bread"
+								? m.remote_raid_max_battle()
+								: m.remote_raid_title()
 	);
 
 	function onclick() {
@@ -88,6 +100,7 @@
 	const chipMuted = "bg-muted text-muted-foreground";
 	const chipGreen = "bg-green-500/15 text-green-700 dark:text-green-400";
 	const chipAmber = "bg-amber-500/15 text-amber-700 dark:text-amber-400";
+	const chipPrimary = "bg-primary/15 text-primary";
 
 	const queueEtaMinutes = $derived(
 		flow.queueEtaSeconds ? Math.max(1, Math.ceil(flow.queueEtaSeconds / 60)) : 0
@@ -116,7 +129,25 @@
 			</Button>
 		{/if}
 
-		{#if showStatus}
+		{#if flow.phase === "idle" && activeLobby}
+			<!-- Someone's already hosting a lobby here — preview it so the button
+				above reads "Join lobby". -->
+			<div class="flex flex-wrap items-center gap-1.5 text-xs">
+				<span class="{chip} {chipPrimary}">{m.remote_raid_lobby_in_progress()}</span>
+				{#if activeLobby.lobbyPlayerCount}
+					<span class="{chip} {chipMuted}">
+						<UsersRound class="size-3" />
+						{activeLobby.lobbyPlayerCount}
+					</span>
+				{/if}
+				{#if activeLobby.battleStartMs}
+					<span class="{chip} {chipMuted}">
+						<Clock class="size-3" />
+						<Countdown expireTime={Math.floor(activeLobby.battleStartMs / 1000)} />
+					</span>
+				{/if}
+			</div>
+		{:else if showStatus}
 			{#if inLobby}
 				<div class="flex flex-wrap items-center gap-1.5 text-xs">
 					{#if flow.friendRequestSent}

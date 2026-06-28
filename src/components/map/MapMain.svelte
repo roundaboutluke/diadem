@@ -51,6 +51,7 @@
 	} from "$lib/map/mapPositionParams.svelte";
 	import { Coords } from "@/lib/utils/coordinates";
 	import TimerLayer from "@/components/map/TimerLayer.svelte";
+	import HoopaLobbyLayer from "@/components/map/HoopaLobbyLayer.svelte";
 	import LayerSearchedGeometry from "@/components/map/LayerSearchedGeometry.svelte";
 	import { getFeatureJump } from "$lib/utils/geo";
 	import { jumpTo } from "$lib/map/utils";
@@ -243,4 +244,5 @@
 	<MarkerContextMenu />
 	<MarkerSearchedLocation />
 	<TimerLayer />
+	<HoopaLobbyLayer />
 </MapCommon>
