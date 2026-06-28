@@ -14,6 +14,8 @@ export type HoopaActiveLobby = {
 	lobbyPlayerCount: number;
 	battleStartMs?: number;
 	pokemonId?: number;
+	/** People Hoopa has pulled into this raid — updates as users join. */
+	invitedCount: number;
 	/** True when the viewer is already invited to / hosting this lobby. */
 	alreadyInvited: boolean;
 };
@@ -30,6 +32,7 @@ type LobbyView = {
 	raid?: LobbyFort;
 	bread?: LobbyFort;
 	lobby_player_count?: number;
+	invited_count?: number;
 	battle_start_ms?: number;
 	already_invited?: boolean;
 };
@@ -83,6 +86,7 @@ async function poll() {
 					lon: fort.lon,
 					kind: (l.kind as HoopaActiveLobby["kind"]) ?? "raid",
 					lobbyPlayerCount: l.lobby_player_count ?? 0,
+					invitedCount: l.invited_count ?? 0,
 					battleStartMs: l.battle_start_ms,
 					pokemonId: fort.pokemon_id,
 					alreadyInvited: l.already_invited ?? false
