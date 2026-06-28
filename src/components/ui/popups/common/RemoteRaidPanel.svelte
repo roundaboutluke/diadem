@@ -20,6 +20,7 @@
 		type RemoteRaidKind
 	} from "@/lib/features/remoteRaid/remoteRaid.svelte";
 	import {
+		dropHoopaLobby,
 		ensureHoopaLobbyPolling,
 		getActiveHoopaLobby
 	} from "@/lib/features/remoteRaid/hoopaLobbies.svelte";
@@ -76,8 +77,14 @@
 	);
 
 	function onclick() {
-		if (flow.canCancel) void flow.release();
-		else if (!inLobby && !queued && !flow.busy) void flow.run({ kind, fortId, lat, lon });
+		if (flow.canCancel) {
+			// Optimistically drop the lobby so it isn't re-adopted (and the map
+			// pill clears) before the release round-trips + the next poll.
+			dropHoopaLobby(fortId);
+			void flow.release();
+		} else if (!inLobby && !queued && !flow.busy) {
+			void flow.run({ kind, fortId, lat, lon });
+		}
 	}
 
 	// Poll live lobby occupancy while in_lobby; queue position while queued.
@@ -100,7 +107,7 @@
 	// we hold the token.
 	$effect(() => {
 		if (flow.phase === "idle" && activeLobby?.alreadyInvited) {
-			flow.adoptOwnedLobby(fortId, activeLobby.battleStartMs, activeLobby.lobbyPlayerCount);
+			flow.adoptOwnedLobby(fortId, activeLobby.battleStartMs, activeLobby.invitedCount);
 		}
 	});
 
@@ -144,12 +151,10 @@
 				the in-lobby state by the effect above instead.) -->
 			<div class="flex flex-wrap items-center gap-1.5 text-xs">
 				<span class="{chip} {chipPrimary}">{m.remote_raid_lobby_in_progress()}</span>
-				{#if activeLobby.lobbyPlayerCount}
-					<span class="{chip} {chipMuted}">
-						<UsersRound class="size-3" />
-						{activeLobby.lobbyPlayerCount}
-					</span>
-				{/if}
+				<span class="{chip} {chipMuted}">
+					<UsersRound class="size-3" />
+					{activeLobby.invitedCount + 1}
+				</span>
 				{#if activeLobby.battleStartMs}
 					<span class="{chip} {chipMuted}">
 						<Clock class="size-3" />
@@ -177,11 +182,10 @@
 							<Countdown expireTime={Math.floor(flow.battleStartMs / 1000)} />
 						</span>
 					{/if}
-					{#if flow.lobbyPlayerCount !== undefined}
+					{#if !flow.friendRequestSent}
 						<span class="{chip} {chipMuted}">
 							<UsersRound class="size-3" />
-							{flow.lobbyPlayerCount}{#if flow.invitedCount}
-								· {m.remote_raid_invited_count({ count: flow.invitedCount })}{/if}
+							{(flow.invitedCount ?? 0) + 1}
 						</span>
 					{/if}
 				</div>

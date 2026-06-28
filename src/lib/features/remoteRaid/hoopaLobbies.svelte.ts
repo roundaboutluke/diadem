@@ -123,3 +123,11 @@ export function getActiveHoopaLobbies(): HoopaActiveLobby[] {
 export function getActiveHoopaLobby(fortId: string): HoopaActiveLobby | undefined {
 	return lobbies.find((l) => l.fortId === fortId);
 }
+
+/** Optimistically drop a lobby (e.g. right after the owner closes it) so the
+ * map pill clears and the popup doesn't re-adopt it before the next poll. */
+export function dropHoopaLobby(fortId: string) {
+	if (lobbies.some((l) => l.fortId === fortId)) {
+		lobbies = lobbies.filter((l) => l.fortId !== fortId);
+	}
+}

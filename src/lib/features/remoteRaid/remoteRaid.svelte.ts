@@ -34,6 +34,7 @@ type LobbyView = {
 	already_invited?: boolean;
 	battle_start_ms?: number;
 	lobby_player_count?: number;
+	invited_count?: number;
 };
 
 type StatusResponse = {
@@ -163,11 +164,11 @@ export class RemoteRaidFlow {
 	 * reopened with a fresh flow. Restores the persisted token (if we hosted it)
 	 * so "Close lobby" works again; without one it just shows the in-lobby state
 	 * (no Close). No-op unless we're idle. */
-	adoptOwnedLobby(fortId: string, battleStartMs: number | undefined, lobbyPlayerCount: number) {
+	adoptOwnedLobby(fortId: string, battleStartMs: number | undefined, invitedCount: number) {
 		if (this.phase !== "idle") return;
 		this.fortId = fortId;
 		this.battleStartMs = battleStartMs;
-		this.lobbyPlayerCount = lobbyPlayerCount;
+		this.invitedCount = invitedCount;
 		this.invited = true;
 		const token = readPersistedToken();
 		if (token) this.token = token;
@@ -235,6 +236,7 @@ export class RemoteRaidFlow {
 			});
 			if (ours) {
 				this.lobbyPlayerCount = ours.lobby_player_count ?? 0;
+				this.invitedCount = ours.invited_count ?? 0;
 				if (ours.already_invited) {
 					// A lazy friend-request was accepted and the invite landed.
 					this.invited = true;
@@ -349,6 +351,9 @@ export class RemoteRaidFlow {
 			// A lazy friend-request host hasn't invited us yet — we're in the
 			// lobby (hosted), but the invite only lands once we accept in-game.
 			this.invited = !this.friendRequestSent && !this.dailyCapReached;
+			// Seed the count (us, if invited) so the lobby chip shows 2 (us +
+			// Hoopa) right away; refreshLobby corrects it as others join.
+			this.invitedCount = this.invited ? 1 : 0;
 			this.phase = "in_lobby";
 		} catch (error) {
 			this.phase = "error";
