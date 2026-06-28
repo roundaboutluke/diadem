@@ -43,9 +43,9 @@
 
 	const buttonLabel = $derived(
 		flow.canCancel
-			? m.remote_raid_cancel()
+			? m.remote_raid_close_lobby()
 			: flow.releasing
-				? m.remote_raid_cancelling()
+				? m.remote_raid_closing()
 				: flow.busy
 					? m.remote_raid_working()
 					: kind === "rsvp"
@@ -90,7 +90,7 @@
 	<div class="border-border mb-2 flex flex-col gap-2 border-b pb-2">
 		{#if showButton}
 			<Button
-				variant={flow.canCancel ? "destructive" : "secondary"}
+				variant={flow.canCancel ? "outline" : "secondary"}
 				class="w-full rounded-full"
 				disabled={buttonPending}
 				{onclick}

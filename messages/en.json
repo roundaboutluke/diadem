@@ -556,5 +556,7 @@
 	"remote_raid_friend_request": "This bot sent you a friend request — accept it in Pokémon GO and it'll pull you into the lobby.",
 	"remote_raid_chip_invited": "Invited",
 	"remote_raid_chip_accept": "Accept friend request",
-	"remote_raid_chip_daily_cap": "Daily limit"
+	"remote_raid_chip_daily_cap": "Daily limit",
+	"remote_raid_close_lobby": "Close lobby",
+	"remote_raid_closing": "Closing…"
 }
