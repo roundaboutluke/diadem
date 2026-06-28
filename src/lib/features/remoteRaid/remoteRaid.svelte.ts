@@ -164,11 +164,11 @@ export class RemoteRaidFlow {
 	 * reopened with a fresh flow. Restores the persisted token (if we hosted it)
 	 * so "Close lobby" works again; without one it just shows the in-lobby state
 	 * (no Close). No-op unless we're idle. */
-	adoptOwnedLobby(fortId: string, battleStartMs: number | undefined, invitedCount: number) {
+	adoptOwnedLobby(fortId: string, battleStartMs: number | undefined, lobbyPlayerCount: number) {
 		if (this.phase !== "idle") return;
 		this.fortId = fortId;
 		this.battleStartMs = battleStartMs;
-		this.invitedCount = invitedCount;
+		this.lobbyPlayerCount = lobbyPlayerCount;
 		this.invited = true;
 		const token = readPersistedToken();
 		if (token) this.token = token;
@@ -252,7 +252,14 @@ export class RemoteRaidFlow {
 				session?.state === "in_lobby" || session?.state === "in_bread_lobby"
 					? session
 					: (data.joinable_lobby ?? undefined);
-			if (!live) return;
+			if (!live) {
+				// Neither our pooled lobby nor a primary session is present — the
+				// lobby ended (bot left at player_join_end / raid started / session
+				// expired). Clear the stale in-lobby state so the popup resets.
+				clearToken();
+				this.reset();
+				return;
+			}
 			this.lobbyPlayerCount = live.lobby_player_count ?? 0;
 			this.invitedCount = live.invited_count ?? 0;
 		} catch {
@@ -351,9 +358,6 @@ export class RemoteRaidFlow {
 			// A lazy friend-request host hasn't invited us yet — we're in the
 			// lobby (hosted), but the invite only lands once we accept in-game.
 			this.invited = !this.friendRequestSent && !this.dailyCapReached;
-			// Seed the count (us, if invited) so the lobby chip shows 2 (us +
-			// Hoopa) right away; refreshLobby corrects it as others join.
-			this.invitedCount = this.invited ? 1 : 0;
 			this.phase = "in_lobby";
 		} catch (error) {
 			this.phase = "error";
@@ -372,7 +376,9 @@ export class RemoteRaidFlow {
 				headers: { "content-type": "application/json" },
 				body: JSON.stringify({ token: this.token })
 			});
-			if (res.ok) {
+			if (res.ok || res.status === 409) {
+				// 409 = the session's already gone (lobby ended) — either way our
+				// state is stale, so clear it.
 				clearToken();
 				this.reset();
 			} else {
