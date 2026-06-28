@@ -4,14 +4,21 @@
 	import { onMount } from "svelte";
 	import { getIconReward } from "@/lib/services/uicons.svelte.js";
 	import { RewardType } from "@/lib/utils/pokestopUtils";
+	import { LoadedFeature, hasLoadedFeature } from "@/lib/services/initialLoad.svelte";
 	import { ensureRemoteRaidProbe } from "@/lib/features/remoteRaid/remoteRaid.svelte";
 	import {
 		ensureHoopaLobbyPolling,
 		getActiveHoopaLobbies
 	} from "@/lib/features/remoteRaid/hoopaLobbies.svelte";
 
-	// In-game Remote Raid Pass item icon (wwm-uicons rewards/items/1408).
-	const passIcon = getIconReward(RewardType.ITEM, { item_id: 1408 });
+	// Remote Raid Pass item icon (wwm-uicons rewards/items/1408). Resolve it
+	// reactively + gated — getIconReward throws if called before the icon sets
+	// load, and this layer mounts with the map, well before then.
+	const passIcon = $derived(
+		hasLoadedFeature(LoadedFeature.ICON_SETS)
+			? getIconReward(RewardType.ITEM, { item_id: 1408 })
+			: ""
+	);
 	const lobbies = $derived(getActiveHoopaLobbies());
 
 	onMount(() => {
@@ -20,14 +27,16 @@
 	});
 </script>
 
-{#each lobbies as lobby (lobby.fortId)}
-	<Marker lngLat={[lobby.lon, lobby.lat]}>
-		<div class="hoopa-lobby" transition:scale|global={{ duration: 120 }}>
-			<span class="hoopa-lobby-pulse"></span>
-			<img src={passIcon} alt="" class="hoopa-lobby-icon" />
-		</div>
-	</Marker>
-{/each}
+{#if passIcon}
+	{#each lobbies as lobby (lobby.fortId)}
+		<Marker lngLat={[lobby.lon, lobby.lat]}>
+			<div class="hoopa-lobby" transition:scale|global={{ duration: 120 }}>
+				<span class="hoopa-lobby-pulse"></span>
+				<img src={passIcon} alt="" class="hoopa-lobby-icon" />
+			</div>
+		</Marker>
+	{/each}
+{/if}
 
 <style>
 	/* Visual-only badge sitting above the fort icon, so clicks pass through to
