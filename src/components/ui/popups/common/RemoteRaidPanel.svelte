@@ -99,7 +99,9 @@
 		{#if showButton}
 			<Button
 				variant={flow.canCancel ? "outline" : "default"}
-				class="w-full rounded-full"
+				class="w-full rounded-full {flow.canCancel
+					? 'border-primary text-primary hover:bg-primary/10 hover:text-primary'
+					: ''}"
 				disabled={buttonPending}
 				{onclick}
 			>
