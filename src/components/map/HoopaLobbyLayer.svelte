@@ -23,7 +23,7 @@
 			clicks pass through to the gym/station marker underneath. -->
 		<div class="hoopa-lobby-pill" transition:scale|global={{ duration: 120 }}>
 			<UsersRound class="size-3" />
-			<span>{lobby.lobbyPlayerCount + 1}</span>
+			<span>{lobby.invitedCount}</span>
 		</div>
 	</Marker>
 {/each}
