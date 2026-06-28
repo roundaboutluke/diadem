@@ -22,8 +22,7 @@
 	} from "lucide-svelte";
 	import TimeWithCountdown from "@/components/ui/popups/common/TimeWithCountdown.svelte";
 	import Countdown from "@/components/utils/Countdown.svelte";
-	import RemoteRaidIcon from "@/components/ui/popups/common/RemoteRaidIcon.svelte";
-	import RemoteRaidStatus from "@/components/ui/popups/common/RemoteRaidStatus.svelte";
+	import RemoteRaidPanel from "@/components/ui/popups/common/RemoteRaidPanel.svelte";
 	import { RemoteRaidFlow } from "@/lib/features/remoteRaid/remoteRaid.svelte";
 	import { currentTimestamp } from "@/lib/utils/currentTimestamp";
 	import {
@@ -108,20 +107,16 @@
 
 					<!--		<StationedPokemonDisplay stationed={data.stationed_pokemon} />-->
 				</div>
-
-				{#if data.battle_pokemon_id}
-					<RemoteRaidIcon
-						flow={remoteRaid}
-						kind="bread"
-						fortId={data.id}
-						lat={data.lat}
-						lon={data.lon}
-					/>
-				{/if}
 			</div>
 
 			{#if data.battle_pokemon_id}
-				<RemoteRaidStatus flow={remoteRaid} />
+				<RemoteRaidPanel
+					flow={remoteRaid}
+					kind="bread"
+					fortId={data.id}
+					lat={data.lat}
+					lon={data.lon}
+				/>
 			{/if}
 		{/if}
 
