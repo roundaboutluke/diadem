@@ -8,30 +8,19 @@
 		ensureHoopaLobbyPolling,
 		getActiveHoopaLobbies
 	} from "@/lib/features/remoteRaid/hoopaLobbies.svelte";
-	import { getConfigModifiers } from "@/lib/map/render/renderMapObjects";
-	import { getCurrentUiconSetDetailsAllTypes } from "@/lib/services/uicons.svelte";
 	import { getUserSettings } from "@/lib/services/userSettings.svelte";
-	import { MapObjectType } from "@/lib/mapObjects/mapObjectTypes";
 
 	const lobbies = $derived(getActiveHoopaLobbies());
 
-	// Baseline clearance above the fort icon, calibrated to the previous fixed
-	// translateY(-2.7rem) at the default icon scale. Everything scales off this.
-	const BASE_CLEARANCE_PX = 43;
-	const REFERENCE_SCALE = 0.25; // getConfigModifiers default scale
-
-	// Place the pill above the fort icon using the SAME per-icon-set / per-type
-	// modifiers that position the icon itself (mirrors TimerLayer), so it tracks
-	// the icon set, the user's map icon size, and the icon's own vertical offset
-	// instead of a single hard-coded value.
-	function pillOffset(kind: "raid" | "bread" | "rsvp"): { x: number; y: number } {
-		const type = kind === "bread" ? MapObjectType.STATION : MapObjectType.GYM;
-		const iconSets = getCurrentUiconSetDetailsAllTypes();
-		const { scale, offsetX, offsetY } = getConfigModifiers(iconSets[type], type);
-		const iconSize = scale * getUserSettings().mapIconSize;
-		const clearance = BASE_CLEARANCE_PX * (iconSize / REFERENCE_SCALE);
-		return { x: offsetX * iconSize, y: offsetY * iconSize - clearance };
-	}
+	// Clearance above the fort icon, in screen pixels. A fort lobby icon is a
+	// composite (gym + raid boss, or a power spot) whose height is ~constant per
+	// icon set, so a single tunable baseline reads better than trying to derive
+	// per-feature sprite height — which lives across several modifiers (gym +
+	// raid_pokemon) we can't cleanly combine. Scales with the user's map icon
+	// size so it tracks when they resize icons. Bump this one number if the pill
+	// sits a touch high or low for your icon set.
+	const BASE_CLEARANCE_PX = 38;
+	const clearancePx = $derived(BASE_CLEARANCE_PX * getUserSettings().mapIconSize);
 
 	onMount(() => {
 		ensureRemoteRaidProbe();
@@ -40,12 +29,11 @@
 </script>
 
 {#each lobbies as lobby (lobby.fortId)}
-	{@const off = pillOffset(lobby.kind)}
 	<Marker lngLat={[lobby.lon, lobby.lat]}>
-		<!-- Outer anchor handles positioning (scales with icon set + map icon
-			size); inner pill keeps the scale transition so the two don't fight.
-			Visual-only — clicks pass through to the fort marker underneath. -->
-		<div class="hoopa-lobby-anchor" style="transform: translate({off.x}px, {off.y}px)">
+		<!-- Outer anchor handles positioning; inner pill keeps the scale
+			transition so the two don't fight. Visual-only — clicks pass through
+			to the fort marker underneath. -->
+		<div class="hoopa-lobby-anchor" style="transform: translateY(-{clearancePx}px)">
 			<div class="hoopa-lobby-pill" transition:scaleTransition|global={{ duration: 120 }}>
 				<UsersRound class="size-3" />
 				<span>{lobby.lobbyPlayerCount}</span>
