@@ -164,11 +164,11 @@ export class RemoteRaidFlow {
 	 * reopened with a fresh flow. Restores the persisted token (if we hosted it)
 	 * so "Close lobby" works again; without one it just shows the in-lobby state
 	 * (no Close). No-op unless we're idle. */
-	adoptOwnedLobby(fortId: string, battleStartMs: number | undefined, invitedCount: number) {
+	adoptOwnedLobby(fortId: string, battleStartMs: number | undefined, lobbyPlayerCount: number) {
 		if (this.phase !== "idle") return;
 		this.fortId = fortId;
 		this.battleStartMs = battleStartMs;
-		this.invitedCount = invitedCount;
+		this.lobbyPlayerCount = lobbyPlayerCount;
 		this.invited = true;
 		const token = readPersistedToken();
 		if (token) this.token = token;
