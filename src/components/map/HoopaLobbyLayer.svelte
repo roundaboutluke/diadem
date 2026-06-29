@@ -105,16 +105,20 @@
 
 	const badgeData = $derived<FeatureCollection<Point>>({
 		type: "FeatureCollection",
-		features: lobbies.map(
-			(l): Feature<Point> => ({
-				type: "Feature",
-				geometry: { type: "Point", coordinates: [l.lon, l.lat] },
-				properties: {
-					count: String(l.lobbyPlayerCount),
-					textOffset: badgeOffset(l)
-				}
-			})
-		)
+		// RSVP (pre-hatch eggs) have no live count yet — skip them so they don't
+		// show a bogus 0. Raids + max battles carry a real headcount.
+		features: lobbies
+			.filter((l) => l.kind !== "rsvp")
+			.map(
+				(l): Feature<Point> => ({
+					type: "Feature",
+					geometry: { type: "Point", coordinates: [l.lon, l.lat] },
+					properties: {
+						count: String(l.lobbyPlayerCount),
+						textOffset: badgeOffset(l)
+					}
+				})
+			)
 	});
 
 	// Cast: MapLibre's expression types don't model an inline `image` inside
