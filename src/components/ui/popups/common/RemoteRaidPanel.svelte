@@ -112,7 +112,7 @@
 		if (adoptHandled || activeLobby === undefined) return;
 		adoptHandled = true;
 		if (flow.phase === "idle" && activeLobby.alreadyInvited) {
-			flow.adoptOwnedLobby(fortId, activeLobby.battleStartMs, activeLobby.invitedCount);
+			flow.adoptOwnedLobby(fortId, activeLobby.battleStartMs, activeLobby.lobbyPlayerCount);
 		}
 	});
 
@@ -158,7 +158,7 @@
 				<span class="{chip} {chipPrimary}">{m.remote_raid_lobby_in_progress()}</span>
 				<span class="{chip} {chipMuted}">
 					<UsersRound class="size-3" />
-					{activeLobby.invitedCount}
+					{activeLobby.lobbyPlayerCount + 1}
 				</span>
 				{#if activeLobby.battleStartMs}
 					<span class="{chip} {chipMuted}">
@@ -190,7 +190,7 @@
 					{#if !flow.friendRequestSent}
 						<span class="{chip} {chipMuted}">
 							<UsersRound class="size-3" />
-							{flow.invitedCount ?? 0}
+							{(flow.lobbyPlayerCount ?? 0) + 1}
 						</span>
 					{/if}
 				</div>
