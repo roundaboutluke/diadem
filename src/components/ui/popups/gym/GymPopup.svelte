@@ -35,7 +35,6 @@
 	);
 	useMetadata(() => ({ title: data ? (data.name ?? m.pogo_gym()) : undefined }));
 	let rsvps: Rsvp[] = $derived(JSON.parse(data.rsvps ?? "[]"));
-	const remoteRaid = new RemoteRaidFlow();
 </script>
 
 {#snippet raidDisplay(expanded: boolean)}
@@ -169,13 +168,18 @@
 		<div class="[&>*:last-child]:mb-3">
 			{@render raidDisplay(true)}
 			{#if hasActiveRaid(data)}
-				<RemoteRaidPanel
-					flow={remoteRaid}
-					kind={isRaidHatched(data) ? "raid" : "rsvp"}
-					fortId={data.id}
-					lat={data.lat}
-					lon={data.lon}
-				/>
+				<!-- Fresh flow per fort so switching popups without closing can't
+					leak the previous fort's lobby/token state. -->
+				{#key data.id}
+					{@const remoteRaid = new RemoteRaidFlow()}
+					<RemoteRaidPanel
+						flow={remoteRaid}
+						kind={isRaidHatched(data) ? "raid" : "rsvp"}
+						fortId={data.id}
+						lat={data.lat}
+						lon={data.lon}
+					/>
+				{/key}
 			{/if}
 			{@render memberOverview()}
 			{#if !isFortOutdated(data.updated) && data.defenders?.length}

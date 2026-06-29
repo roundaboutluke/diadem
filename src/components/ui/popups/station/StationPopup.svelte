@@ -37,7 +37,6 @@
 		(getMapObjects()[getCurrentSelectedMapId()] as StationData) ??
 			(getCurrentSelectedData() as StationData)
 	);
-	const remoteRaid = new RemoteRaidFlow();
 </script>
 
 {#snippet basicInfo()}
@@ -110,13 +109,18 @@
 			</div>
 
 			{#if data.battle_pokemon_id}
-				<RemoteRaidPanel
-					flow={remoteRaid}
-					kind="bread"
-					fortId={data.id}
-					lat={data.lat}
-					lon={data.lon}
-				/>
+				<!-- Fresh flow per station so switching popups without closing
+					can't leak the previous fort's lobby/token state. -->
+				{#key data.id}
+					{@const remoteRaid = new RemoteRaidFlow()}
+					<RemoteRaidPanel
+						flow={remoteRaid}
+						kind="bread"
+						fortId={data.id}
+						lat={data.lat}
+						lon={data.lon}
+					/>
+				{/key}
 			{/if}
 		{/if}
 
