@@ -64,13 +64,16 @@
 			const m = getMap();
 			if (!m) return;
 			if (!m.hasImage(PEOPLE_IMAGE_ID)) {
+				// Render at 2x and tag pixelRatio:2 so it displays ~12px inline (to
+				// match the text). Without this it renders at full pixel size and
+				// inflates the whole badge via icon-text-fit.
 				const c = document.createElement("canvas");
-				c.width = 22;
-				c.height = 22;
+				c.width = 24;
+				c.height = 24;
 				const cx = c.getContext("2d");
 				if (!cx) return;
-				cx.drawImage(img, 0, 0, 22, 22);
-				m.addImage(PEOPLE_IMAGE_ID, cx.getImageData(0, 0, 22, 22));
+				cx.drawImage(img, 0, 0, 24, 24);
+				m.addImage(PEOPLE_IMAGE_ID, cx.getImageData(0, 0, 24, 24), { pixelRatio: 2 });
 			}
 			peopleReady = true;
 		};
