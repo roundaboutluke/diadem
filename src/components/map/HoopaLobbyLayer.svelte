@@ -13,6 +13,8 @@
 	import { getCurrentUiconSetDetailsAllTypes } from "@/lib/services/uicons.svelte";
 	import { MapObjectType } from "@/lib/mapObjects/mapObjectTypes";
 	import { getMap, getMapStyleVersion } from "@/lib/map/map.svelte";
+	import { getMapObjects } from "@/lib/mapObjects/mapObjectsState.svelte";
+	import { isPopupActionActive, PopupAction } from "@/lib/ui/popupActions";
 
 	const BADGE_IMAGE_ID = "hoopa-lobby-badge-bg";
 	const PEOPLE_IMAGE_ID = "hoopa-lobby-people";
@@ -22,6 +24,9 @@
 	// timer would (clear of the icon at any height). Tunable to stack relative to
 	// the raid timer.
 	const BADGE_BASE_OFFSET = 1.5;
+	// Extra drop (em) when a raid timer is also showing, so the count tucks below
+	// it rather than overlapping.
+	const TIMER_STACK_OFFSET = 1.5;
 
 	// lucide UsersRound, white stroke so it reads on the primary pill.
 	const PEOPLE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 21a8 8 0 0 0-16 0"/><circle cx="10" cy="8" r="5"/><path d="M22 20c0-3.37-2-6.5-4-8a5 5 0 0 0-.45-8.3"/></svg>`;
@@ -81,15 +86,21 @@
 	});
 
 	// Same per-icon-set / per-type offset TimerLayer uses, so the badge sits
-	// correctly above any icon height instead of a hard-coded pixel value.
-	function badgeOffset(kind: HoopaActiveLobby["kind"]): [number, number] {
-		const type = kind === "bread" ? MapObjectType.STATION : MapObjectType.GYM;
+	// correctly above any icon height instead of a hard-coded pixel value. When a
+	// raid timer is also showing for the fort, drop the badge below it so they
+	// don't overlap.
+	function badgeOffset(lobby: HoopaActiveLobby): [number, number] {
+		const type = lobby.kind === "bread" ? MapObjectType.STATION : MapObjectType.GYM;
 		const iconSets = getCurrentUiconSetDetailsAllTypes();
 		const { offsetX, offsetY } = getConfigModifiers(iconSets[type], type);
-		return [
-			offsetX / MAPLIBRE_ICON_OFFSET_SCALE,
-			BADGE_BASE_OFFSET + offsetY / MAPLIBRE_ICON_OFFSET_SCALE
-		];
+
+		const obj = Object.values(getMapObjects()).find(
+			(o) => "id" in o && (o as { id: string }).id === lobby.fortId
+		);
+		const timerShown = obj ? isPopupActionActive(obj.type, obj.mapId, PopupAction.TIMER) : false;
+		const base = BADGE_BASE_OFFSET + (timerShown ? TIMER_STACK_OFFSET : 0);
+
+		return [offsetX / MAPLIBRE_ICON_OFFSET_SCALE, base + offsetY / MAPLIBRE_ICON_OFFSET_SCALE];
 	}
 
 	const badgeData = $derived<FeatureCollection<Point>>({
@@ -100,7 +111,7 @@
 				geometry: { type: "Point", coordinates: [l.lon, l.lat] },
 				properties: {
 					count: String(l.lobbyPlayerCount),
-					textOffset: badgeOffset(l.kind)
+					textOffset: badgeOffset(l)
 				}
 			})
 		)
