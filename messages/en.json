@@ -662,6 +662,7 @@
 	"unity_raids": "Unity Raids",
 	"filter_template_levels_super_mega": "Super Mega {kind}",
 	"about_this_sation": "About this Power Spot"
+	"filters_dont_match_gym": "None of your filters match this Gym"
 	"install_app": "Install app",
 	"install_app_description": "Add to your home screen",
 	"remote_raid_title": "Remote raid",

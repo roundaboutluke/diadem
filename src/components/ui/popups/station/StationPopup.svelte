@@ -42,6 +42,8 @@
 		Swords,
 		UsersRound
 	} from "@lucide/svelte";
+	import RemoteRaidPanel from "@/components/ui/popups/common/RemoteRaidPanel.svelte";
+	import { RemoteRaidFlow } from "@/lib/features/remoteRaid/remoteRaid.svelte";
 
 	export { image, overview, main };
 
@@ -195,6 +197,19 @@
 				/>
 			</BasicMainCard>
 		</TitledMainSection>
+
+		<!-- Fresh flow per station so switching popups without closing
+			can't leak the previous fort's lobby/token state. -->
+		{#key data.id}
+			{@const remoteRaid = new RemoteRaidFlow()}
+			<RemoteRaidPanel
+				flow={remoteRaid}
+				kind="bread"
+				fortId={data.id}
+				lat={data.lat}
+				lon={data.lon}
+			/>
+		{/key}
 
 		<TitledMainSection
 			Icon={UsersRound}

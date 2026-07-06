@@ -47,6 +47,8 @@
 	import FiltersetIcon from "$lib/features/filters/FiltersetIcon.svelte";
 	import { filterTitle } from "$lib/features/filters/filtersetUtils.svelte";
 	import type { AnyFilterset } from "$lib/features/filters/filtersets";
+	import RemoteRaidPanel from "@/components/ui/popups/common/RemoteRaidPanel.svelte";
+	import { RemoteRaidFlow } from "@/lib/features/remoteRaid/remoteRaid.svelte";
 
 	export { image, overview, main };
 
@@ -292,6 +294,21 @@
 				{/if}
 			</BasicMainCard>
 		</TitledMainSection>
+
+		{#if hasActiveRaid(data)}
+			<!-- Fresh flow per fort so switching popups without closing can't
+				leak the previous fort's lobby/token state. -->
+			{#key data.id}
+				{@const remoteRaid = new RemoteRaidFlow()}
+				<RemoteRaidPanel
+					flow={remoteRaid}
+					kind={isRaidHatched(data) ? "raid" : "rsvp"}
+					fortId={data.id}
+					lat={data.lat}
+					lon={data.lon}
+				/>
+			{/key}
+		{/if}
 
 		<TitledMainSection
 			Icon={Shield}
