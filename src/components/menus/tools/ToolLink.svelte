@@ -8,6 +8,7 @@
 	import type { LucideIcon } from "@/lib/types/lucide";
 	import type { Snippet } from "svelte";
 	import { isMenuSidebar } from "@/lib/utils/device";
+	import { getConfig } from "@/lib/services/config/config";
 
 	let {
 		Icon,
@@ -23,7 +24,10 @@
 		children?: Snippet;
 	} = $props();
 
-	let toolsClass: string = $derived(isMenuSidebar() ? "tools-sidebar" : "tools-mobile");
+	let compact: boolean = $derived(getConfig().tools.compactTools ?? false);
+	let toolsClass: string = $derived(
+		compact ? "tools-compact" : isMenuSidebar() ? "tools-sidebar" : "tools-mobile"
+	);
 </script>
 
 <Button
@@ -37,11 +41,13 @@
 		aria-hidden="true"
 	></div>
 
-	{@render children?.()}
+	{#if !compact}
+		{@render children?.()}
 
-	<div
-		class="absolute top-0 right-0 bg-linear-to-r from-background to-background/50 w-1/2 h-full"
-	></div>
+		<div
+			class="absolute top-0 right-0 bg-linear-to-r from-background to-background/50 w-1/2 h-full"
+		></div>
+	{/if}
 	<div class="flex gap-4 items-center group relative z-20">
 		<Card
 			class="tools-icon bg-card text-muted-foreground flex items-center justify-center aspect-square"
@@ -89,6 +95,22 @@
 		& .tools-icon-icon {
 			width: calc(var(--spacing) * 5);
 			height: calc(var(--spacing) * 5);
+		}
+	}
+
+	:global(.tools-compact) {
+		font-size: var(--text-base) !important;
+		line-height: var(--tw-leading, var(--text-base--line-height)) !important;
+		padding-block: calc(var(--spacing) * 2.5);
+
+		& .tools-icon {
+			width: calc(var(--spacing) * 9);
+			height: calc(var(--spacing) * 9);
+		}
+
+		& .tools-icon-icon {
+			width: calc(var(--spacing) * 4);
+			height: calc(var(--spacing) * 4);
 		}
 	}
 </style>

@@ -134,6 +134,8 @@ export type ClientConfig = {
 		coverageMap: boolean;
 		scout: boolean;
 		autoBattle: boolean;
+		customTools?: boolean;
+		compactTools?: boolean;
 	};
 };
 
