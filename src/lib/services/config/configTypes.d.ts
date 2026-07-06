@@ -133,6 +133,8 @@ export type ClientConfig = {
 		showToolsMenu: boolean;
 		coverageMap: boolean;
 		scout: boolean;
+		customTools?: boolean;
+		compactTools?: boolean;
 	};
 };
 
