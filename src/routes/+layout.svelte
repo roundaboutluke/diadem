@@ -9,11 +9,15 @@
 	import { onMount } from "svelte";
 	import { getConfig } from "$lib/services/config/config";
 	import { getInstanceUrl } from "$lib/native/runtime";
+	import { initPwaInstall } from "@/lib/services/pwa.svelte";
 
 	let { children, data } = $props();
 
-	// remove static loader
-	onMount(() => document.getElementById("initial-loader")?.remove());
+	onMount(() => {
+		initPwaInstall();
+		// remove static loader
+		document.getElementById("initial-loader")?.remove();
+	});
 </script>
 
 {#if data?.needsInstanceGate}
