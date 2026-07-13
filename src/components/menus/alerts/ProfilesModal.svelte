@@ -46,6 +46,16 @@
 	);
 	const activeName = $derived(activeProfile?.name || `Profile ${currentProfileNo}`);
 
+	// Snap like the main menu drawer (opens partial, drag up to expand). A
+	// full-height, snap-positioned sheet means expanding a section fills/scrolls
+	// within the drawer instead of growing it upward. drawer-partial/drawer-full
+	// (global styles from MobileMenuMain) toggle the inner scroll per snap.
+	const snapPoints = [0.62, 1];
+	let snapPoint = $state<number | string>(snapPoints[0]);
+	const contentClass = $derived(
+		snapPoint === snapPoints[snapPoints.length - 1] ? "drawer-full" : "drawer-partial"
+	);
+
 	// Accordion — every section starts collapsed.
 	let profileOpen = $state(false);
 	let locationOpen = $state(false);
@@ -103,14 +113,14 @@
 	});
 </script>
 
-<Drawer.Root bind:open>
+<Drawer.Root bind:open {snapPoints} bind:snapPoint>
 	<Drawer.Portal>
 		<Drawer.Backdrop class="fixed inset-0 z-50 backdrop-blur-[1px] backdrop-brightness-95" />
 		<Drawer.VirtualKeyboardProvider>
 			<Drawer.Viewport class="drawer-viewport flex items-end justify-center z-50!">
 				<Drawer.Popup
 					aria-label="Settings"
-					class="drawer-popup flex h-fit max-h-[85dvh] w-full flex-col overflow-hidden rounded-t-xl border border-t-border bg-card/60 px-2 pt-2 backdrop-blur-sm sm:max-w-lg"
+					class="drawer-popup {contentClass} flex h-full w-full flex-col border border-t-border bg-card/60 px-2 pt-2 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm sm:max-w-lg"
 				>
 					<!-- Inset pill title — mirrors the main menu drawer's MobileTitle. -->
 					<div
@@ -124,10 +134,7 @@
 						/>
 					</div>
 
-					<Drawer.Content
-						class="content flex min-h-0 flex-col gap-2 overflow-y-auto overflow-x-hidden px-1 pt-1"
-						style="padding-bottom: max(1rem, env(safe-area-inset-bottom)); overscroll-behavior: contain;"
-					>
+					<Drawer.Content class="content flex min-h-0 flex-1 flex-col gap-2 px-1 pb-6 pt-1">
 						<!-- Profile selector (switch + create) -->
 						<CollapsibleSection
 							icon={UserRound}
