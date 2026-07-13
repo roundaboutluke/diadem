@@ -110,26 +110,27 @@
 
 <Drawer.Root bind:open>
 	<Drawer.Portal>
-		<Drawer.Backdrop class="fixed inset-0 z-50" style="background-color: rgba(0, 0, 0, 0.45);" />
+		<Drawer.Backdrop class="fixed inset-0 z-50 backdrop-blur-[1px] backdrop-brightness-95" />
 		<Drawer.VirtualKeyboardProvider>
 			<Drawer.Viewport class="drawer-viewport flex items-end justify-center z-50!">
 				<Drawer.Popup
 					aria-label="Settings"
-					class="drawer-popup flex h-[85dvh] w-full flex-col rounded-t-xl border border-t-border bg-card/95 backdrop-blur-sm sm:max-w-lg"
+					class="drawer-popup flex h-[85dvh] w-full flex-col overflow-hidden rounded-t-xl border border-t-border bg-card/60 px-2 pt-2 backdrop-blur-sm sm:max-w-lg"
 				>
-			<!-- Drag handle -->
-			<div class="mx-auto mb-1 mt-3 h-1 w-10 shrink-0 rounded-full bg-ring"></div>
-
+			<!-- Inset pill title — mirrors the main menu drawer's MobileTitle. -->
 			<div
-				class="flex shrink-0 items-center gap-2 border-b px-5 py-3 text-base font-semibold"
+				class="mb-2 flex shrink-0 items-center gap-2 rounded-lg border border-border bg-card px-4 py-1.5 text-base font-bold"
 			>
-				<Settings2 class="h-5 w-5 text-primary" />
+				<Settings2 class="h-4.5 w-4.5 shrink-0 text-primary" />
 				Settings
-				<CloseButton class="ml-auto" onclick={() => (open = false)} />
+				<CloseButton
+					class="ml-auto hover:bg-accent/90! active:bg-accent/90!"
+					onclick={() => (open = false)}
+				/>
 			</div>
 
 			<Drawer.Content
-				class="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overflow-x-hidden px-5 py-4"
+				class="content flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overflow-x-hidden px-3 pt-1"
 				style="padding-bottom: max(1rem, env(safe-area-inset-bottom)); overscroll-behavior: contain;"
 			>
 				<!-- Profile selector (switch + create) -->

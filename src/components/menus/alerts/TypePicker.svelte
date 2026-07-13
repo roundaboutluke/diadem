@@ -51,16 +51,11 @@
 						style="top:0.375rem; right:0.375rem;"
 					>{count}</span>
 				{/if}
-				<span
-					class="flex shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary"
-					style="height:2.5rem; width:2.5rem;"
-				>
-					{#if iconUrl}
-						<img src={iconUrl} alt="" style="height:1.75rem; width:1.75rem; object-fit:contain;" />
-					{:else if Icon}
-						<Icon class="h-5 w-5" />
-					{/if}
-				</span>
+				{#if iconUrl}
+					<img src={iconUrl} alt="" class="h-9 w-9 shrink-0 object-contain" />
+				{:else if Icon}
+					<Icon class="h-7 w-7 shrink-0 text-primary" />
+				{/if}
 				<span class="text-xs font-semibold">{meta.label}</span>
 			</button>
 		{/each}
