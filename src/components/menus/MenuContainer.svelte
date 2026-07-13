@@ -5,6 +5,7 @@
 	import ScoutMenu from "@/components/menus/scout/ScoutMenu.svelte";
 	import ToolsMenu from "@/components/menus/tools/ToolsMenu.svelte";
 	import CoverageMapMenu from "@/components/menus/coverageMap/CoverageMapMenu.svelte";
+	import AlertsMenu from "@/components/menus/alerts/AlertsMenu.svelte";
 
 	let MenuElement = $derived.by(() => {
 		switch (getOpenedMenu()) {
@@ -18,6 +19,8 @@
 				return ToolsMenu;
 			case Menu.COVERAGE_MAP:
 				return CoverageMapMenu;
+			case Menu.ALERTS:
+				return AlertsMenu;
 		}
 	});
 </script>

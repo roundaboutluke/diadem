@@ -5,6 +5,6 @@
 	import MobileMenuCoverageMap from "@/components/menus/mobile/MobileMenuCoverageMap.svelte";
 </script>
 
-<MobileMenuMain menus={[Menu.FILTERS, Menu.PROFILE, Menu.TOOLS]} />
+<MobileMenuMain menus={[Menu.FILTERS, Menu.PROFILE, Menu.TOOLS, Menu.ALERTS]} />
 <MobileMenuCoverageMap />
 <MobileMenuStatic menus={[Menu.SCOUT]} />

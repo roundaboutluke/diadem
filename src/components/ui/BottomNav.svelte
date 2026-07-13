@@ -1,10 +1,11 @@
 <script lang="ts">
-	import { CircleUserRound, PocketKnife, Settings2 } from "@lucide/svelte";
+	import { Bell, CircleUserRound, PocketKnife, Settings2 } from "@lucide/svelte";
 	import Button from "@/components/ui/input/Button.svelte";
 	import * as m from "@/lib/paraglide/messages";
 	import { getUserDetails } from "@/lib/services/user/userDetails.svelte.js";
 	import { closeMenu, getOpenedMenu, Menu, openMenu } from "@/lib/ui/menus.svelte.js";
 	import { hasLoadedFeature, LoadedFeature } from "@/lib/services/initialLoad.svelte.js";
+	import { isSupportedFeature } from "@/lib/services/supportedFeatures";
 	import { fade } from "svelte/transition";
 	import { Avatar } from "bits-ui";
 	import { getConfig } from "@/lib/services/config/config";
@@ -21,30 +22,27 @@
 		}
 	}
 
-	const buttons: {
-		text: string;
-		icon: any;
-		type: Menu;
-	}[] = [];
+	// Derived (not a static array) so the gated Alerts bell can appear once
+	// supported-features + the user session have loaded.
+	const buttons = $derived.by(() => {
+		// Reactive dep: re-read the (async-loaded) feature flags once ready.
+		hasLoadedFeature(LoadedFeature.SUPPORTED_FEATURES);
+		const list: { text: string; icon: typeof Settings2; type: Menu }[] = [];
 
-	buttons.push({
-		text: m.nav_filters(),
-		icon: Settings2,
-		type: Menu.FILTERS
-	});
+		list.push({ text: m.nav_filters(), icon: Settings2, type: Menu.FILTERS });
 
-	if (getConfig().tools?.showToolsMenu) {
-		buttons.push({
-			text: m.nav_tools(),
-			icon: PocketKnife,
-			type: Menu.TOOLS
-		});
-	}
+		if (getConfig().tools?.showToolsMenu) {
+			list.push({ text: m.nav_tools(), icon: PocketKnife, type: Menu.TOOLS });
+		}
 
-	buttons.push({
-		text: m.nav_profile(),
-		icon: CircleUserRound,
-		type: Menu.PROFILE
+		// Alerts (Poracle) bell — only for logged-in users on an instance with
+		// a Poracle backend configured.
+		if (isSupportedFeature("poracle") && getUserDetails()?.details) {
+			list.push({ text: m.nav_alerts(), icon: Bell, type: Menu.ALERTS });
+		}
+
+		list.push({ text: m.nav_profile(), icon: CircleUserRound, type: Menu.PROFILE });
+		return list;
 	});
 </script>
 

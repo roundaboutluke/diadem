@@ -1,4 +1,5 @@
 import { json } from "@sveltejs/kit";
+import { env } from "$env/dynamic/private";
 import { getServerConfig } from "@/lib/services/config/config.server";
 import { isAuthEnabled, isAuthRequired } from "@/lib/server/auth/betterAuth";
 import type { SupportedFeatures } from "@/lib/services/supportedFeatures";
@@ -19,6 +20,9 @@ export const GET: RequestHandler = async ({ locals }) => {
 		showFullscreenLogin: authRequired && !locals.user,
 		geometryLookup:
 			Boolean(config.nominatim?.url) &&
-			(!Boolean(config.pelias?.url) || Boolean(config.photon?.url))
+			(!Boolean(config.pelias?.url) || Boolean(config.photon?.url)),
+		// The Alerts bell only makes sense when a Poracle backend secret is
+		// configured server-side; the flag lets the client hide it otherwise.
+		poracle: Boolean(env.PORACLE_API_SECRET)
 	} as SupportedFeatures);
 };
