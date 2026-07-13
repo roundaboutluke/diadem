@@ -7,6 +7,7 @@
 	import { fade, slide } from "svelte/transition";
 	import maplibre from "maplibre-gl";
 	import SearchFab from "@/components/ui/fab/SearchFab.svelte";
+	import AlertsFab from "@/components/ui/fab/AlertsFab.svelte";
 	import MapStyleFab from "@/components/ui/fab/MapStyleFab.svelte";
 	import type { MapStyle } from "@/lib/services/config/configTypes";
 
@@ -43,6 +44,10 @@
 
 	{#if showSearch}
 		<SearchFab {searchMode} {map} />
+	{/if}
+
+	{#if searchMode === "main"}
+		<AlertsFab />
 	{/if}
 
 	{#if allowMapStyle}
