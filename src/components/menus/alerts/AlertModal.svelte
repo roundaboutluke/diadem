@@ -94,7 +94,7 @@
 		<Drawer.VirtualKeyboardProvider>
 			<Drawer.Viewport class="drawer-viewport flex items-end justify-center z-50!">
 				<Drawer.Popup
-					class="drawer-popup flex h-[85dvh] w-full flex-col overflow-hidden rounded-t-xl border border-t-border bg-card/60 px-2 pt-2 backdrop-blur-sm sm:max-w-lg"
+					class="drawer-popup flex h-fit max-h-[85dvh] w-full flex-col overflow-hidden rounded-t-xl border border-t-border bg-card/60 px-2 pt-2 backdrop-blur-sm sm:max-w-lg"
 				>
 					<!-- Inset pill title — mirrors the main menu drawer's MobileTitle. -->
 					<div
@@ -123,35 +123,35 @@
 					</div>
 
 					<Drawer.Content
-						class="content flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden overscroll-contain px-3 pt-1"
+						class="content flex min-h-0 flex-col overflow-y-auto overflow-x-hidden overscroll-contain px-3 pt-1"
 						style="padding-bottom: max(1rem, env(safe-area-inset-bottom));"
 					>
 						{#if step === "pick"}
-							<TypePicker types={visibleTypes} {counts} {hasIcons} {onPick} onCancel={onClose} />
+							<TypePicker types={visibleTypes} {counts} {hasIcons} {onPick} />
 						{:else if needsMasterfile && !masterfileLoaded}
 							<p class="text-sm text-muted-foreground">Loading Pokémon data…</p>
 						{:else}
 							{#key `${formType}:${editingRule?.uid ?? "new"}`}
 								{#if formType === "pokemon"}
-									<PokemonForm {config} {hasIcons} {defaultDistance} initial={editingRule as PokemonRule | null} {submitting} {onSubmit} onCancel={onClose} />
+									<PokemonForm {config} {hasIcons} {defaultDistance} initial={editingRule as PokemonRule | null} {submitting} {onSubmit} />
 								{:else if formType === "raid"}
-									<RaidForm {config} {hasIcons} {defaultDistance} initial={editingRule as RaidRule | null} {submitting} {onSubmit} onCancel={onClose} />
+									<RaidForm {config} {hasIcons} {defaultDistance} initial={editingRule as RaidRule | null} {submitting} {onSubmit} />
 								{:else if formType === "egg"}
-									<EggForm {config} {defaultDistance} initial={editingRule as EggRule | null} {submitting} {onSubmit} onCancel={onClose} />
+									<EggForm {config} {defaultDistance} initial={editingRule as EggRule | null} {submitting} {onSubmit} />
 								{:else if formType === "quest"}
-									<QuestForm {config} {hasIcons} {defaultDistance} initial={editingRule as QuestRule | null} {submitting} {onSubmit} onCancel={onClose} />
+									<QuestForm {config} {hasIcons} {defaultDistance} initial={editingRule as QuestRule | null} {submitting} {onSubmit} />
 								{:else if formType === "invasion"}
-									<InvasionForm {config} {gruntTypes} {defaultDistance} initial={editingRule as InvasionRule | null} {submitting} {onSubmit} onCancel={onClose} />
+									<InvasionForm {config} {gruntTypes} {defaultDistance} initial={editingRule as InvasionRule | null} {submitting} {onSubmit} />
 								{:else if formType === "lure"}
-									<LureForm {config} {defaultDistance} initial={editingRule as LureRule | null} {submitting} {onSubmit} onCancel={onClose} />
+									<LureForm {config} {defaultDistance} initial={editingRule as LureRule | null} {submitting} {onSubmit} />
 								{:else if formType === "gym"}
-									<GymForm {config} {defaultDistance} initial={editingRule as GymRule | null} {submitting} {onSubmit} onCancel={onClose} />
+									<GymForm {config} {defaultDistance} initial={editingRule as GymRule | null} {submitting} {onSubmit} />
 								{:else if formType === "nest"}
-									<NestForm {config} {hasIcons} {defaultDistance} initial={editingRule as NestRule | null} {submitting} {onSubmit} onCancel={onClose} />
+									<NestForm {config} {hasIcons} {defaultDistance} initial={editingRule as NestRule | null} {submitting} {onSubmit} />
 								{:else if formType === "maxbattle"}
-									<MaxBattleForm {config} {hasIcons} {defaultDistance} initial={editingRule as MaxBattleRule | null} {submitting} {onSubmit} onCancel={onClose} />
+									<MaxBattleForm {config} {hasIcons} {defaultDistance} initial={editingRule as MaxBattleRule | null} {submitting} {onSubmit} />
 								{:else if formType === "fort"}
-									<FortForm {config} {defaultDistance} initial={editingRule as FortRule | null} {submitting} {onSubmit} onCancel={onClose} />
+									<FortForm {config} {defaultDistance} initial={editingRule as FortRule | null} {submitting} {onSubmit} />
 								{/if}
 							{/key}
 						{/if}

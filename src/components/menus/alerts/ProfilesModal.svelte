@@ -115,7 +115,7 @@
 			<Drawer.Viewport class="drawer-viewport flex items-end justify-center z-50!">
 				<Drawer.Popup
 					aria-label="Settings"
-					class="drawer-popup flex h-[85dvh] w-full flex-col overflow-hidden rounded-t-xl border border-t-border bg-card/60 px-2 pt-2 backdrop-blur-sm sm:max-w-lg"
+					class="drawer-popup flex h-fit max-h-[85dvh] w-full flex-col overflow-hidden rounded-t-xl border border-t-border bg-card/60 px-2 pt-2 backdrop-blur-sm sm:max-w-lg"
 				>
 			<!-- Inset pill title — mirrors the main menu drawer's MobileTitle. -->
 			<div
@@ -130,7 +130,7 @@
 			</div>
 
 			<Drawer.Content
-				class="content flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overflow-x-hidden px-3 pt-1"
+				class="content flex min-h-0 flex-col gap-3 overflow-y-auto overflow-x-hidden px-3 pt-1"
 				style="padding-bottom: max(1rem, env(safe-area-inset-bottom)); overscroll-behavior: contain;"
 			>
 				<!-- Profile selector (switch + create) -->

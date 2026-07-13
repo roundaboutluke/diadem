@@ -1,5 +1,4 @@
 <script lang="ts">
-	import Button from "@/components/ui/input/Button.svelte";
 	import { pokedexTypeMeta, type PokedexTrackingType } from "@/lib/services/alerts/alerts.shared";
 	import { typeIcon, sectionIconUrl } from "@/lib/services/alerts/alerts.icons";
 
@@ -12,22 +11,16 @@
 		types,
 		counts = {},
 		hasIcons = false,
-		onPick,
-		onCancel
+		onPick
 	}: {
 		types: PokedexTrackingType[];
 		counts?: Partial<Record<PokedexTrackingType, number>>;
 		hasIcons?: boolean;
 		onPick: (type: PokedexTrackingType) => void;
-		onCancel: () => void;
 	} = $props();
 </script>
 
 <div class="flex flex-col gap-3">
-	<div class="flex items-center justify-between gap-2">
-		<span class="text-sm font-medium">What do you want to be alerted about?</span>
-		<Button variant="ghost" size="sm" onclick={onCancel}>Cancel</Button>
-	</div>
 	<!-- Auto-fill square tiles: ~3 across on a phone, ~4 on desktop, no media
 		queries. The grid + aspect-ratio are inline styles because Tailwind's
 		content scan is unreliable in this (custom) dir; the colour/hover classes
