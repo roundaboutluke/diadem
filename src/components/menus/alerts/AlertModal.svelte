@@ -94,7 +94,7 @@
 		<Drawer.VirtualKeyboardProvider>
 			<Drawer.Viewport class="drawer-viewport flex items-end justify-center z-50!">
 				<Drawer.Popup
-					class="drawer-popup flex h-[85dvh] w-full flex-col overflow-hidden rounded-t-xl border-t bg-background sm:max-w-lg"
+					class="drawer-popup flex h-[85dvh] w-full flex-col overflow-hidden rounded-t-xl border border-t-border bg-card/95 backdrop-blur-sm sm:max-w-lg"
 				>
 					<div class="mx-auto mb-1 mt-3 h-1 w-10 shrink-0 rounded-full bg-ring"></div>
 			<Drawer.Title
@@ -119,7 +119,7 @@
 				style="padding-bottom: max(1rem, env(safe-area-inset-bottom));"
 			>
 				{#if step === "pick"}
-					<TypePicker types={visibleTypes} {counts} {onPick} onCancel={onClose} />
+					<TypePicker types={visibleTypes} {counts} {hasIcons} {onPick} onCancel={onClose} />
 				{:else if needsMasterfile && !masterfileLoaded}
 					<p class="text-sm text-muted-foreground">Loading Pokémon data…</p>
 				{:else}

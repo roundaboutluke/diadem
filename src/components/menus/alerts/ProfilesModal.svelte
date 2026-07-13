@@ -111,16 +111,11 @@
 <Drawer.Root bind:open>
 	<Drawer.Portal>
 		<Drawer.Backdrop class="fixed inset-0 z-50" style="background-color: rgba(0, 0, 0, 0.45);" />
-		<!-- max-width is inline, not a Tailwind class: Tailwind doesn't scan this
-			(custom) dir, so `sm:max-w-lg` would compile to nothing. Viewport pins
-			the sheet to the bottom; max-width 32rem + centering caps it on desktop
-			and stays full-bleed on phones (32rem > phone width). -->
 		<Drawer.VirtualKeyboardProvider>
 			<Drawer.Viewport class="drawer-viewport flex items-end justify-center z-50!">
 				<Drawer.Popup
 					aria-label="Settings"
-					class="drawer-popup pokedex-settings-drawer flex h-[85dvh] w-full flex-col rounded-t-xl border-t bg-background"
-					style="max-width: 32rem;"
+					class="drawer-popup flex h-[85dvh] w-full flex-col rounded-t-xl border border-t-border bg-card/95 backdrop-blur-sm sm:max-w-lg"
 				>
 			<!-- Drag handle -->
 			<div class="mx-auto mb-1 mt-3 h-1 w-10 shrink-0 rounded-full bg-ring"></div>

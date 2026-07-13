@@ -2,7 +2,6 @@
 	import { onMount, setContext } from "svelte";
 	import { AlertCircle, CheckCircle2, Plus, X } from "@lucide/svelte";
 	import Button from "@/components/ui/input/Button.svelte";
-	import Loading from "@/components/ui/Loading.svelte";
 	import { LoadedFeature, hasLoadedFeature } from "@/lib/services/initialLoad.svelte";
 	import AreaSelector from "./AreaSelector.svelte";
 	import CollapsibleSection from "./CollapsibleSection.svelte";
@@ -361,8 +360,18 @@
 
 <div class="flex flex-col gap-3 px-2 pb-4 pt-1">
 	{#if loading}
-		<div class="flex items-center justify-center py-10">
-			<Loading />
+		<!-- Layout-shaped skeleton (not a bare spinner) so the sheet reads as
+			structured while the init bundle loads, instead of flashing empty. -->
+		<div class="flex animate-pulse flex-col gap-3" aria-hidden="true">
+			<div class="flex items-center gap-2">
+				<div class="h-4 w-4 rounded-full bg-muted"></div>
+				<div class="h-4 w-20 rounded bg-muted"></div>
+				<div class="ml-auto h-8 w-24 rounded-md bg-muted"></div>
+			</div>
+			<div class="h-9 w-full rounded-md bg-muted"></div>
+			{#each Array(4) as _, i (i)}
+				<div class="h-12 w-full rounded-md border bg-muted/40"></div>
+			{/each}
 		</div>
 	{:else}
 		{#if profiles.length > 0}

@@ -1,19 +1,23 @@
 <script lang="ts">
 	import Button from "@/components/ui/input/Button.svelte";
 	import { pokedexTypeMeta, type PokedexTrackingType } from "@/lib/services/alerts/alerts.shared";
-	import { typeIcon } from "@/lib/services/alerts/alerts.icons";
+	import { typeIcon, sectionIconUrl } from "@/lib/services/alerts/alerts.icons";
 
 	// "Add alert" step one: pick the type. A compact grid of square icon
 	// tiles (icon + label; the per-type blurb is a hover tooltip) that stays
 	// tidy on mobile and desktop. Choosing a tile opens that type's form.
+	// Tiles use the same UICON artwork as the Alerts section headers (falling
+	// back to the lucide glyph) so the two views read as one set.
 	let {
 		types,
 		counts = {},
+		hasIcons = false,
 		onPick,
 		onCancel
 	}: {
 		types: PokedexTrackingType[];
 		counts?: Partial<Record<PokedexTrackingType, number>>;
+		hasIcons?: boolean;
 		onPick: (type: PokedexTrackingType) => void;
 		onCancel: () => void;
 	} = $props();
@@ -32,6 +36,7 @@
 		{#each types as type (type)}
 			{@const meta = pokedexTypeMeta[type]}
 			{@const Icon = typeIcon(type)}
+			{@const iconUrl = hasIcons ? sectionIconUrl(type) : null}
 			{@const count = counts[type] ?? 0}
 			<button
 				type="button"
@@ -50,7 +55,11 @@
 					class="flex shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary"
 					style="height:2.5rem; width:2.5rem;"
 				>
-					{#if Icon}<Icon class="h-5 w-5" />{/if}
+					{#if iconUrl}
+						<img src={iconUrl} alt="" style="height:1.75rem; width:1.75rem; object-fit:contain;" />
+					{:else if Icon}
+						<Icon class="h-5 w-5" />
+					{/if}
 				</span>
 				<span class="text-xs font-semibold">{meta.label}</span>
 			</button>
