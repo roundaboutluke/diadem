@@ -76,15 +76,26 @@
 
 	const title = $derived(
 		step === "pick"
-			? "Add notification"
+			? "Add alert"
 			: editingRule
-				? `Edit ${pokedexTypeMeta[formType].label} notification`
-				: `New ${pokedexTypeMeta[formType].label} notification`
+				? `Edit ${pokedexTypeMeta[formType].label} alert`
+				: `New ${pokedexTypeMeta[formType].label} alert`
+	);
+
+	// Snap like the main menu drawer, but a touch shorter than its 0.62 so the
+	// parent drawer peeks out behind this nested one. Full-height + snap means
+	// the form fills/scrolls within instead of growing the sheet upward.
+	const snapPoints = [0.55, 1];
+	let snapPoint = $state<number | string>(snapPoints[0]);
+	const contentClass = $derived(
+		snapPoint === snapPoints[snapPoints.length - 1] ? "drawer-full" : "drawer-partial"
 	);
 </script>
 
 <Drawer.Root
 	{open}
+	{snapPoints}
+	bind:snapPoint
 	onOpenChangeComplete={(o) => {
 		if (!o) onClose();
 	}}
@@ -94,7 +105,7 @@
 		<Drawer.VirtualKeyboardProvider>
 			<Drawer.Viewport class="drawer-viewport flex items-end justify-center z-50!">
 				<Drawer.Popup
-					class="drawer-popup flex h-fit max-h-[85dvh] w-full flex-col overflow-hidden rounded-t-xl border border-t-border bg-card/60 px-2 pt-2 backdrop-blur-sm sm:max-w-lg"
+					class="drawer-popup {contentClass} flex h-full w-full flex-col border border-t-border bg-card/60 px-2 pt-2 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm sm:max-w-lg"
 				>
 					<!-- Inset pill title — mirrors the main menu drawer's MobileTitle. -->
 					<div
@@ -122,10 +133,7 @@
 						<CloseButton class="mr-1 hover:bg-accent/90! active:bg-accent/90!" onclick={onClose} />
 					</div>
 
-					<Drawer.Content
-						class="content flex min-h-0 flex-col overflow-y-auto overflow-x-hidden overscroll-contain px-3 pt-1"
-						style="padding-bottom: max(1rem, env(safe-area-inset-bottom));"
-					>
+					<Drawer.Content class="content flex min-h-0 flex-1 flex-col px-3 pb-6 pt-1">
 						{#if step === "pick"}
 							<TypePicker types={visibleTypes} {counts} {hasIcons} {onPick} />
 						{:else if needsMasterfile && !masterfileLoaded}

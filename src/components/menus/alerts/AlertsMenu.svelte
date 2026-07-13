@@ -408,13 +408,13 @@
 		{/if}
 
 		<Button size="sm" class="w-full" onclick={startAdd}>
-			<Plus class="h-4 w-4" /> Add notification
+			<Plus class="h-4 w-4" /> Add alert
 		</Button>
 
 		{#if totalRules === 0}
 			<p class="rounded-md border border-dashed bg-card px-4 py-8 text-center text-sm text-muted-foreground">
-				You're not tracking anything yet. Add a notification to get pinged about spawns, raids, quests
-				and more.
+				You're not tracking anything yet. Add an alert to get notified about spawns, raids, quests and
+				more.
 			</p>
 		{:else}
 			{#each typesWithRules as type (type)}
@@ -423,7 +423,7 @@
 					icon={typeIcon(type)}
 					iconUrl={hasIcons ? (sectionIconUrl(type) ?? undefined) : undefined}
 					title={pokedexTypeMeta[type].label}
-					subtitle={`${count} notification${count === 1 ? "" : "s"}`}
+					subtitle={`${count} alert${count === 1 ? "" : "s"}`}
 					bind:open={openSections[type]}
 				>
 					<RuleList

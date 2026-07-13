@@ -49,8 +49,10 @@
 	// Snap like the main menu drawer (opens partial, drag up to expand). A
 	// full-height, snap-positioned sheet means expanding a section fills/scrolls
 	// within the drawer instead of growing it upward. drawer-partial/drawer-full
-	// (global styles from MobileMenuMain) toggle the inner scroll per snap.
-	const snapPoints = [0.62, 1];
+	// (global styles from MobileMenuMain) toggle the inner scroll per snap. The
+	// initial snap is a touch shorter than the top-level menu's 0.62 so the
+	// parent drawer peeks out behind this nested one (visible stack).
+	const snapPoints = [0.55, 1];
 	let snapPoint = $state<number | string>(snapPoints[0]);
 	const contentClass = $derived(
 		snapPoint === snapPoints[snapPoints.length - 1] ? "drawer-full" : "drawer-partial"
