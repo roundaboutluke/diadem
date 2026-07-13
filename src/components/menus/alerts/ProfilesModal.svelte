@@ -5,16 +5,16 @@
 	import Button from "@/components/ui/input/Button.svelte";
 	import Input from "@/components/ui/input/Input.svelte";
 	import CloseButton from "@/components/ui/CloseButton.svelte";
-	import MenuCard from "@/components/menus/MenuCard.svelte";
+	import CollapsibleSection from "./CollapsibleSection.svelte";
 	import ActiveHoursEditor from "./ActiveHoursEditor.svelte";
 	import type { PoracleProfile } from "@/lib/services/alerts/alerts.shared";
 
 	// Settings bottom-sheet on $lib/drawer, styled to match the main menu
-	// drawer (translucent card surface + inset pill title). The body is flat
-	// diadem MenuCards (Profile / Location / Schedule) — not collapsible
-	// dropdowns — so it reads like the rest of the tooling. The Profile card
-	// switches in place and creates profiles; the Location editor is injected
-	// as a snippet so this component stays decoupled from the pickers.
+	// drawer (translucent card surface + inset pill title). The body is a
+	// uniform accordion of CollapsibleSections (Profile / Location / Schedule)
+	// — collapsed by default so the sheet opens compact and each section
+	// reveals downward. The Location editor is injected as a snippet so this
+	// component stays decoupled from the pickers.
 	let {
 		open = $bindable(false),
 		profiles,
@@ -44,6 +44,12 @@
 	const activeProfile = $derived(
 		profiles.find((p) => p.profile_no === currentProfileNo) ?? profiles[0] ?? null
 	);
+	const activeName = $derived(activeProfile?.name || `Profile ${currentProfileNo}`);
+
+	// Accordion — every section starts collapsed.
+	let profileOpen = $state(false);
+	let locationOpen = $state(false);
+	let scheduleOpen = $state(false);
 
 	// New-profile inline form
 	let showNew = $state(false);
@@ -58,6 +64,43 @@
 		copyFrom = "";
 		showNew = false;
 	}
+
+	function areaCount(p: PoracleProfile): number {
+		try {
+			const parsed = JSON.parse(p.area || "[]");
+			return Array.isArray(parsed) ? parsed.length : 0;
+		} catch {
+			return 0;
+		}
+	}
+	function scheduleSummary(p: PoracleProfile): string {
+		if (!p.active_hours || p.active_hours === "{}") return "Manual";
+		try {
+			const parsed = JSON.parse(p.active_hours);
+			return Array.isArray(parsed) && parsed.length > 0
+				? `${parsed.length} time${parsed.length === 1 ? "" : "s"}`
+				: "Manual";
+		} catch {
+			return "Manual";
+		}
+	}
+
+	// A profile with no areas and no point has nowhere to fire notifications.
+	const locWarn = $derived(
+		activeProfile
+			? areaCount(activeProfile) === 0 &&
+					(activeProfile.latitude == null || activeProfile.longitude == null)
+			: false
+	);
+	const locSummary = $derived.by(() => {
+		if (!activeProfile) return "";
+		const ac = areaCount(activeProfile);
+		if (ac > 0) return `${ac} area${ac === 1 ? "" : "s"}`;
+		if (activeProfile.latitude != null && activeProfile.longitude != null) {
+			return `${activeProfile.latitude.toFixed(2)}, ${activeProfile.longitude.toFixed(2)}`;
+		}
+		return "Not set";
+	});
 </script>
 
 <Drawer.Root bind:open>
@@ -86,10 +129,13 @@
 						style="padding-bottom: max(1rem, env(safe-area-inset-bottom)); overscroll-behavior: contain;"
 					>
 						<!-- Profile selector (switch + create) -->
-						<MenuCard title="Profile" Icon={UserRound}>
-							<!-- Borderless rows: selection carried by a primary fill so
-								the list reads as one continuous menu. -->
-							<div class="flex flex-col gap-1 px-2">
+						<CollapsibleSection
+							icon={UserRound}
+							title="Profile"
+							subtitle={activeName}
+							bind:open={profileOpen}
+						>
+							<div class="flex flex-col gap-1">
 								{#each profiles as p (p.profile_no)}
 									{@const isActive = p.profile_no === currentProfileNo}
 									<div
@@ -178,28 +224,35 @@
 									</div>
 								{/if}
 							</div>
-						</MenuCard>
+						</CollapsibleSection>
 
 						{#if activeProfile}
-							<MenuCard title="Location" Icon={MapPin}>
-								<div class="px-4">
-									{#if location}
-										{@render location()}
-									{/if}
-								</div>
-							</MenuCard>
+							<CollapsibleSection
+								icon={MapPin}
+								title="Location"
+								subtitle={locSummary}
+								warn={locWarn}
+								bind:open={locationOpen}
+							>
+								{#if location}
+									{@render location()}
+								{/if}
+							</CollapsibleSection>
 
-							<MenuCard title="Schedule" Icon={Clock}>
-								<div class="px-4">
-									{#key currentProfileNo}
-										<ActiveHoursEditor
-											profile={activeProfile}
-											saving={savingHours}
-											onSave={onSaveHours}
-										/>
-									{/key}
-								</div>
-							</MenuCard>
+							<CollapsibleSection
+								icon={Clock}
+								title="Schedule"
+								subtitle={scheduleSummary(activeProfile)}
+								bind:open={scheduleOpen}
+							>
+								{#key currentProfileNo}
+									<ActiveHoursEditor
+										profile={activeProfile}
+										saving={savingHours}
+										onSave={onSaveHours}
+									/>
+								{/key}
+							</CollapsibleSection>
 						{/if}
 					</Drawer.Content>
 				</Drawer.Popup>

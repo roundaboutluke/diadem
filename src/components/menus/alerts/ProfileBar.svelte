@@ -1,12 +1,10 @@
 <script lang="ts">
 	import { Settings2, UserRound } from "@lucide/svelte";
-	import Button from "@/components/ui/input/Button.svelte";
 	import type { PoracleProfile } from "@/lib/services/alerts/alerts.shared";
 
-	// Compact active-profile indicator + entry point to the profile
-	// manager. Switching, creating and per-profile settings all live
-	// inside the manager panel (toggled here) rather than a cramped
-	// inline dropdown.
+	// The active-profile indicator IS the entry point to the settings panel —
+	// the whole bar is a button (a trailing gear hints at it), so there's no
+	// separate "Settings" control cluttering the header.
 	let {
 		profiles,
 		currentProfileNo,
@@ -24,16 +22,15 @@
 	);
 </script>
 
-<div class="flex flex-wrap items-center gap-2 text-sm">
-	<UserRound class="h-4 w-4 text-muted-foreground" />
+<button
+	type="button"
+	class="flex w-full items-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors hover:bg-muted/40 {managing
+		? 'bg-muted'
+		: ''}"
+	onclick={onToggleManage}
+>
+	<UserRound class="h-4 w-4 shrink-0 text-muted-foreground" />
 	<span class="text-muted-foreground">Profile</span>
-	<span class="font-medium">{current?.name || `Profile ${currentProfileNo}`}</span>
-	<Button
-		variant="outline"
-		size="sm"
-		class="ml-auto {managing ? 'bg-muted' : ''}"
-		onclick={onToggleManage}
-	>
-		<Settings2 class="h-4 w-4" /> Settings
-	</Button>
-</div>
+	<span class="min-w-0 truncate font-medium">{current?.name || `Profile ${currentProfileNo}`}</span>
+	<Settings2 class="ml-auto h-4 w-4 shrink-0 text-muted-foreground" />
+</button>

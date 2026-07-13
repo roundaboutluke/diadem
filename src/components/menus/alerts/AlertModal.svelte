@@ -76,10 +76,10 @@
 
 	const title = $derived(
 		step === "pick"
-			? "Add alert"
+			? "Add notification"
 			: editingRule
-				? `Edit ${pokedexTypeMeta[formType].label} alert`
-				: `New ${pokedexTypeMeta[formType].label} alert`
+				? `Edit ${pokedexTypeMeta[formType].label} notification`
+				: `New ${pokedexTypeMeta[formType].label} notification`
 	);
 </script>
 

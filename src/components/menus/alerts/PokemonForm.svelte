@@ -141,7 +141,7 @@
 			<Button variant="outline" onclick={onCancel} disabled={submitting}>Cancel</Button>
 		{/if}
 		<Button onclick={submit} disabled={submitting}>
-			{submitting ? "Saving…" : initial ? "Save changes" : "Add rule"}
+			Save
 		</Button>
 	</div>
 </div>
