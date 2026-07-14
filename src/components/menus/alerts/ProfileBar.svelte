@@ -24,9 +24,9 @@
 
 <button
 	type="button"
-	class="flex w-full items-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors hover:bg-muted/40 {managing
+	class="flex w-full items-center gap-2 rounded-md border px-3 py-2 text-sm shadow-sm transition-colors hover:bg-muted/40 {managing
 		? 'bg-muted'
-		: ''}"
+		: 'bg-card'}"
 	onclick={onToggleManage}
 >
 	<UserRound class="h-4 w-4 shrink-0 text-muted-foreground" />
