@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { MapPin, Search, X } from "@lucide/svelte";
+	import { MapPin, X } from "@lucide/svelte";
+	import SearchBar from "@/components/ui/input/SearchBar.svelte";
 	import { fetchGymNames, searchGyms } from "@/lib/services/alerts/alerts.client";
 
 	// Optional "target a specific gym" picker for raid / egg / gym rules.
@@ -29,8 +30,9 @@
 		}
 	});
 
-	function onInput(v: string) {
-		query = v;
+	// Debounced name search driven by the SearchBar's bound query.
+	$effect(() => {
+		const v = query;
 		clearTimeout(timer);
 		if (v.trim().length < 2) {
 			results = [];
@@ -45,7 +47,8 @@
 				searching = false;
 			}
 		}, 250);
-	}
+		return () => clearTimeout(timer);
+	});
 
 	function pick(g: { id: string; name: string }) {
 		gymId = g.id;
@@ -81,19 +84,10 @@
 		</div>
 	{:else}
 		<div class="relative">
-			<div class="flex items-center gap-2 rounded-md border bg-background px-3">
-				<Search class="h-4 w-4 shrink-0 text-muted-foreground" />
-				<input
-					value={query}
-					oninput={(e) => onInput((e.target as HTMLInputElement).value)}
-					placeholder="Search for a gym by name…"
-					class="h-10 min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
-				/>
-			</div>
+			<SearchBar bind:query placeholder="Search for a gym by name…" />
 			{#if results.length > 0}
 				<ul
-					style="z-index: 40;"
-					class="absolute mt-1 max-h-60 w-full overflow-y-auto rounded-md border bg-background shadow-md"
+					class="absolute z-40 mt-1 max-h-60 w-full overflow-y-auto rounded-md border bg-background shadow-md"
 				>
 					{#each results as g (g.id)}
 						<li>

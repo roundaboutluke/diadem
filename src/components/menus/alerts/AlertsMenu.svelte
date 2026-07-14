@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount, setContext } from "svelte";
-	import { AlertCircle, CheckCircle2, Plus, X } from "@lucide/svelte";
+	import { Plus } from "@lucide/svelte";
+	import { openToast } from "@/lib/ui/toasts.svelte.js";
 	import Button from "@/components/ui/input/Button.svelte";
 	import { LoadedFeature, hasLoadedFeature } from "@/lib/services/initialLoad.svelte";
 	import AreaSelector from "./AreaSelector.svelte";
@@ -171,10 +172,9 @@
 	let bulkBusy = $state(false);
 	const needsMasterfile = $derived(masterfileTypes.includes(formType));
 
-	let banner = $state<{ kind: "error" | "success"; text: string } | null>(null);
+	// Transient feedback via diadem's toast system (errors linger a little).
 	function flash(kind: "error" | "success", text: string) {
-		banner = { kind, text };
-		if (kind === "success") setTimeout(() => (banner = null), 4000);
+		openToast(text, kind === "error" ? 4000 : 1500);
 	}
 	function errText(err: unknown) {
 		return err instanceof PokedexApiError ? err.message : "Something went wrong";
@@ -381,24 +381,6 @@
 				managing={managingProfiles}
 				onToggleManage={() => (managingProfiles = !managingProfiles)}
 			/>
-		{/if}
-
-		{#if banner}
-			<div
-				class="flex items-center gap-2 rounded-md border px-3 py-2 text-sm {banner.kind === 'error'
-					? 'border-destructive/30 bg-destructive/10 text-destructive'
-					: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'}"
-			>
-				{#if banner.kind === "error"}
-					<AlertCircle class="h-4 w-4 shrink-0" />
-				{:else}
-					<CheckCircle2 class="h-4 w-4 shrink-0" />
-				{/if}
-				<span class="flex-1">{banner.text}</span>
-				<button type="button" aria-label="Dismiss" onclick={() => (banner = null)}>
-					<X class="h-4 w-4" />
-				</button>
-			</div>
 		{/if}
 
 		{#if loadError}

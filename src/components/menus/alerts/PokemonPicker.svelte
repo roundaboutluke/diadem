@@ -1,13 +1,15 @@
 <script lang="ts">
-	import { Search, X } from "@lucide/svelte";
-	import Input from "@/components/ui/input/Input.svelte";
+	import { X } from "@lucide/svelte";
+	import SearchBar from "@/components/ui/input/SearchBar.svelte";
+	import { resize } from "@/lib/services/assets";
 	import { getAllPokemon, getMasterPokemon } from "@/lib/services/masterfile";
 	import { getIconPokemon } from "@/lib/services/uicons.svelte";
 
-	// Controlled Pokémon + form picker backed by Diadem's masterfile.
-	// `pokemon_id` 0 means "any / everything" (Poracle convention) when
-	// `allowAny` is set. Two-way bound via $bindable so the parent form
-	// reads the current selection directly.
+	// Controlled Pokémon + form picker backed by Diadem's masterfile, presented
+	// as a searchable UICON grid in the style of the filterset icon picker
+	// (SearchBar + IconGrid). `pokemon_id` 0 means "any / everything" (Poracle
+	// convention) when `allowAny` is set. Two-way bound via $bindable so the
+	// parent form reads the current selection directly.
 	let {
 		pokemonId = $bindable(0),
 		form = $bindable(0),
@@ -48,7 +50,7 @@
 		const list = q
 			? options.filter((o) => o.label.toLowerCase().includes(q) || String(o.pokemon_id) === q)
 			: options;
-		return list.slice(0, 60);
+		return list.slice(0, 150);
 	});
 
 	const selectedLabel = $derived(pokemonId === 0 ? "Any Pokémon" : displayName(pokemonId, form));
@@ -74,53 +76,57 @@
 	</button>
 
 	{#if open}
-		<!-- Overlay dropdown. z-index is set inline, not via a class: Tailwind
-			doesn't scan this (custom) directory, so a `z-*` class here compiles
-			to nothing. 40 beats the slider thumbs (z-5) below it. -->
 		<div
-			style="z-index: 40;"
-			class="absolute mt-1 w-full overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-lg"
+			class="absolute z-40 mt-1 w-full overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-lg"
 		>
-			<div class="flex items-center gap-2 border-b px-2 py-1.5">
-				<Search class="h-4 w-4 shrink-0 text-muted-foreground" />
-				<Input
-					value={search}
-					oninput={(e: Event) => (search = (e.target as HTMLInputElement).value)}
-					placeholder="Search Pokémon…"
-					class="h-8 border-0 px-1 shadow-none focus-visible:ring-0"
-				/>
-				<button type="button" aria-label="Close" onclick={() => (open = false)}>
-					<X class="h-4 w-4 text-muted-foreground" />
+			<div class="flex items-center gap-2 border-b p-2">
+				<SearchBar bind:query={search} placeholder="Search Pokémon…" />
+				<button
+					type="button"
+					class="shrink-0 rounded-md p-1 text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+					aria-label="Close"
+					onclick={() => (open = false)}
+				>
+					<X class="h-4 w-4" />
 				</button>
 			</div>
-			<div class="max-h-64 overflow-y-auto py-1">
+			<div class="max-h-64 overflow-y-auto p-2">
 				{#if allowAny}
 					<button
 						type="button"
-						class="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-muted/50"
+						class="mb-2 w-full rounded-sm px-3 py-1.5 text-left text-sm text-muted-foreground hover:bg-accent"
 						onclick={() => select(0, 0)}
 					>
-						<span class="text-muted-foreground">Any Pokémon</span>
+						Any Pokémon
 					</button>
 				{/if}
-				{#each filtered as opt (opt.pokemon_id + "-" + opt.form)}
-					<button
-						type="button"
-						class="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-muted/50"
-						onclick={() => select(opt.pokemon_id, opt.form)}
-					>
-						{#if hasIcons}
-							<img
-								src={getIconPokemon({ pokemon_id: opt.pokemon_id, form: opt.form })}
-								alt=""
-								class="h-6 w-6 shrink-0"
-							/>
-						{/if}
-						<span class="truncate">{opt.label}</span>
-					</button>
-				{:else}
-					<div class="px-3 py-2 text-sm text-muted-foreground">No matches</div>
-				{/each}
+				<!-- UICON grid, mirroring the filterset IconGrid. -->
+				<div class="grid" style:grid-template-columns="repeat(auto-fill, minmax(2.5rem, 1fr))">
+					{#each filtered as opt (opt.pokemon_id + "-" + opt.form)}
+						<button
+							type="button"
+							class="size-10 rounded-sm text-center hover:bg-accent active:bg-accent"
+							title={opt.label}
+							onclick={() => select(opt.pokemon_id, opt.form)}
+						>
+							{#if hasIcons}
+								<img
+									class="mx-auto max-h-9 max-w-9"
+									src={resize(getIconPokemon({ pokemon_id: opt.pokemon_id, form: opt.form }), {
+										width: 64
+									})}
+									alt={opt.label}
+									loading="lazy"
+								/>
+							{:else}
+								<span class="line-clamp-2 px-0.5 text-[10px] leading-tight">{opt.label}</span>
+							{/if}
+						</button>
+					{/each}
+				</div>
+				{#if filtered.length === 0}
+					<p class="px-1 py-2 text-sm text-muted-foreground">No matches</p>
+				{/if}
 			</div>
 		</div>
 	{/if}
