@@ -38,7 +38,7 @@
 	}
 </script>
 
-<form id="alert-rule-form" class="flex flex-col gap-4 pb-2" onsubmit={(e) => { e.preventDefault(); submit(); }}>
+<form id="alert-rule-form" class="flex flex-col gap-4 rounded-md border bg-card p-4 shadow-sm" onsubmit={(e) => { e.preventDefault(); submit(); }}>
 	<div class="flex flex-col gap-1.5">
 		<span class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Pokémon</span>
 		<PokemonPicker bind:pokemonId bind:form {hasIcons} />

@@ -46,7 +46,7 @@
 	}
 </script>
 
-<form id="alert-rule-form" class="flex flex-col gap-4 pb-2" onsubmit={(e) => { e.preventDefault(); submit(); }}>
+<form id="alert-rule-form" class="flex flex-col gap-4 rounded-md border bg-card p-4 shadow-sm" onsubmit={(e) => { e.preventDefault(); submit(); }}>
 	<label class="flex flex-col gap-1 text-xs text-muted-foreground">
 		<span class="font-medium uppercase tracking-wide">Team</span>
 		<select bind:value={team} class="h-10 rounded-md border bg-background px-2 text-sm text-foreground">

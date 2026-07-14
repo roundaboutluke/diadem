@@ -46,7 +46,7 @@
 	}
 </script>
 
-<form id="alert-rule-form" class="flex flex-col gap-4 pb-2" onsubmit={(e) => { e.preventDefault(); submit(); }}>
+<form id="alert-rule-form" class="flex flex-col gap-4 rounded-md border bg-card p-4 shadow-sm" onsubmit={(e) => { e.preventDefault(); submit(); }}>
 	<div class="inline-flex overflow-hidden rounded-md border text-sm">
 		<button
 			type="button"
