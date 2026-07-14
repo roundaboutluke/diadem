@@ -349,23 +349,23 @@
 		<div class="grid grid-cols-2 gap-2">
 			<button
 				type="button"
-				class="flex flex-col items-center justify-center gap-1.5 rounded-md border border-primary/30 bg-primary/10 px-3 py-4 text-primary shadow-sm transition-colors hover:bg-primary/15"
+				class="flex flex-col items-center justify-center gap-1 rounded-md border border-transparent bg-secondary px-3 py-2.5 text-secondary-foreground shadow-sm transition-colors hover:bg-secondary/80"
 				onclick={startAdd}
 			>
-				<Plus class="h-6 w-6" />
+				<Plus class="h-5 w-5" />
 				<span class="text-sm font-semibold">Add alert</span>
 			</button>
 			<button
 				type="button"
-				class="flex flex-col items-center justify-center gap-1.5 rounded-md border px-3 py-4 shadow-sm transition-colors hover:bg-muted/40 {managingProfiles
+				class="flex flex-col items-center justify-center gap-1 rounded-md border px-3 py-2.5 shadow-sm transition-colors hover:bg-muted/40 {managingProfiles
 					? 'bg-muted'
 					: 'bg-card'}"
 				onclick={() => (managingProfiles = !managingProfiles)}
 			>
-				<Settings2 class="h-6 w-6 text-muted-foreground" />
+				<Settings2 class="h-5 w-5 text-muted-foreground" />
 				<span class="text-sm font-semibold">Settings</span>
 				{#if activeProfileName}
-					<span class="max-w-full truncate text-xs text-muted-foreground">· {activeProfileName}</span>
+					<span class="max-w-full truncate text-xs text-muted-foreground">{activeProfileName}</span>
 				{/if}
 			</button>
 		</div>
