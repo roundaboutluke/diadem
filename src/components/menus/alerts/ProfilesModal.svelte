@@ -122,7 +122,7 @@
 			<Drawer.Viewport class="drawer-viewport flex items-end justify-center z-50!">
 				<Drawer.Popup
 					aria-label="Settings"
-					class="drawer-popup {contentClass} flex h-full w-full flex-col border border-t-border bg-card/60 px-2 pt-2 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm sm:max-w-lg"
+					class="drawer-popup {contentClass} flex h-full w-full flex-col border border-t-border bg-background px-2 pt-2 pb-[env(safe-area-inset-bottom)] sm:max-w-lg"
 				>
 					<!-- Inset pill title — mirrors the main menu drawer's MobileTitle. -->
 					<div
