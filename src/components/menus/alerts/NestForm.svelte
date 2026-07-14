@@ -38,7 +38,9 @@
 	}
 </script>
 
-<form id="alert-rule-form" class="flex flex-col gap-4 rounded-md border bg-card p-4 shadow-sm" onsubmit={(e) => { e.preventDefault(); submit(); }}>
+<form id="alert-rule-form" class="flex flex-col gap-3" onsubmit={(e) => { e.preventDefault(); submit(); }}>
+	<section class="flex flex-col gap-3 rounded-md border bg-card p-4 shadow-sm">
+		<h3 class="mb-1 text-sm font-semibold">Filters</h3>
 	<div class="flex flex-col gap-1.5">
 		<span class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Pokémon</span>
 		<PokemonPicker bind:pokemonId bind:form {hasIcons} />
@@ -46,6 +48,11 @@
 
 	<ValueSlider title="Min spawns / hour" min={0} max={60} bind:value={minSpawnAvg} />
 
+	</section>
+
+	<section class="flex flex-col gap-3 rounded-md border bg-card p-4 shadow-sm">
+		<h3 class="mb-1 text-sm font-semibold">Where</h3>
 	<DistanceField bind:distance {maxDistance} />
 
+	</section>
 </form>

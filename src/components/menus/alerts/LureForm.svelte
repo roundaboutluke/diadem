@@ -32,7 +32,9 @@
 	}
 </script>
 
-<form id="alert-rule-form" class="flex flex-col gap-4 rounded-md border bg-card p-4 shadow-sm" onsubmit={(e) => { e.preventDefault(); submit(); }}>
+<form id="alert-rule-form" class="flex flex-col gap-3" onsubmit={(e) => { e.preventDefault(); submit(); }}>
+	<section class="flex flex-col gap-3 rounded-md border bg-card p-4 shadow-sm">
+		<h3 class="mb-1 text-sm font-semibold">Filters</h3>
 	<label class="flex flex-col gap-1 text-xs text-muted-foreground">
 		<span class="font-medium uppercase tracking-wide">Lure type</span>
 		<select bind:value={lureId} class="h-10 rounded-md border bg-background px-2 text-sm text-foreground">
@@ -42,6 +44,11 @@
 		</select>
 	</label>
 
+	</section>
+
+	<section class="flex flex-col gap-3 rounded-md border bg-card p-4 shadow-sm">
+		<h3 class="mb-1 text-sm font-semibold">Where</h3>
 	<DistanceField bind:distance {maxDistance} />
 
+	</section>
 </form>
