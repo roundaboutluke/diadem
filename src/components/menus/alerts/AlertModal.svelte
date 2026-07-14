@@ -31,12 +31,6 @@
 		type RaidRule
 	} from "@/lib/services/alerts/alerts.shared";
 
-	// The "Add / Edit alert" flow as a bottom-sheet on $lib/drawer, styled to
-	// match diadem's main menu drawer (translucent card surface + inset pill
-	// title). Drawer.VirtualKeyboardProvider handles the on-screen keyboard so
-	// the form's text fields stay usable. Adding flows pick-type → form (Back
-	// returns to the picker); editing jumps straight to the form. All view
-	// state lives on the parent; this is a thin presenter driven by `step`.
 	let {
 		open = false,
 		step,
@@ -81,9 +75,6 @@
 				: `New ${pokedexTypeMeta[formType].label} alert`
 	);
 
-	// Snap like the main menu drawer, but a touch shorter than its 0.62 so the
-	// parent drawer peeks out behind this nested one. Full-height + snap means
-	// the form fills/scrolls within instead of growing the sheet upward.
 	const snapPoints = [0.55, 1];
 	let snapPoint = $state<number | string>(snapPoints[0]);
 	const contentClass = $derived(
@@ -106,7 +97,6 @@
 				<Drawer.Popup
 					class="drawer-popup {contentClass} flex h-full w-full flex-col border border-t-border bg-card/60 px-2 pt-2 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm sm:max-w-lg"
 				>
-					<!-- Inset pill title — mirrors the main menu drawer's MobileTitle. -->
 					<div
 						class="mb-2 flex shrink-0 items-center justify-between rounded-lg border border-border bg-card py-1"
 					>
@@ -140,33 +130,86 @@
 						{:else}
 							{#key `${formType}:${editingRule?.uid ?? "new"}`}
 								{#if formType === "pokemon"}
-									<PokemonForm {config} {hasIcons} {defaultDistance} initial={editingRule as PokemonRule | null} {submitting} {onSubmit} />
+									<PokemonForm
+										{config}
+										{hasIcons}
+										{defaultDistance}
+										initial={editingRule as PokemonRule | null}
+										{onSubmit}
+									/>
 								{:else if formType === "raid"}
-									<RaidForm {config} {hasIcons} {defaultDistance} initial={editingRule as RaidRule | null} {submitting} {onSubmit} />
+									<RaidForm
+										{config}
+										{hasIcons}
+										{defaultDistance}
+										initial={editingRule as RaidRule | null}
+										{onSubmit}
+									/>
 								{:else if formType === "egg"}
-									<EggForm {config} {defaultDistance} initial={editingRule as EggRule | null} {submitting} {onSubmit} />
+									<EggForm
+										{config}
+										{defaultDistance}
+										initial={editingRule as EggRule | null}
+										{onSubmit}
+									/>
 								{:else if formType === "quest"}
-									<QuestForm {config} {hasIcons} {defaultDistance} initial={editingRule as QuestRule | null} {submitting} {onSubmit} />
+									<QuestForm
+										{config}
+										{hasIcons}
+										{defaultDistance}
+										initial={editingRule as QuestRule | null}
+										{onSubmit}
+									/>
 								{:else if formType === "invasion"}
-									<InvasionForm {config} {gruntTypes} {defaultDistance} initial={editingRule as InvasionRule | null} {submitting} {onSubmit} />
+									<InvasionForm
+										{config}
+										{gruntTypes}
+										{defaultDistance}
+										initial={editingRule as InvasionRule | null}
+										{onSubmit}
+									/>
 								{:else if formType === "lure"}
-									<LureForm {config} {defaultDistance} initial={editingRule as LureRule | null} {submitting} {onSubmit} />
+									<LureForm
+										{config}
+										{defaultDistance}
+										initial={editingRule as LureRule | null}
+										{onSubmit}
+									/>
 								{:else if formType === "gym"}
-									<GymForm {config} {defaultDistance} initial={editingRule as GymRule | null} {submitting} {onSubmit} />
+									<GymForm
+										{config}
+										{defaultDistance}
+										initial={editingRule as GymRule | null}
+										{onSubmit}
+									/>
 								{:else if formType === "nest"}
-									<NestForm {config} {hasIcons} {defaultDistance} initial={editingRule as NestRule | null} {submitting} {onSubmit} />
+									<NestForm
+										{config}
+										{hasIcons}
+										{defaultDistance}
+										initial={editingRule as NestRule | null}
+										{onSubmit}
+									/>
 								{:else if formType === "maxbattle"}
-									<MaxBattleForm {config} {hasIcons} {defaultDistance} initial={editingRule as MaxBattleRule | null} {submitting} {onSubmit} />
+									<MaxBattleForm
+										{config}
+										{hasIcons}
+										{defaultDistance}
+										initial={editingRule as MaxBattleRule | null}
+										{onSubmit}
+									/>
 								{:else if formType === "fort"}
-									<FortForm {config} {defaultDistance} initial={editingRule as FortRule | null} {submitting} {onSubmit} />
+									<FortForm
+										{config}
+										{defaultDistance}
+										initial={editingRule as FortRule | null}
+										{onSubmit}
+									/>
 								{/if}
 							{/key}
 						{/if}
 					</Drawer.Content>
 
-					<!-- Pinned action bar (diadem filterset style) — Save stays reachable
-						at any snap point instead of scrolling with the form. Submits the
-						active form via HTML form association. -->
 					{#if step === "form" && (!needsMasterfile || masterfileLoaded)}
 						<div class="mt-1 flex shrink-0 justify-end border-t border-t-border px-3 pb-1 pt-2">
 							<Button type="submit" form="alert-rule-form" disabled={submitting}>Save</Button>

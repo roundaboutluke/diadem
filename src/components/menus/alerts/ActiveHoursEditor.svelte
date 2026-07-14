@@ -3,10 +3,6 @@
 	import Button from "@/components/ui/input/Button.svelte";
 	import type { ActiveHour, PoracleProfile } from "@/lib/services/alerts/alerts.shared";
 
-	// Editor for a profile's active_hours schedule — a list of
-	// {day, hours, mins} switch-points telling Poracle when to activate
-	// this profile. Stored as a JSON string; "{}" / empty means no
-	// schedule (manual switching only).
 	let {
 		profile,
 		saving = false,
@@ -41,7 +37,9 @@
 	function setTime(index: number, value: string) {
 		const [h, m] = value.split(":").map((n) => Number.parseInt(n, 10));
 		entries = entries.map((e, i) =>
-			i === index ? { ...e, hours: Number.isFinite(h) ? h : 0, mins: Number.isFinite(m) ? m : 0 } : e
+			i === index
+				? { ...e, hours: Number.isFinite(h) ? h : 0, mins: Number.isFinite(m) ? m : 0 }
+				: e
 		);
 	}
 	function setDay(index: number, day: number) {

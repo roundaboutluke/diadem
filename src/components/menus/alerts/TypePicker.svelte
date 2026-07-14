@@ -3,11 +3,6 @@
 	import { pokedexTypeMeta, type PokedexTrackingType } from "@/lib/services/alerts/alerts.shared";
 	import { typeIcon, sectionIconUrl } from "@/lib/services/alerts/alerts.icons";
 
-	// "Add alert" step one: pick the type. A list of card rows (icon + label +
-	// blurb + drill-in chevron) that mirrors the Alerts section list and
-	// diadem's menu rows, rather than a grid of custom tiles. Icons reuse the
-	// section-header UICON art (lucide glyph fallback). Choosing a row opens
-	// that type's form.
 	let {
 		types,
 		hasIcons = false,

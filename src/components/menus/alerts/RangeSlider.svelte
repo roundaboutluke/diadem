@@ -2,9 +2,6 @@
 	import { Slider } from "bits-ui";
 	import SliderCommon from "@/components/ui/input/slider/SliderCommon.svelte";
 
-	// Two-thumb range slider in Diadem's style (reuses SliderCommon's track +
-	// thumb) but without the kit's editable number boxes or per-step tick
-	// labels — just a title and a live value readout. Clean, no extra chrome.
 	let {
 		title,
 		min,

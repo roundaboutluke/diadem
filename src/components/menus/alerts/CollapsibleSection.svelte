@@ -3,10 +3,6 @@
 	import type { Icon as IconType } from "@lucide/svelte";
 	import { ChevronDown } from "@lucide/svelte";
 
-	// A card-styled collapsible section. Header shows an optional icon,
-	// title, optional subtitle/summary and a chevron; the body reveals on
-	// toggle. Matches the sibling tools' card chrome (rounded border,
-	// bg-card, shadow-sm).
 	let {
 		title,
 		subtitle = undefined,
@@ -47,7 +43,9 @@
 				class="h-9 w-9 shrink-0 object-contain"
 			/>
 		{:else if Icon}
-			<span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+			<span
+				class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary"
+			>
 				<Icon class="h-4.5 w-4.5" />
 			</span>
 		{/if}
@@ -55,7 +53,9 @@
 			<span class="flex items-center gap-2">
 				<span class="text-base font-semibold">{title}</span>
 				{#if badge}
-					<span class="rounded-full bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">{badge}</span>
+					<span class="rounded-full bg-muted px-1.5 py-0.5 text-xs text-muted-foreground"
+						>{badge}</span
+					>
 				{/if}
 			</span>
 			{#if subtitle}
@@ -72,7 +72,9 @@
 			{/if}
 		</span>
 		<ChevronDown
-			class="h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-200 {open ? 'rotate-180' : ''}"
+			class="h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-200 {open
+				? 'rotate-180'
+				: ''}"
 		/>
 	</button>
 	{#if open}

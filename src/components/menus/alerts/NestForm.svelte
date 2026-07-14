@@ -2,25 +2,24 @@
 	import DistanceField from "./DistanceField.svelte";
 	import PokemonPicker from "./PokemonPicker.svelte";
 	import ValueSlider from "./ValueSlider.svelte";
-	import { clampInt, type NestRule, type PoracleWebConfig } from "@/lib/services/alerts/alerts.shared";
+	import {
+		clampInt,
+		type NestRule,
+		type PoracleWebConfig
+	} from "@/lib/services/alerts/alerts.shared";
 
-	// Nest tracking rule — a Pokémon (or any) with a minimum spawn rate.
 	let {
 		config,
 		hasIcons = true,
 		initial = null,
-		submitting = false,
 		defaultDistance = 0,
-		onSubmit,
-		onCancel
+		onSubmit
 	}: {
 		config: PoracleWebConfig | null;
 		hasIcons?: boolean;
 		initial?: NestRule | null;
-		submitting?: boolean;
 		defaultDistance?: number;
 		onSubmit: (rule: Record<string, unknown>) => void;
-		onCancel?: () => void;
 	} = $props();
 
 	// svelte-ignore state_referenced_locally
@@ -34,25 +33,35 @@
 	let distance = $state(seed?.distance ?? defaultDistance);
 
 	function submit() {
-		onSubmit({ pokemon_id: pokemonId, form, min_spawn_avg: clampInt(minSpawnAvg, 0, 100000), distance });
+		onSubmit({
+			pokemon_id: pokemonId,
+			form,
+			min_spawn_avg: clampInt(minSpawnAvg, 0, 100000),
+			distance
+		});
 	}
 </script>
 
-<form id="alert-rule-form" class="flex flex-col gap-3" onsubmit={(e) => { e.preventDefault(); submit(); }}>
+<form
+	id="alert-rule-form"
+	class="flex flex-col gap-3"
+	onsubmit={(e) => {
+		e.preventDefault();
+		submit();
+	}}
+>
 	<section class="flex flex-col gap-3 rounded-md border bg-card p-4 shadow-sm">
 		<h3 class="mb-1 text-sm font-semibold">Filters</h3>
-	<div class="flex flex-col gap-1.5">
-		<span class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Pokémon</span>
-		<PokemonPicker bind:pokemonId bind:form {hasIcons} />
-	</div>
+		<div class="flex flex-col gap-1.5">
+			<span class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Pokémon</span>
+			<PokemonPicker bind:pokemonId bind:form {hasIcons} />
+		</div>
 
-	<ValueSlider title="Min spawns / hour" min={0} max={60} bind:value={minSpawnAvg} />
-
+		<ValueSlider title="Min spawns / hour" min={0} max={60} bind:value={minSpawnAvg} />
 	</section>
 
 	<section class="flex flex-col gap-3 rounded-md border bg-card p-4 shadow-sm">
 		<h3 class="mb-1 text-sm font-semibold">Where</h3>
-	<DistanceField bind:distance {maxDistance} />
-
+		<DistanceField bind:distance {maxDistance} />
 	</section>
 </form>

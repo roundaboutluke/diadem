@@ -39,16 +39,46 @@ export const pokedexTypeMeta: Record<
 	PokedexTrackingType,
 	{ label: string; icon: string; hook: string; blurb: string }
 > = {
-	pokemon: { label: "Pokémon", icon: "Sparkles", hook: "pokemon", blurb: "Wild spawns by IV, CP, level, PVP rank and more." },
-	raid: { label: "Raids", icon: "Swords", hook: "raid", blurb: "Raid bosses by level or specific Pokémon." },
+	pokemon: {
+		label: "Pokémon",
+		icon: "Sparkles",
+		hook: "pokemon",
+		blurb: "Wild spawns by IV, CP, level, PVP rank and more."
+	},
+	raid: {
+		label: "Raids",
+		icon: "Swords",
+		hook: "raid",
+		blurb: "Raid bosses by level or specific Pokémon."
+	},
 	egg: { label: "Eggs", icon: "Egg", hook: "raid", blurb: "Raid eggs by level and gym team." },
 	quest: { label: "Quests", icon: "ScrollText", hook: "quest", blurb: "Field research rewards." },
-	invasion: { label: "Invasions", icon: "Skull", hook: "invasion", blurb: "Team GO Rocket grunts by type and gender." },
+	invasion: {
+		label: "Invasions",
+		icon: "Skull",
+		hook: "invasion",
+		blurb: "Team GO Rocket grunts by type and gender."
+	},
 	lure: { label: "Lures", icon: "Flower2", hook: "lure", blurb: "Lured Pokéstops by lure type." },
-	gym: { label: "Gyms", icon: "Castle", hook: "gym", blurb: "Gym control and battle changes by team." },
+	gym: {
+		label: "Gyms",
+		icon: "Castle",
+		hook: "gym",
+		blurb: "Gym control and battle changes by team."
+	},
 	nest: { label: "Nests", icon: "TreePine", hook: "nest", blurb: "Pokémon nests by spawn rate." },
-	maxbattle: { label: "Max Battles", icon: "Zap", hook: "maxbattle", blurb: "Dynamax / Gigantamax power spots." },
-	fort: { label: "Fort Updates", icon: "MapPin", hook: "pokestop", blurb: "Pokéstop / gym additions, edits and removals." }
+	maxbattle: {
+		label: "Max Battles",
+		icon: "Zap",
+		hook: "maxbattle",
+		blurb: "Dynamax / Gigantamax power spots."
+	},
+	fort: {
+		label: "Fort Updates",
+		icon: "MapPin",
+		hook: "pokestop",
+		blurb: "Pokéstop / gym additions, edits and removals."
+	}
 };
 
 // ─── Tracking rule shapes ───────────────────────────────────────────

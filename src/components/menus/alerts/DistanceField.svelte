@@ -5,10 +5,6 @@
 	import SelectGroupItem from "@/components/ui/input/selectgroup/SelectGroupItem.svelte";
 	import { clampInt } from "@/lib/services/alerts/alerts.shared";
 
-	// Distance scope for a rule. distance === 0 means "use my selected
-	// areas" (Poracle's area-based match); any positive value is a radius
-	// in metres around the user's set location. `maxDistance` (from
-	// PoracleWeb config, 0 = unlimited) caps the radius.
 	let {
 		distance = $bindable(0),
 		maxDistance = 0
@@ -17,23 +13,16 @@
 		maxDistance?: number;
 	} = $props();
 
-	// Per-rule scope from the page: whether the active profile has any
-	// geofence areas (with none, the "My areas" scope matches nothing in
-	// Poracle, so we hide it and force a radius), plus the profile's name
-	// to anchor the radius note.
 	const scope = getContext<
 		{ readonly hasAreas: boolean; readonly profileName: string } | undefined
 	>("pokedexRuleScope");
 	const hasAreas = $derived(scope?.hasAreas ?? true);
 	const profileName = $derived(scope?.profileName ?? "");
 
-	// Local radius memory so toggling "areas ↔ radius" doesn't lose the
-	// typed number. Seeds from the incoming distance or a sane default.
 	let radius = $state(distance > 0 ? distance : 1000);
 
 	const useRadius = $derived(distance > 0);
 
-	// No areas → a radius is mandatory; make sure distance is positive.
 	$effect(() => {
 		if (!hasAreas && distance <= 0) {
 			distance = clampInt(radius > 0 ? radius : 1000, 1, maxDistance > 0 ? maxDistance : 1_000_000);
@@ -64,7 +53,8 @@
 			class="w-full"
 		>
 			<SelectGroupItem type="radio" value="area" class="p-2 flex-1">My areas</SelectGroupItem>
-			<SelectGroupItem type="radio" value="radius" class="p-2 flex-1">Within radius</SelectGroupItem>
+			<SelectGroupItem type="radio" value="radius" class="p-2 flex-1">Within radius</SelectGroupItem
+			>
 		</RadioGroup>
 	{/if}
 	{#if !hasAreas || useRadius}

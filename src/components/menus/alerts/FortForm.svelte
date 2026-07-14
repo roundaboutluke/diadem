@@ -8,22 +8,16 @@
 		type PoracleWebConfig
 	} from "@/lib/services/alerts/alerts.shared";
 
-	// Fort-update tracking rule — Pokéstop / gym additions, removals and
-	// edits, filtered by change type (API.md).
 	let {
 		config,
 		initial = null,
-		submitting = false,
 		defaultDistance = 0,
-		onSubmit,
-		onCancel
+		onSubmit
 	}: {
 		config: PoracleWebConfig | null;
 		initial?: FortRule | null;
-		submitting?: boolean;
 		defaultDistance?: number;
 		onSubmit: (rule: Record<string, unknown>) => void;
-		onCancel?: () => void;
 	} = $props();
 
 	// svelte-ignore state_referenced_locally
@@ -53,46 +47,56 @@
 	}
 </script>
 
-<form id="alert-rule-form" class="flex flex-col gap-3" onsubmit={(e) => { e.preventDefault(); submit(); }}>
+<form
+	id="alert-rule-form"
+	class="flex flex-col gap-3"
+	onsubmit={(e) => {
+		e.preventDefault();
+		submit();
+	}}
+>
 	<section class="flex flex-col gap-3 rounded-md border bg-card p-4 shadow-sm">
 		<h3 class="mb-1 text-sm font-semibold">Filters</h3>
-	<label class="flex flex-col gap-1 text-xs text-muted-foreground">
-		<span class="font-medium uppercase tracking-wide">Fort type</span>
-		<select bind:value={fortType} class="h-10 rounded-md border bg-background px-2 text-sm text-foreground">
-			{#each fortTypes as f (f.value)}
-				<option value={f.value}>{f.label}</option>
-			{/each}
-		</select>
-	</label>
+		<label class="flex flex-col gap-1 text-xs text-muted-foreground">
+			<span class="font-medium uppercase tracking-wide">Fort type</span>
+			<select
+				bind:value={fortType}
+				class="h-10 rounded-md border bg-background px-2 text-sm text-foreground"
+			>
+				{#each fortTypes as f (f.value)}
+					<option value={f.value}>{f.label}</option>
+				{/each}
+			</select>
+		</label>
 
-	<div class="flex flex-col gap-1.5">
-		<span class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Change types</span>
-		<div class="flex flex-wrap gap-1.5">
-			{#each fortChangeTypes as c (c.value)}
-				{@const on = chosen.has(c.value)}
-				<button
-					type="button"
-					class="rounded-full border px-3 py-1 text-sm transition-colors {on
-						? 'border-primary bg-primary/10 text-primary'
-						: 'bg-background hover:bg-muted/40'}"
-					onclick={() => toggleChange(c.value)}
-				>
-					{c.label}
-				</button>
-			{/each}
+		<div class="flex flex-col gap-1.5">
+			<span class="text-xs font-medium uppercase tracking-wide text-muted-foreground"
+				>Change types</span
+			>
+			<div class="flex flex-wrap gap-1.5">
+				{#each fortChangeTypes as c (c.value)}
+					{@const on = chosen.has(c.value)}
+					<button
+						type="button"
+						class="rounded-full border px-3 py-1 text-sm transition-colors {on
+							? 'border-primary bg-primary/10 text-primary'
+							: 'bg-background hover:bg-muted/40'}"
+						onclick={() => toggleChange(c.value)}
+					>
+						{c.label}
+					</button>
+				{/each}
+			</div>
 		</div>
-	</div>
 
-	<label class="flex items-center gap-2 text-sm">
-		<Switch checked={includeEmpty} onCheckedChange={(v) => (includeEmpty = v)} />
-		Include changes with no name / description
-	</label>
-
+		<label class="flex items-center gap-2 text-sm">
+			<Switch checked={includeEmpty} onCheckedChange={(v) => (includeEmpty = v)} />
+			Include changes with no name / description
+		</label>
 	</section>
 
 	<section class="flex flex-col gap-3 rounded-md border bg-card p-4 shadow-sm">
 		<h3 class="mb-1 text-sm font-semibold">Where</h3>
-	<DistanceField bind:distance {maxDistance} />
-
+		<DistanceField bind:distance {maxDistance} />
 	</section>
 </form>

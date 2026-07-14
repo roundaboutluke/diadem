@@ -9,12 +9,6 @@
 	import ActiveHoursEditor from "./ActiveHoursEditor.svelte";
 	import type { PoracleProfile } from "@/lib/services/alerts/alerts.shared";
 
-	// Settings bottom-sheet on $lib/drawer, styled to match the main menu
-	// drawer (translucent card surface + inset pill title). The body is a
-	// uniform accordion of CollapsibleSections (Profile / Location / Schedule)
-	// — collapsed by default so the sheet opens compact and each section
-	// reveals downward. The Location editor is injected as a snippet so this
-	// component stays decoupled from the pickers.
 	let {
 		open = $bindable(false),
 		profiles,
@@ -46,24 +40,16 @@
 	);
 	const activeName = $derived(activeProfile?.name || `Profile ${currentProfileNo}`);
 
-	// Snap like the main menu drawer (opens partial, drag up to expand). A
-	// full-height, snap-positioned sheet means expanding a section fills/scrolls
-	// within the drawer instead of growing it upward. drawer-partial/drawer-full
-	// (global styles from MobileMenuMain) toggle the inner scroll per snap. The
-	// initial snap is a touch shorter than the top-level menu's 0.62 so the
-	// parent drawer peeks out behind this nested one (visible stack).
 	const snapPoints = [0.55, 1];
 	let snapPoint = $state<number | string>(snapPoints[0]);
 	const contentClass = $derived(
 		snapPoint === snapPoints[snapPoints.length - 1] ? "drawer-full" : "drawer-partial"
 	);
 
-	// Accordion — every section starts collapsed.
 	let profileOpen = $state(false);
 	let locationOpen = $state(false);
 	let scheduleOpen = $state(false);
 
-	// New-profile inline form
 	let showNew = $state(false);
 	let newName = $state("");
 	let copyFrom = $state<number | "">("");
@@ -97,7 +83,6 @@
 		}
 	}
 
-	// A profile with no areas and no point has nowhere to fire notifications.
 	const locWarn = $derived(
 		activeProfile
 			? areaCount(activeProfile) === 0 &&
@@ -124,7 +109,6 @@
 					aria-label="Settings"
 					class="drawer-popup {contentClass} flex h-full w-full flex-col border border-t-border bg-card/60 px-2 pt-2 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm sm:max-w-lg"
 				>
-					<!-- Inset pill title — mirrors the main menu drawer's MobileTitle. -->
 					<div
 						class="mb-2 flex shrink-0 items-center gap-2 rounded-lg border border-border bg-card px-4 py-1.5 text-base font-bold"
 					>
@@ -137,7 +121,6 @@
 					</div>
 
 					<Drawer.Content class="content flex min-h-0 flex-1 flex-col gap-2 px-1 pb-6 pt-1">
-						<!-- Profile selector (switch + create) -->
 						<CollapsibleSection
 							icon={UserRound}
 							title="Profile"
@@ -181,7 +164,6 @@
 									</div>
 								{/each}
 
-								<!-- New-profile row. -->
 								<button
 									type="button"
 									class="flex items-center gap-2.5 rounded-md px-3 py-2 text-left text-primary transition-colors hover:bg-muted/40"
@@ -210,12 +192,17 @@
 											>
 												<option value="">Start empty</option>
 												{#each profiles as p (p.profile_no)}
-													<option value={p.profile_no}>{p.name || `Profile ${p.profile_no}`}</option>
+													<option value={p.profile_no}>{p.name || `Profile ${p.profile_no}`}</option
+													>
 												{/each}
 											</select>
 										</label>
 										<div class="flex items-center gap-2">
-											<Button size="sm" onclick={submitAdd} disabled={busy || newName.trim().length === 0}>
+											<Button
+												size="sm"
+												onclick={submitAdd}
+												disabled={busy || newName.trim().length === 0}
+											>
 												<Plus class="h-4 w-4" /> Create
 											</Button>
 											<Button

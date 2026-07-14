@@ -5,10 +5,6 @@
 	import { typeIcon } from "@/lib/services/alerts/alerts.icons";
 	import type { AnyRule, PokedexTrackingType } from "@/lib/services/alerts/alerts.shared";
 
-	// One rule rendered as a Diadem-filterset-style card: icon +
-	// what-it-tracks title + a wrap of attribute chips, plus select /
-	// edit / delete controls. Built from the rule's structured fields
-	// (see ruleSummary) so it never falls back to "Rule #".
 	let {
 		type,
 		rule,
@@ -35,11 +31,6 @@
 		onDelete: () => void;
 	} = $props();
 
-	// `ready` (masterfile loaded) is referenced so the summary recomputes
-	// once names become resolvable — mPokemon isn't reactive on its own.
-	// Guarded: a species lookup on a not-yet-loaded / missing masterfile
-	// entry can throw, and under async rendering that would wedge the
-	// whole page — fall back to a minimal summary and recompute on `ready`.
 	const summary = $derived.by((): RuleSummary => {
 		void ready;
 		try {
@@ -49,14 +40,8 @@
 		}
 	});
 
-	// Every card keeps a uniform icon slot: a specific species → uicon image
-	// (resolved defensively so a bad/early lookup can't throw during render);
-	// an emoji icon (hundo/nundo) → rendered as text; anything else falls back
-	// to the tracking type's own icon.
 	const TypeIcon = $derived(typeIcon(type));
-	const emojiIcon = $derived(
-		summary.icon && "emoji" in summary.icon ? summary.icon.emoji : null
-	);
+	const emojiIcon = $derived(summary.icon && "emoji" in summary.icon ? summary.icon.emoji : null);
 	const iconSrc = $derived.by(() => {
 		const icon = summary.icon;
 		if (!hasIcons || !icon) return null;

@@ -4,31 +4,24 @@
 	import PokemonPicker from "./PokemonPicker.svelte";
 	import { type MaxBattleRule, type PoracleWebConfig } from "@/lib/services/alerts/alerts.shared";
 
-	// Max Battle (Dynamax/Gigantamax power spot) tracking rule. By level,
-	// or a specific Pokémon. pokemon_id 9000 = any (API.md).
 	let {
 		config,
 		hasIcons = true,
 		initial = null,
-		submitting = false,
 		defaultDistance = 0,
-		onSubmit,
-		onCancel
+		onSubmit
 	}: {
 		config: PoracleWebConfig | null;
 		hasIcons?: boolean;
 		initial?: MaxBattleRule | null;
-		submitting?: boolean;
 		defaultDistance?: number;
 		onSubmit: (rule: Record<string, unknown>) => void;
-		onCancel?: () => void;
 	} = $props();
 
 	// svelte-ignore state_referenced_locally
 	const seed = initial;
 	const maxDistance = $derived(config?.maxDistance ?? 0);
 	const baseLevels = [1, 2, 3, 4, 5, 6];
-	// Keep an existing rule's tier selectable so editing never resets it.
 	const levels =
 		seed && seed.level > 0 && !baseLevels.includes(seed.level)
 			? [...baseLevels, seed.level].sort((a, b) => a - b)
@@ -46,47 +39,61 @@
 	}
 </script>
 
-<form id="alert-rule-form" class="flex flex-col gap-3" onsubmit={(e) => { e.preventDefault(); submit(); }}>
+<form
+	id="alert-rule-form"
+	class="flex flex-col gap-3"
+	onsubmit={(e) => {
+		e.preventDefault();
+		submit();
+	}}
+>
 	<section class="flex flex-col gap-3 rounded-md border bg-card p-4 shadow-sm">
 		<h3 class="mb-1 text-sm font-semibold">Filters</h3>
-	<div class="inline-flex overflow-hidden rounded-md border text-sm">
-		<button
-			type="button"
-			class="px-3 py-1.5 {!byPokemon ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-muted/40'}"
-			onclick={() => (byPokemon = false)}
-		>
-			By level
-		</button>
-		<button
-			type="button"
-			class="border-l px-3 py-1.5 {byPokemon ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-muted/40'}"
-			onclick={() => (byPokemon = true)}
-		>
-			Specific Pokémon
-		</button>
-	</div>
-
-	{#if byPokemon}
-		<div class="flex flex-col gap-1.5">
-			<span class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Pokémon</span>
-			<PokemonPicker bind:pokemonId bind:form {hasIcons} allowAny={false} />
+		<div class="inline-flex overflow-hidden rounded-md border text-sm">
+			<button
+				type="button"
+				class="px-3 py-1.5 {!byPokemon
+					? 'bg-primary text-primary-foreground'
+					: 'bg-background hover:bg-muted/40'}"
+				onclick={() => (byPokemon = false)}
+			>
+				By level
+			</button>
+			<button
+				type="button"
+				class="border-l px-3 py-1.5 {byPokemon
+					? 'bg-primary text-primary-foreground'
+					: 'bg-background hover:bg-muted/40'}"
+				onclick={() => (byPokemon = true)}
+			>
+				Specific Pokémon
+			</button>
 		</div>
-	{:else}
-		<label class="flex flex-col gap-1 text-xs text-muted-foreground">
-			<span class="font-medium uppercase tracking-wide">Battle level</span>
-			<select bind:value={level} class="h-10 rounded-md border bg-background px-2 text-sm text-foreground">
-				{#each levels as l (l)}
-					<option value={l}>{m.x_start_max_battle({ level: l })}</option>
-				{/each}
-			</select>
-		</label>
-	{/if}
 
+		{#if byPokemon}
+			<div class="flex flex-col gap-1.5">
+				<span class="text-xs font-medium uppercase tracking-wide text-muted-foreground"
+					>Pokémon</span
+				>
+				<PokemonPicker bind:pokemonId bind:form {hasIcons} allowAny={false} />
+			</div>
+		{:else}
+			<label class="flex flex-col gap-1 text-xs text-muted-foreground">
+				<span class="font-medium uppercase tracking-wide">Battle level</span>
+				<select
+					bind:value={level}
+					class="h-10 rounded-md border bg-background px-2 text-sm text-foreground"
+				>
+					{#each levels as l (l)}
+						<option value={l}>{m.x_start_max_battle({ level: l })}</option>
+					{/each}
+				</select>
+			</label>
+		{/if}
 	</section>
 
 	<section class="flex flex-col gap-3 rounded-md border bg-card p-4 shadow-sm">
 		<h3 class="mb-1 text-sm font-semibold">Where</h3>
-	<DistanceField bind:distance {maxDistance} />
-
+		<DistanceField bind:distance {maxDistance} />
 	</section>
 </form>

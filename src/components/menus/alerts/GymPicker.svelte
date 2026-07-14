@@ -3,10 +3,6 @@
 	import SearchBar from "@/components/ui/input/SearchBar.svelte";
 	import { fetchGymNames, searchGyms } from "@/lib/services/alerts/alerts.client";
 
-	// Optional "target a specific gym" picker for raid / egg / gym rules.
-	// Searches gym names (permission-gated server-side); selecting sets
-	// `gymId`. `gymName` is bindable so the parent can seed / read the label;
-	// when only an ID is known (editing a rule) the name is resolved lazily.
 	let {
 		gymId = $bindable(null),
 		gymName = $bindable("")
@@ -20,7 +16,6 @@
 	let searching = $state(false);
 	let timer: ReturnType<typeof setTimeout> | undefined;
 
-	// Resolve the label for an ID that arrived without one (rule edit).
 	$effect(() => {
 		if (gymId && !gymName) {
 			const id = gymId;
@@ -30,7 +25,6 @@
 		}
 	});
 
-	// Debounced name search driven by the SearchBar's bound query.
 	$effect(() => {
 		const v = query;
 		clearTimeout(timer);

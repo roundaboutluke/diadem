@@ -2,7 +2,6 @@
 	import { Slider } from "bits-ui";
 	import SliderCommon from "@/components/ui/input/slider/SliderCommon.svelte";
 
-	// Single-thumb slider — see RangeSlider for the rationale.
 	let {
 		title,
 		min,

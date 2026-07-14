@@ -4,10 +4,6 @@
 	import RuleCard from "./RuleCard.svelte";
 	import { type AnyRule, type PokedexTrackingType } from "@/lib/services/alerts/alerts.shared";
 
-	// List of tracking rules for one type. Each row is a Diadem-filterset
-	// -style RuleCard (icon + title + attribute chips) with select / edit
-	// / delete, plus a bulk-delete bar. Distance is edited per rule (via the
-	// rule's own form), so there's no bulk distance control.
 	let {
 		type,
 		rules,
@@ -68,12 +64,16 @@
 	</p>
 {:else}
 	<div class="flex flex-col gap-1.5">
-		<!-- Bulk select is opt-in (keeps the default list clean) — only for 2+ -->
 		{#if rules.length > 1}
 			{#if selectMode}
 				<div class="flex flex-wrap items-center gap-3 px-1 py-1 text-xs text-muted-foreground">
 					<label class="flex items-center gap-2">
-						<input type="checkbox" checked={allSelected} onchange={toggleAll} aria-label="Select all" />
+						<input
+							type="checkbox"
+							checked={allSelected}
+							onchange={toggleAll}
+							aria-label="Select all"
+						/>
 						Select all
 					</label>
 					{#if selectedCount > 0}
@@ -82,7 +82,11 @@
 							<Trash2 class="h-4 w-4" /> Delete
 						</Button>
 					{/if}
-					<button type="button" class="ml-auto underline hover:text-foreground" onclick={exitSelect}>
+					<button
+						type="button"
+						class="ml-auto underline hover:text-foreground"
+						onclick={exitSelect}
+					>
 						Done
 					</button>
 				</div>

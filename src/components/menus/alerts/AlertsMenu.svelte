@@ -37,11 +37,6 @@
 		type PokedexTrackingType
 	} from "@/lib/services/alerts/alerts.shared";
 
-	// The native Alerts menu — the notification bell's panel. Data lives in the
-	// shared alertsStore (so the menu reopens instantly and the FAB can badge a
-	// count); this component owns the transient UI state + CRUD orchestration and
-	// drives the two nested $lib/drawer sheets (Add-alert and Settings).
-
 	const hasIcons = $derived(hasLoadedFeature(LoadedFeature.ICON_SETS));
 	const masterfileLoaded = $derived(hasLoadedFeature(LoadedFeature.MASTER_FILE));
 	const masterfileTypes: PokedexTrackingType[] = ["pokemon", "raid", "quest", "nest", "maxbattle"];
@@ -58,7 +53,6 @@
 		}
 	}
 
-	// ── Gym-name resolution for raid/egg/gym cards (lazy, permission-gated) ──
 	let gymNames = $state<Record<string, string>>({});
 	const requestedGyms = new Set<string>();
 	$effect(() => {
@@ -77,14 +71,14 @@
 		}
 	});
 
-	// ── Derived overview (from the store) ──
 	const disabledHooks = $derived(alertsStore.config?.disabledHooks ?? []);
 	const visibleTypes = $derived(
 		pokedexTrackingTypes.filter((t) => !disabledHooks.includes(pokedexTypeMeta[t].hook))
 	);
-	const typesWithRules = $derived(visibleTypes.filter((t) => (alertsStore.rules[t]?.length ?? 0) > 0));
+	const typesWithRules = $derived(
+		visibleTypes.filter((t) => (alertsStore.rules[t]?.length ?? 0) > 0)
+	);
 
-	// ── Area / location interplay (per-profile) ──
 	const selectedAreas = $derived(parseAreas(alertsStore.human?.area));
 	const hasAreasSelected = $derived(selectedAreas.length > 0);
 	const newRuleDefaultDistance = $derived(
@@ -97,12 +91,10 @@
 	const initialLat = $derived(alertsStore.human?.latitude ?? null);
 	const initialLon = $derived(alertsStore.human?.longitude ?? null);
 
-	// ── Profiles ──
 	const currentProfileNo = $derived(alertsStore.human?.current_profile_no ?? 1);
 	const activeProfileName = $derived(
 		alertsStore.profiles.find((p) => p.profile_no === currentProfileNo)?.name ?? ""
 	);
-	// Per-rule scope for the deeply-nested DistanceField.
 	setContext("pokedexRuleScope", {
 		get hasAreas() {
 			return hasAreasSelected;
@@ -112,8 +104,6 @@
 		}
 	});
 
-	// Location vs area is a per-profile choice; reset it to match whenever the
-	// active profile changes (tracked on currentProfileNo only).
 	let locationMode = $state<"location" | "area">("location");
 	$effect(() => {
 		void currentProfileNo;
@@ -128,10 +118,12 @@
 	let savingAreas = $state(false);
 
 	let openSections = $state<Record<PokedexTrackingType, boolean>>(
-		Object.fromEntries(pokedexTrackingTypes.map((t) => [t, false])) as Record<PokedexTrackingType, boolean>
+		Object.fromEntries(pokedexTrackingTypes.map((t) => [t, false])) as Record<
+			PokedexTrackingType,
+			boolean
+		>
 	);
 
-	// ── Add/edit form state ──
 	let formType = $state<PokedexTrackingType>("pokemon");
 	let showPicker = $state(false);
 	let showForm = $state(false);
@@ -141,7 +133,6 @@
 	let bulkBusy = $state(false);
 	const needsMasterfile = $derived(masterfileTypes.includes(formType));
 
-	// Transient feedback via diadem's toast system (errors linger a little).
 	function flash(kind: "error" | "success", text: string) {
 		openToast(text, kind === "error" ? 4000 : 1500);
 	}
@@ -199,7 +190,10 @@
 				const created = alertsStore.profiles.find((p) => !before.has(p.profile_no));
 				if (created) await copyProfile(copyFrom, created.profile_no);
 			}
-			flash("success", copyFrom != null ? "Profile created with copied rules." : "Profile created.");
+			flash(
+				"success",
+				copyFrom != null ? "Profile created with copied rules." : "Profile created."
+			);
 		} catch (err) {
 			flash("error", errText(err));
 		} finally {
@@ -330,8 +324,6 @@
 
 <div class="flex flex-col gap-3 px-2 pb-4 pt-1">
 	{#if alertsStore.loading && !alertsStore.loaded}
-		<!-- Layout-shaped skeleton (not a bare spinner) so the sheet reads as
-			structured while the init bundle loads, instead of flashing empty. -->
 		<div class="flex animate-pulse flex-col gap-3" aria-hidden="true">
 			<div class="flex items-center gap-2">
 				<div class="h-4 w-4 rounded-full bg-muted"></div>
@@ -344,8 +336,6 @@
 			{/each}
 		</div>
 	{:else}
-		<!-- Two blocky actions (matches diadem's chunky icon+label buttons): the
-			primary "Add alert" and "Settings" (which carries the active profile). -->
 		<div class="grid grid-cols-2 gap-2">
 			<button
 				type="button"
@@ -371,7 +361,9 @@
 		</div>
 
 		{#if alertsStore.error}
-			<p class="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+			<p
+				class="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+			>
 				{alertsStore.error}
 			</p>
 		{/if}
@@ -416,7 +408,6 @@
 	{/if}
 </div>
 
-<!-- Active profile's Location / Area editor, handed to the Settings drawer. -->
 {#snippet locationEditor()}
 	<div class="flex flex-col gap-3">
 		<RadioGroup
@@ -424,13 +415,19 @@
 			onValueChange={(v) => (locationMode = v as "location" | "area")}
 			class="w-full"
 		>
-			<SelectGroupItem type="radio" value="location" class="p-2 flex-1">By location</SelectGroupItem>
+			<SelectGroupItem type="radio" value="location" class="p-2 flex-1">By location</SelectGroupItem
+			>
 			<SelectGroupItem type="radio" value="area" class="p-2 flex-1">By area</SelectGroupItem>
 		</RadioGroup>
 
 		{#key currentProfileNo}
 			{#if locationMode === "location"}
-				<LocationBox lat={initialLat} lon={initialLon} saving={savingLocation} onSave={handleSaveLocation} />
+				<LocationBox
+					lat={initialLat}
+					lon={initialLon}
+					saving={savingLocation}
+					onSave={handleSaveLocation}
+				/>
 			{:else}
 				<AreaSelector
 					areas={alertsStore.areas}
@@ -443,7 +440,6 @@
 	</div>
 {/snippet}
 
-<!-- Settings (profiles / areas / schedule / location) — nested drawer. -->
 <ProfilesModal
 	bind:open={managingProfiles}
 	profiles={alertsStore.profiles}
@@ -458,7 +454,6 @@
 	location={locationEditor}
 />
 
-<!-- Add / edit alert — nested drawer. -->
 <AlertModal
 	open={showPicker || showForm}
 	step={showForm ? "form" : "pick"}

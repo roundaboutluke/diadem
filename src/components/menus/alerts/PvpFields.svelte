@@ -6,9 +6,6 @@
 	import ValueSlider from "./ValueSlider.svelte";
 	import { pvpLeagues, type PoracleWebConfig } from "@/lib/services/alerts/alerts.shared";
 
-	// PVP rank filter fields. Poracle stores the league as its CP cap
-	// (500/1500/2500); league 0 means "no PVP filter". Only rendered
-	// when the operator's PoracleWeb config exposes PVP.
 	let {
 		league = $bindable(0),
 		best = $bindable(1),
@@ -42,11 +39,7 @@
 	{#if enabled}
 		<div class="flex flex-col gap-1">
 			<span class="text-xs font-medium uppercase tracking-wide text-muted-foreground">League</span>
-			<RadioGroup
-				value={String(league)}
-				onValueChange={(v) => (league = Number(v))}
-				class="w-full"
-			>
+			<RadioGroup value={String(league)} onValueChange={(v) => (league = Number(v))} class="w-full">
 				{#each leagues as l (l.value)}
 					<SelectGroupItem type="radio" value={String(l.value)} class="p-2 flex-1">
 						{l.label}

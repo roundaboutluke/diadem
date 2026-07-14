@@ -4,10 +4,6 @@
 	import { getLocale } from "@/lib/paraglide/runtime";
 	import type { AddressData } from "@/lib/features/geocoding";
 
-	// Location picker for the active profile. Search an address via
-	// Diadem's Photon-backed /api/search/address endpoint, or grab the
-	// browser's current position, then save the coordinates. AddressData
-	// centre is GeoJSON order [lon, lat].
 	let {
 		lat = null,
 		lon = null,
@@ -59,7 +55,6 @@
 	}
 
 	function pick(result: AddressData) {
-		// AddressData.center is [lon, lat].
 		coords = { lon: result.center[0], lat: result.center[1] };
 		coordLabel = result.name;
 		query = "";

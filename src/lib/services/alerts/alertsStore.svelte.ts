@@ -13,7 +13,8 @@ export function bundleToRules(
 	bundle: Record<string, unknown> | null
 ): Partial<Record<PokedexTrackingType, AnyRule[]>> {
 	const out: Partial<Record<PokedexTrackingType, AnyRule[]>> = {};
-	for (const type of pokedexTrackingTypes) out[type] = bundle ? ((bundle[type] as AnyRule[]) ?? []) : [];
+	for (const type of pokedexTrackingTypes)
+		out[type] = bundle ? ((bundle[type] as AnyRule[]) ?? []) : [];
 	return out;
 }
 
@@ -33,9 +34,7 @@ class AlertsStore {
 	profiles = $state<PoracleProfile[]>([]);
 	rules = $state<Partial<Record<PokedexTrackingType, AnyRule[]>>>(bundleToRules(null));
 
-	total = $derived(
-		pokedexTrackingTypes.reduce((n, t) => n + (this.rules[t]?.length ?? 0), 0)
-	);
+	total = $derived(pokedexTrackingTypes.reduce((n, t) => n + (this.rules[t]?.length ?? 0), 0));
 
 	async load(force = false) {
 		if (this.loading) return;

@@ -3,10 +3,6 @@
 	import Button from "@/components/ui/input/Button.svelte";
 	import type { PoracleArea } from "@/lib/services/alerts/alerts.shared";
 
-	// Multi-select of the user's geofence areas. Rules with distance 0
-	// notify inside whichever areas are selected here. Only
-	// userSelectable areas are shown; selection is saved via onSave,
-	// which persists through /pokedex/areas → Poracle setAreas.
 	let {
 		areas,
 		selected = [],
@@ -19,10 +15,6 @@
 		onSave: (names: string[]) => void;
 	} = $props();
 
-	// Case-insensitive membership — Poracle stores/echoes area names
-	// lower-cased in the human record but the area list uses display
-	// casing. Seeded once from the initial `selected`; the parent
-	// remounts (via load data) rather than mutating it in place.
 	// svelte-ignore state_referenced_locally
 	let chosen = $state(new Set(selected.map((s) => s.toLowerCase())));
 
@@ -64,7 +56,9 @@
 	{:else}
 		{#each groups as [group, groupAreas] (group)}
 			<div class="flex flex-col gap-1.5">
-				<span class="text-xs font-medium uppercase tracking-wide text-muted-foreground">{group}</span>
+				<span class="text-xs font-medium uppercase tracking-wide text-muted-foreground"
+					>{group}</span
+				>
 				<div class="flex flex-wrap gap-1.5">
 					{#each groupAreas as area (area.name)}
 						{@const on = isOn(area.name)}

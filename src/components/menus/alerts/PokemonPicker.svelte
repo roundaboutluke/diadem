@@ -5,11 +5,6 @@
 	import { getAllPokemon, getMasterPokemon } from "@/lib/services/masterfile";
 	import { getIconPokemon } from "@/lib/services/uicons.svelte";
 
-	// Controlled Pokémon + form picker backed by Diadem's masterfile, presented
-	// as a searchable UICON grid in the style of the filterset icon picker
-	// (SearchBar + IconGrid). `pokemon_id` 0 means "any / everything" (Poracle
-	// convention) when `allowAny` is set. Two-way bound via $bindable so the
-	// parent form reads the current selection directly.
 	let {
 		pokemonId = $bindable(0),
 		form = $bindable(0),
@@ -35,8 +30,6 @@
 		return label && label !== species ? `${species} (${label})` : species;
 	}
 
-	// Full option list built once from the masterfile. Cheap enough
-	// (~1k entries) to filter reactively on each keystroke.
 	const options = $derived.by(() =>
 		getAllPokemon().map((p) => ({
 			pokemon_id: p.pokemon_id,
@@ -100,7 +93,6 @@
 						Any Pokémon
 					</button>
 				{/if}
-				<!-- UICON grid, mirroring the filterset IconGrid. -->
 				<div class="grid" style:grid-template-columns="repeat(auto-fill, minmax(2.5rem, 1fr))">
 					{#each filtered as opt (opt.pokemon_id + "-" + opt.form)}
 						<button

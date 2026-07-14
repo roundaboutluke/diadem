@@ -12,42 +12,27 @@
 		type PoracleWebConfig
 	} from "@/lib/services/alerts/alerts.shared";
 
-	// Add / edit form for a Pokémon tracking rule. On submit it emits a
-	// complete rule payload (defaults merged with the user's inputs) via
-	// onSubmit; the parent handles the POST + list refresh. In edit mode
-	// `initial` seeds the fields and its uid is passed back so the parent
-	// can reconcile Poracle's smart-diff.
 	let {
 		config,
 		hasIcons = true,
 		initial = null,
-		submitting = false,
 		defaultDistance = 0,
-		onSubmit,
-		onCancel
+		onSubmit
 	}: {
 		config: PoracleWebConfig | null;
 		hasIcons?: boolean;
 		initial?: PokemonRule | null;
-		submitting?: boolean;
 		defaultDistance?: number;
 		onSubmit: (rule: Record<string, unknown>) => void;
-		onCancel?: () => void;
 	} = $props();
 
 	const maxDistance = $derived(config?.maxDistance ?? 0);
 
-	// Non-reactive snapshot of the edit target taken once at mount. The
-	// parent keys the form on the rule uid, so it remounts (and re-seeds)
-	// whenever the edit target changes — capturing the initial value here
-	// is intentional and correct.
 	// svelte-ignore state_referenced_locally
 	const seed = initial;
 
 	let pokemonId = $state(seed?.pokemon_id ?? 0);
 	let form = $state(seed?.form ?? 0);
-	// A stored min_iv of -1 means "include unencountered / 0 IV"; the
-	// slider then falls back to a sensible 90 for when the user unticks the box.
 	let minIv = $state(seed && seed.min_iv >= 0 ? clampInt(seed.min_iv, 0, 100) : 90);
 	let includeUnencountered = $state((seed?.min_iv ?? 0) < 0);
 	let maxIv = $state(clampInt(seed?.max_iv ?? 100, 0, 100));
@@ -86,60 +71,74 @@
 	}
 </script>
 
-<form id="alert-rule-form" class="flex flex-col gap-3" onsubmit={(e) => { e.preventDefault(); submit(); }}>
+<form
+	id="alert-rule-form"
+	class="flex flex-col gap-3"
+	onsubmit={(e) => {
+		e.preventDefault();
+		submit();
+	}}
+>
 	<section class="flex flex-col gap-3 rounded-md border bg-card p-4 shadow-sm">
 		<h3 class="mb-1 text-sm font-semibold">Filters</h3>
-	<div class="flex flex-col gap-1.5">
-		<span class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Pokémon</span>
-		<PokemonPicker bind:pokemonId bind:form {hasIcons} />
-	</div>
+		<div class="flex flex-col gap-1.5">
+			<span class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Pokémon</span>
+			<PokemonPicker bind:pokemonId bind:form {hasIcons} />
+		</div>
 
-	<div class="flex flex-col gap-2">
+		<div class="flex flex-col gap-2">
+			<RangeSlider
+				title="IV %"
+				min={0}
+				max={100}
+				bind:valueMin={minIv}
+				bind:valueMax={maxIv}
+				format={(v) => `${v}%`}
+			/>
+			<label class="flex items-center gap-2 text-xs text-muted-foreground">
+				<Switch
+					checked={includeUnencountered}
+					onCheckedChange={(v) => (includeUnencountered = v)}
+				/>
+				Include 0 IV / unencountered
+			</label>
+		</div>
+
 		<RangeSlider
-			title="IV %"
+			title="CP"
 			min={0}
-			max={100}
-			bind:valueMin={minIv}
-			bind:valueMax={maxIv}
-			format={(v) => `${v}%`}
+			max={10000}
+			step={50}
+			bind:valueMin={minCp}
+			bind:valueMax={maxCp}
+			format={(v) => v.toLocaleString()}
 		/>
-		<label class="flex items-center gap-2 text-xs text-muted-foreground">
-			<Switch checked={includeUnencountered} onCheckedChange={(v) => (includeUnencountered = v)} />
-			Include 0 IV / unencountered
+
+		<RangeSlider title="Level" min={0} max={40} bind:valueMin={minLevel} bind:valueMax={maxLevel} />
+
+		<label class="flex flex-col gap-1 text-xs text-muted-foreground">
+			<span class="font-medium uppercase tracking-wide">Gender</span>
+			<select
+				bind:value={gender}
+				class="h-10 rounded-md border bg-background px-2 text-sm text-foreground"
+			>
+				{#each genderOptions as g (g.value)}
+					<option value={g.value}>{g.label}</option>
+				{/each}
+			</select>
 		</label>
-	</div>
 
-	<RangeSlider
-		title="CP"
-		min={0}
-		max={10000}
-		step={50}
-		bind:valueMin={minCp}
-		bind:valueMax={maxCp}
-		format={(v) => v.toLocaleString()}
-	/>
-
-	<RangeSlider title="Level" min={0} max={40} bind:valueMin={minLevel} bind:valueMax={maxLevel} />
-
-	<label class="flex flex-col gap-1 text-xs text-muted-foreground">
-		<span class="font-medium uppercase tracking-wide">Gender</span>
-		<select
-			bind:value={gender}
-			class="h-10 rounded-md border bg-background px-2 text-sm text-foreground"
-		>
-			{#each genderOptions as g (g.value)}
-				<option value={g.value}>{g.label}</option>
-			{/each}
-		</select>
-	</label>
-
-	<PvpFields bind:league={pvpLeague} bind:best={pvpBest} bind:worst={pvpWorst} bind:minCp={pvpMinCp} {config} />
-
+		<PvpFields
+			bind:league={pvpLeague}
+			bind:best={pvpBest}
+			bind:worst={pvpWorst}
+			bind:minCp={pvpMinCp}
+			{config}
+		/>
 	</section>
 
 	<section class="flex flex-col gap-3 rounded-md border bg-card p-4 shadow-sm">
 		<h3 class="mb-1 text-sm font-semibold">Where</h3>
-	<DistanceField bind:distance {maxDistance} />
-
+		<DistanceField bind:distance {maxDistance} />
 	</section>
 </form>

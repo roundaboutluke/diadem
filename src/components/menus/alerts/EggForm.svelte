@@ -3,31 +3,28 @@
 	import { mRaid } from "@/lib/services/ingameLocale";
 	import DistanceField from "./DistanceField.svelte";
 	import GymPicker from "./GymPicker.svelte";
-	import { teamOptions, type EggRule, type PoracleWebConfig } from "@/lib/services/alerts/alerts.shared";
+	import {
+		teamOptions,
+		type EggRule,
+		type PoracleWebConfig
+	} from "@/lib/services/alerts/alerts.shared";
 
-	// Raid-egg tracking rule — by egg level + gym team (API.md).
 	let {
 		config,
 		initial = null,
-		submitting = false,
 		defaultDistance = 0,
-		onSubmit,
-		onCancel
+		onSubmit
 	}: {
 		config: PoracleWebConfig | null;
 		initial?: EggRule | null;
-		submitting?: boolean;
 		defaultDistance?: number;
 		onSubmit: (rule: Record<string, unknown>) => void;
-		onCancel?: () => void;
 	} = $props();
 
 	// svelte-ignore state_referenced_locally
 	const seed = initial;
 	const maxDistance = $derived(config?.maxDistance ?? 0);
 	const baseLevels = [1, 2, 3, 4, 5, 6];
-	// Keep an existing rule's tier selectable (e.g. Mega / shadow tiers created
-	// elsewhere) so editing never silently resets it.
 	const levels =
 		seed && seed.level > 0 && !baseLevels.includes(seed.level)
 			? [...baseLevels, seed.level].sort((a, b) => a - b)
@@ -45,39 +42,50 @@
 	}
 </script>
 
-<form id="alert-rule-form" class="flex flex-col gap-3" onsubmit={(e) => { e.preventDefault(); submit(); }}>
+<form
+	id="alert-rule-form"
+	class="flex flex-col gap-3"
+	onsubmit={(e) => {
+		e.preventDefault();
+		submit();
+	}}
+>
 	<section class="flex flex-col gap-3 rounded-md border bg-card p-4 shadow-sm">
 		<h3 class="mb-1 text-sm font-semibold">Filters</h3>
-	<label class="flex flex-col gap-1 text-xs text-muted-foreground">
-		<span class="font-medium uppercase tracking-wide">Egg level</span>
-		<select bind:value={level} class="h-10 rounded-md border bg-background px-2 text-sm text-foreground">
-			{#each levels as l (l)}
-				<option value={l}>{mRaid(l)}</option>
-			{/each}
-		</select>
-	</label>
+		<label class="flex flex-col gap-1 text-xs text-muted-foreground">
+			<span class="font-medium uppercase tracking-wide">Egg level</span>
+			<select
+				bind:value={level}
+				class="h-10 rounded-md border bg-background px-2 text-sm text-foreground"
+			>
+				{#each levels as l (l)}
+					<option value={l}>{mRaid(l)}</option>
+				{/each}
+			</select>
+		</label>
 
-	<label class="flex flex-col gap-1 text-xs text-muted-foreground">
-		<span class="font-medium uppercase tracking-wide">Gym team</span>
-		<select bind:value={team} class="h-10 rounded-md border bg-background px-2 text-sm text-foreground">
-			{#each teamOptions as t (t.value)}
-				<option value={t.value}>{t.label}</option>
-			{/each}
-		</select>
-	</label>
+		<label class="flex flex-col gap-1 text-xs text-muted-foreground">
+			<span class="font-medium uppercase tracking-wide">Gym team</span>
+			<select
+				bind:value={team}
+				class="h-10 rounded-md border bg-background px-2 text-sm text-foreground"
+			>
+				{#each teamOptions as t (t.value)}
+					<option value={t.value}>{t.label}</option>
+				{/each}
+			</select>
+		</label>
 
-	<label class="flex items-center gap-2 text-sm">
-		<Switch checked={exclusive} onCheckedChange={(v) => (exclusive = v)} />
-		EX gyms only
-	</label>
-
+		<label class="flex items-center gap-2 text-sm">
+			<Switch checked={exclusive} onCheckedChange={(v) => (exclusive = v)} />
+			EX gyms only
+		</label>
 	</section>
 
 	<section class="flex flex-col gap-3 rounded-md border bg-card p-4 shadow-sm">
 		<h3 class="mb-1 text-sm font-semibold">Where</h3>
-	<GymPicker bind:gymId />
+		<GymPicker bind:gymId />
 
-	<DistanceField bind:distance {maxDistance} />
-
+		<DistanceField bind:distance {maxDistance} />
 	</section>
 </form>
