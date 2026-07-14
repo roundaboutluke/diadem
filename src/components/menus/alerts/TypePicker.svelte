@@ -9,12 +9,10 @@
 	// back to the lucide glyph) so the two views read as one set.
 	let {
 		types,
-		counts = {},
 		hasIcons = false,
 		onPick
 	}: {
 		types: PokedexTrackingType[];
-		counts?: Partial<Record<PokedexTrackingType, number>>;
 		hasIcons?: boolean;
 		onPick: (type: PokedexTrackingType) => void;
 	} = $props();
@@ -30,20 +28,13 @@
 			{@const meta = pokedexTypeMeta[type]}
 			{@const Icon = typeIcon(type)}
 			{@const iconUrl = hasIcons ? sectionIconUrl(type) : null}
-			{@const count = counts[type] ?? 0}
 			<button
 				type="button"
 				title={meta.blurb}
-				class="relative flex flex-col items-center justify-center gap-2 rounded-md border p-3 text-center transition-colors hover:border-primary/60 hover:bg-muted/30"
+				class="flex flex-col items-center justify-center gap-2 rounded-md border p-3 text-center transition-colors hover:border-primary/60 hover:bg-muted/30"
 				style="aspect-ratio:1;"
 				onclick={() => onPick(type)}
 			>
-				{#if count > 0}
-					<span
-						class="absolute rounded-full bg-primary px-1.5 text-xs font-semibold text-primary-foreground"
-						style="top:0.375rem; right:0.375rem;"
-					>{count}</span>
-				{/if}
 				{#if iconUrl}
 					<img src={iconUrl} alt="" class="h-9 w-9 shrink-0 object-contain" />
 				{:else if Icon}

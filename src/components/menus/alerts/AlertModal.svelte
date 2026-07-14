@@ -49,7 +49,6 @@
 		needsMasterfile,
 		masterfileLoaded,
 		visibleTypes,
-		counts,
 		onPick,
 		onBack,
 		onSubmit,
@@ -67,7 +66,6 @@
 		needsMasterfile: boolean;
 		masterfileLoaded: boolean;
 		visibleTypes: PokedexTrackingType[];
-		counts: Partial<Record<PokedexTrackingType, number>>;
 		onPick: (type: PokedexTrackingType) => void;
 		onBack: () => void;
 		onSubmit: (rule: Record<string, unknown>) => void;
@@ -135,7 +133,7 @@
 
 					<Drawer.Content class="content flex min-h-0 flex-1 flex-col px-3 pb-6 pt-1">
 						{#if step === "pick"}
-							<TypePicker types={visibleTypes} {counts} {hasIcons} {onPick} />
+							<TypePicker types={visibleTypes} {hasIcons} {onPick} />
 						{:else if needsMasterfile && !masterfileLoaded}
 							<p class="text-sm text-muted-foreground">Loading Pokémon data…</p>
 						{:else}

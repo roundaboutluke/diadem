@@ -81,11 +81,6 @@
 
 	// ── Derived overview (from the store) ──
 	const disabledHooks = $derived(alertsStore.config?.disabledHooks ?? []);
-	const counts = $derived.by(() => {
-		const c: Partial<Record<PokedexTrackingType, number>> = {};
-		for (const type of pokedexTrackingTypes) c[type] = alertsStore.rules[type]?.length ?? 0;
-		return c;
-	});
 	const visibleTypes = $derived(
 		pokedexTrackingTypes.filter((t) => !disabledHooks.includes(pokedexTypeMeta[t].hook))
 	);
@@ -466,7 +461,6 @@
 	{needsMasterfile}
 	{masterfileLoaded}
 	{visibleTypes}
-	{counts}
 	onPick={pickType}
 	onBack={backToPicker}
 	onSubmit={handleSubmit}
