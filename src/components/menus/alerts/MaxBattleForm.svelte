@@ -1,4 +1,5 @@
 <script lang="ts">
+	import SelectField from "./SelectField.svelte";
 	import { m } from "@/lib/paraglide/messages";
 	import DistanceField from "./DistanceField.svelte";
 	import PokemonPicker from "./PokemonPicker.svelte";
@@ -78,17 +79,12 @@
 				<PokemonPicker bind:pokemonId bind:form {hasIcons} allowAny={false} />
 			</div>
 		{:else}
-			<label class="flex flex-col gap-1 text-xs text-muted-foreground">
-				<span class="font-medium uppercase tracking-wide">Battle level</span>
-				<select
-					bind:value={level}
-					class="h-10 rounded-md border bg-background px-2 text-sm text-foreground"
-				>
-					{#each levels as l (l)}
-						<option value={l}>{m.x_start_max_battle({ level: l })}</option>
-					{/each}
-				</select>
-			</label>
+			<SelectField
+				label="Battle level"
+				value={level}
+				options={levels.map((l) => ({ value: l, label: m.x_start_max_battle({ level: l }) }))}
+				onchange={(v) => (level = Number(v))}
+			/>
 		{/if}
 	</section>
 

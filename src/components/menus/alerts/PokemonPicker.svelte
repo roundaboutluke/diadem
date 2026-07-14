@@ -75,19 +75,13 @@
 		<Dialog.Overlay class="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm" />
 		<Dialog.Content
 			trapFocus={false}
-			class="fixed inset-0 z-[60] flex flex-col bg-background sm:inset-auto sm:left-1/2 sm:top-1/2 sm:h-[70vh] sm:max-h-[38rem] sm:w-[calc(100%-1rem)] sm:max-w-md sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-md sm:border sm:shadow-xl"
+			class="fixed left-1/2 top-1/2 z-[60] flex max-h-[80dvh] w-[calc(100%-1rem)] max-w-md -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-md border bg-background shadow-md"
 		>
-			<div
-				class="flex shrink-0 items-center gap-2 border-b p-2"
-				style="padding-top: max(0.5rem, env(safe-area-inset-top));"
-			>
+			<div class="flex shrink-0 items-center gap-2 border-b p-2">
 				<SearchBar bind:query={search} placeholder="Search Pokémon…" />
 				<CloseButton onclick={() => (open = false)} />
 			</div>
-			<div
-				class="min-h-0 flex-1 overflow-y-auto p-3"
-				style="padding-bottom: max(0.75rem, env(safe-area-inset-bottom));"
-			>
+			<div class="min-h-0 flex-1 overflow-y-auto p-3">
 				{#if allowAny}
 					<button
 						type="button"

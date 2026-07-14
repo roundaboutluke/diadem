@@ -1,4 +1,5 @@
 <script lang="ts">
+	import SelectField from "./SelectField.svelte";
 	import Switch from "@/components/ui/input/Switch.svelte";
 	import { mRaid } from "@/lib/services/ingameLocale";
 	import DistanceField from "./DistanceField.svelte";
@@ -86,17 +87,12 @@
 				<PokemonPicker bind:pokemonId bind:form {hasIcons} allowAny={false} />
 			</div>
 		{:else}
-			<label class="flex flex-col gap-1 text-xs text-muted-foreground">
-				<span class="font-medium uppercase tracking-wide">Raid level</span>
-				<select
-					bind:value={level}
-					class="h-10 rounded-md border bg-background px-2 text-sm text-foreground"
-				>
-					{#each levels as l (l)}
-						<option value={l}>{mRaid(l)}</option>
-					{/each}
-				</select>
-			</label>
+			<SelectField
+				label="Raid level"
+				value={level}
+				options={levels.map((l) => ({ value: l, label: mRaid(l) }))}
+				onchange={(v) => (level = Number(v))}
+			/>
 		{/if}
 
 		<label class="flex flex-col gap-1 text-xs text-muted-foreground">

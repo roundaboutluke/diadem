@@ -1,4 +1,5 @@
 <script lang="ts">
+	import SelectField from "./SelectField.svelte";
 	import Input from "@/components/ui/input/Input.svelte";
 	import Switch from "@/components/ui/input/Switch.svelte";
 	import DistanceField from "./DistanceField.svelte";
@@ -63,17 +64,12 @@
 >
 	<section class="flex flex-col gap-3 rounded-md border bg-card p-4 shadow-sm">
 		<h3 class="mb-1 text-sm font-semibold">Filters</h3>
-		<label class="flex flex-col gap-1 text-xs text-muted-foreground">
-			<span class="font-medium uppercase tracking-wide">Reward type</span>
-			<select
-				bind:value={rewardType}
-				class="h-10 rounded-md border bg-background px-2 text-sm text-foreground"
-			>
-				{#each questRewardTypes as r (r.value)}
-					<option value={r.value}>{r.label}</option>
-				{/each}
-			</select>
-		</label>
+		<SelectField
+			label="Reward type"
+			value={rewardType}
+			options={questRewardTypes}
+			onchange={(v) => (rewardType = Number(v))}
+		/>
 
 		{#if isPokemon}
 			<div class="flex flex-col gap-1.5">

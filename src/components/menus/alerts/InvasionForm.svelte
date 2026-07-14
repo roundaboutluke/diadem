@@ -1,4 +1,5 @@
 <script lang="ts">
+	import SelectField from "./SelectField.svelte";
 	import DistanceField from "./DistanceField.svelte";
 	import {
 		genderOptions,
@@ -67,17 +68,12 @@
 			</select>
 		</label>
 
-		<label class="flex flex-col gap-1 text-xs text-muted-foreground">
-			<span class="font-medium uppercase tracking-wide">Gender</span>
-			<select
-				bind:value={gender}
-				class="h-10 rounded-md border bg-background px-2 text-sm text-foreground"
-			>
-				{#each genderOptions as g (g.value)}
-					<option value={g.value}>{g.label}</option>
-				{/each}
-			</select>
-		</label>
+		<SelectField
+			label="Gender"
+			value={gender}
+			options={genderOptions}
+			onchange={(v) => (gender = Number(v))}
+		/>
 	</section>
 
 	<section class="flex flex-col gap-3 rounded-md border bg-card p-4 shadow-sm">

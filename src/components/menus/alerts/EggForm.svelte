@@ -1,4 +1,5 @@
 <script lang="ts">
+	import SelectField from "./SelectField.svelte";
 	import Switch from "@/components/ui/input/Switch.svelte";
 	import { mRaid } from "@/lib/services/ingameLocale";
 	import DistanceField from "./DistanceField.svelte";
@@ -52,29 +53,19 @@
 >
 	<section class="flex flex-col gap-3 rounded-md border bg-card p-4 shadow-sm">
 		<h3 class="mb-1 text-sm font-semibold">Filters</h3>
-		<label class="flex flex-col gap-1 text-xs text-muted-foreground">
-			<span class="font-medium uppercase tracking-wide">Egg level</span>
-			<select
-				bind:value={level}
-				class="h-10 rounded-md border bg-background px-2 text-sm text-foreground"
-			>
-				{#each levels as l (l)}
-					<option value={l}>{mRaid(l)}</option>
-				{/each}
-			</select>
-		</label>
+		<SelectField
+			label="Egg level"
+			value={level}
+			options={levels.map((l) => ({ value: l, label: mRaid(l) }))}
+			onchange={(v) => (level = Number(v))}
+		/>
 
-		<label class="flex flex-col gap-1 text-xs text-muted-foreground">
-			<span class="font-medium uppercase tracking-wide">Gym team</span>
-			<select
-				bind:value={team}
-				class="h-10 rounded-md border bg-background px-2 text-sm text-foreground"
-			>
-				{#each teamOptions as t (t.value)}
-					<option value={t.value}>{t.label}</option>
-				{/each}
-			</select>
-		</label>
+		<SelectField
+			label="Gym team"
+			value={team}
+			options={teamOptions}
+			onchange={(v) => (team = Number(v))}
+		/>
 
 		<label class="flex items-center gap-2 text-sm">
 			<Switch checked={exclusive} onCheckedChange={(v) => (exclusive = v)} />

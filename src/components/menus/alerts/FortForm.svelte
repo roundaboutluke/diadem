@@ -1,4 +1,5 @@
 <script lang="ts">
+	import SelectField from "./SelectField.svelte";
 	import Switch from "@/components/ui/input/Switch.svelte";
 	import DistanceField from "./DistanceField.svelte";
 	import {
@@ -57,17 +58,12 @@
 >
 	<section class="flex flex-col gap-3 rounded-md border bg-card p-4 shadow-sm">
 		<h3 class="mb-1 text-sm font-semibold">Filters</h3>
-		<label class="flex flex-col gap-1 text-xs text-muted-foreground">
-			<span class="font-medium uppercase tracking-wide">Fort type</span>
-			<select
-				bind:value={fortType}
-				class="h-10 rounded-md border bg-background px-2 text-sm text-foreground"
-			>
-				{#each fortTypes as f (f.value)}
-					<option value={f.value}>{f.label}</option>
-				{/each}
-			</select>
-		</label>
+		<SelectField
+			label="Fort type"
+			value={fortType}
+			options={fortTypes}
+			onchange={(v) => (fortType = v)}
+		/>
 
 		<div class="flex flex-col gap-1.5">
 			<span class="text-xs font-medium uppercase tracking-wide text-muted-foreground"
