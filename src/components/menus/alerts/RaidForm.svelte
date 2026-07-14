@@ -1,10 +1,9 @@
 <script lang="ts">
-	import SelectField from "./SelectField.svelte";
 	import Switch from "@/components/ui/input/Switch.svelte";
-	import { mRaid } from "@/lib/services/ingameLocale";
 	import DistanceField from "./DistanceField.svelte";
 	import GymPicker from "./GymPicker.svelte";
 	import PokemonPicker from "./PokemonPicker.svelte";
+	import RaidLevelField from "./RaidLevelField.svelte";
 	import {
 		teamOptions,
 		type PoracleWebConfig,
@@ -28,11 +27,6 @@
 	// svelte-ignore state_referenced_locally
 	const seed = initial;
 	const maxDistance = $derived(config?.maxDistance ?? 0);
-	const baseLevels = [1, 2, 3, 4, 5, 6];
-	const levels =
-		seed && seed.level > 0 && !baseLevels.includes(seed.level)
-			? [...baseLevels, seed.level].sort((a, b) => a - b)
-			: baseLevels;
 
 	let byPokemon = $state((seed?.pokemon_id ?? 0) > 0 && (seed?.pokemon_id ?? 0) !== 9000);
 	let level = $state(seed && seed.level > 0 ? seed.level : 5);
@@ -87,12 +81,7 @@
 				<PokemonPicker bind:pokemonId bind:form {hasIcons} allowAny={false} />
 			</div>
 		{:else}
-			<SelectField
-				label="Raid level"
-				value={level}
-				options={levels.map((l) => ({ value: l, label: mRaid(l) }))}
-				onchange={(v) => (level = Number(v))}
-			/>
+			<RaidLevelField label="Raid level" value={level} onchange={(v) => (level = v)} />
 		{/if}
 
 		<label class="flex flex-col gap-1 text-xs text-muted-foreground">
