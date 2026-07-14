@@ -1,5 +1,7 @@
 <script lang="ts">
 	import Switch from "@/components/ui/input/Switch.svelte";
+	import RadioGroup from "@/components/ui/input/selectgroup/RadioGroup.svelte";
+	import SelectGroupItem from "@/components/ui/input/selectgroup/SelectGroupItem.svelte";
 	import RangeSlider from "./RangeSlider.svelte";
 	import ValueSlider from "./ValueSlider.svelte";
 	import { pvpLeagues, type PoracleWebConfig } from "@/lib/services/alerts/alerts.shared";
@@ -38,17 +40,20 @@
 	</label>
 
 	{#if enabled}
-		<label class="flex flex-col gap-1 text-xs text-muted-foreground">
-			<span class="font-medium uppercase tracking-wide">League</span>
-			<select
-				bind:value={league}
-				class="h-10 rounded-md border bg-background px-2 text-sm text-foreground"
+		<div class="flex flex-col gap-1">
+			<span class="text-xs font-medium uppercase tracking-wide text-muted-foreground">League</span>
+			<RadioGroup
+				value={String(league)}
+				onValueChange={(v) => (league = Number(v))}
+				class="w-full"
 			>
 				{#each leagues as l (l.value)}
-					<option value={l.value}>{l.label}</option>
+					<SelectGroupItem type="radio" value={String(l.value)} class="p-2 flex-1">
+						{l.label}
+					</SelectGroupItem>
 				{/each}
-			</select>
-		</label>
+			</RadioGroup>
+		</div>
 		<RangeSlider
 			title="Rank range"
 			min={1}

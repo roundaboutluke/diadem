@@ -3,6 +3,8 @@
 	import { Plus } from "@lucide/svelte";
 	import { openToast } from "@/lib/ui/toasts.svelte.js";
 	import Button from "@/components/ui/input/Button.svelte";
+	import RadioGroup from "@/components/ui/input/selectgroup/RadioGroup.svelte";
+	import SelectGroupItem from "@/components/ui/input/selectgroup/SelectGroupItem.svelte";
 	import { LoadedFeature, hasLoadedFeature } from "@/lib/services/initialLoad.svelte";
 	import AreaSelector from "./AreaSelector.svelte";
 	import CollapsibleSection from "./CollapsibleSection.svelte";
@@ -429,26 +431,14 @@
 <!-- Active profile's Location / Area editor, handed to the Settings drawer. -->
 {#snippet locationEditor()}
 	<div class="flex flex-col gap-3">
-		<div class="inline-flex w-fit overflow-hidden rounded-md border text-sm">
-			<button
-				type="button"
-				class="px-3 py-1.5 {locationMode === 'location'
-					? 'bg-primary text-primary-foreground'
-					: 'bg-background hover:bg-muted/40'}"
-				onclick={() => (locationMode = "location")}
-			>
-				By location
-			</button>
-			<button
-				type="button"
-				class="border-l px-3 py-1.5 {locationMode === 'area'
-					? 'bg-primary text-primary-foreground'
-					: 'bg-background hover:bg-muted/40'}"
-				onclick={() => (locationMode = "area")}
-			>
-				By area
-			</button>
-		</div>
+		<RadioGroup
+			value={locationMode}
+			onValueChange={(v) => (locationMode = v as "location" | "area")}
+			class="w-full"
+		>
+			<SelectGroupItem type="radio" value="location" class="p-2 flex-1">By location</SelectGroupItem>
+			<SelectGroupItem type="radio" value="area" class="p-2 flex-1">By area</SelectGroupItem>
+		</RadioGroup>
 
 		{#key currentProfileNo}
 			{#if locationMode === "location"}

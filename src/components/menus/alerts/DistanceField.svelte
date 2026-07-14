@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { getContext } from "svelte";
 	import Input from "@/components/ui/input/Input.svelte";
+	import RadioGroup from "@/components/ui/input/selectgroup/RadioGroup.svelte";
+	import SelectGroupItem from "@/components/ui/input/selectgroup/SelectGroupItem.svelte";
 	import { clampInt } from "@/lib/services/alerts/alerts.shared";
 
 	// Distance scope for a rule. distance === 0 means "use my selected
@@ -56,26 +58,14 @@
 <div class="flex flex-col gap-2">
 	<span class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Distance</span>
 	{#if hasAreas}
-		<div class="inline-flex overflow-hidden rounded-md border text-sm">
-			<button
-				type="button"
-				class="px-3 py-1.5 {!useRadius
-					? 'bg-primary text-primary-foreground'
-					: 'bg-background hover:bg-muted/40'}"
-				onclick={() => setMode(false)}
-			>
-				My areas
-			</button>
-			<button
-				type="button"
-				class="border-l px-3 py-1.5 {useRadius
-					? 'bg-primary text-primary-foreground'
-					: 'bg-background hover:bg-muted/40'}"
-				onclick={() => setMode(true)}
-			>
-				Within radius
-			</button>
-		</div>
+		<RadioGroup
+			value={useRadius ? "radius" : "area"}
+			onValueChange={(v) => setMode(v === "radius")}
+			class="w-full"
+		>
+			<SelectGroupItem type="radio" value="area" class="p-2 flex-1">My areas</SelectGroupItem>
+			<SelectGroupItem type="radio" value="radius" class="p-2 flex-1">Within radius</SelectGroupItem>
+		</RadioGroup>
 	{/if}
 	{#if !hasAreas || useRadius}
 		<div class="flex items-center gap-2">
