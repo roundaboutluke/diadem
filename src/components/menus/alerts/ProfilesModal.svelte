@@ -102,12 +102,12 @@
 
 <Drawer.Root bind:open {snapPoints} bind:snapPoint>
 	<Drawer.Portal>
-		<Drawer.Backdrop class="fixed inset-0 z-50 backdrop-blur-[1px] backdrop-brightness-95" />
+		<Drawer.Backdrop class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" />
 		<Drawer.VirtualKeyboardProvider>
 			<Drawer.Viewport class="drawer-viewport flex items-end justify-center z-50!">
 				<Drawer.Popup
 					aria-label="Settings"
-					class="drawer-popup {contentClass} flex h-full w-full flex-col border border-t-border bg-card/60 px-2 pt-2 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm sm:max-w-lg"
+					class="drawer-popup {contentClass} flex h-full w-full flex-col border border-t-border bg-card/80 px-2 pt-2 pb-[env(safe-area-inset-bottom)] shadow-2xl backdrop-blur-sm sm:max-w-lg"
 				>
 					<div
 						class="mb-2 flex shrink-0 items-center gap-2 rounded-lg border border-border bg-card px-4 py-1.5 text-base font-bold"
