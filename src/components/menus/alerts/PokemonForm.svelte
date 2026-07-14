@@ -82,7 +82,7 @@
 	<section class="flex flex-col gap-3 rounded-md border bg-card p-4 shadow-sm">
 		<h3 class="mb-1 text-sm font-semibold">Filters</h3>
 		<div class="flex flex-col gap-1.5">
-			<span class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Pokémon</span>
+			<span class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Species</span>
 			<PokemonPicker bind:pokemonId bind:form {hasIcons} />
 		</div>
 
