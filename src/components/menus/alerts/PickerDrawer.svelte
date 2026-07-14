@@ -15,7 +15,7 @@
 		children: Snippet;
 	} = $props();
 
-	const snapPoints = [0.8, 1];
+	const snapPoints = [0.45, 1];
 	let snapPoint = $state<number | string>(snapPoints[0]);
 	const contentClass = $derived(
 		snapPoint === snapPoints[snapPoints.length - 1] ? "drawer-full" : "drawer-partial"
