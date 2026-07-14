@@ -1,15 +1,13 @@
 <script lang="ts">
 	import { onMount, setContext, untrack } from "svelte";
-	import { Bell, Plus } from "@lucide/svelte";
+	import { Bell, Plus, Settings2 } from "@lucide/svelte";
 	import { openToast } from "@/lib/ui/toasts.svelte.js";
-	import Button from "@/components/ui/input/Button.svelte";
 	import RadioGroup from "@/components/ui/input/selectgroup/RadioGroup.svelte";
 	import SelectGroupItem from "@/components/ui/input/selectgroup/SelectGroupItem.svelte";
 	import { LoadedFeature, hasLoadedFeature } from "@/lib/services/initialLoad.svelte";
 	import AreaSelector from "./AreaSelector.svelte";
 	import CollapsibleSection from "./CollapsibleSection.svelte";
 	import LocationBox from "./LocationBox.svelte";
-	import ProfileBar from "./ProfileBar.svelte";
 	import ProfilesModal from "./ProfilesModal.svelte";
 	import RuleList from "./RuleList.svelte";
 	import AlertModal from "./AlertModal.svelte";
@@ -346,24 +344,37 @@
 			{/each}
 		</div>
 	{:else}
-		{#if alertsStore.profiles.length > 0}
-			<ProfileBar
-				profiles={alertsStore.profiles}
-				{currentProfileNo}
-				managing={managingProfiles}
-				onToggleManage={() => (managingProfiles = !managingProfiles)}
-			/>
-		{/if}
+		<!-- Two blocky actions (matches diadem's chunky icon+label buttons): the
+			primary "Add alert" and "Settings" (which carries the active profile). -->
+		<div class="grid grid-cols-2 gap-2">
+			<button
+				type="button"
+				class="flex flex-col items-center justify-center gap-1.5 rounded-md border border-primary/30 bg-primary/10 px-3 py-4 text-primary shadow-sm transition-colors hover:bg-primary/15"
+				onclick={startAdd}
+			>
+				<Plus class="h-6 w-6" />
+				<span class="text-sm font-semibold">Add alert</span>
+			</button>
+			<button
+				type="button"
+				class="flex flex-col items-center justify-center gap-1.5 rounded-md border px-3 py-4 shadow-sm transition-colors hover:bg-muted/40 {managingProfiles
+					? 'bg-muted'
+					: 'bg-card'}"
+				onclick={() => (managingProfiles = !managingProfiles)}
+			>
+				<Settings2 class="h-6 w-6 text-muted-foreground" />
+				<span class="text-sm font-semibold">Settings</span>
+				{#if activeProfileName}
+					<span class="max-w-full truncate text-xs text-muted-foreground">· {activeProfileName}</span>
+				{/if}
+			</button>
+		</div>
 
 		{#if alertsStore.error}
 			<p class="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
 				{alertsStore.error}
 			</p>
 		{/if}
-
-		<Button size="sm" class="w-full" onclick={startAdd}>
-			<Plus class="h-4 w-4" /> Add alert
-		</Button>
 
 		{#if alertsStore.total === 0}
 			<div
