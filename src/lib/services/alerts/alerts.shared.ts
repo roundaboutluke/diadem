@@ -1,11 +1,4 @@
-// Shared (client + server) types and constants for the Pokedex tool —
-// Diadem's native Poracle alert configuration page. Types mirror the
-// PoracleNG REST API (see ~/PoracleAlts/PoracleNG-main/API.md) and the
-// tracking-row shapes returned by GET /api/tracking/{type}/{id}.
-//
-// This module is import-safe from both client and server: it contains
-// no secrets and no server-only imports. The server proxy lives in
-// pokedex.server.ts; the DB-facing secret never reaches here.
+// Client+server-safe types/constants mirroring the PoracleNG REST API.
 
 // ─── Tracking types ─────────────────────────────────────────────────
 

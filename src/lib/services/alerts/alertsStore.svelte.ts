@@ -18,10 +18,6 @@ export function bundleToRules(
 	return out;
 }
 
-// Shared reactive state for the Alerts feature. Lives at module scope so the
-// bundle survives the AlertsMenu unmounting (menu reopens instantly) and so the
-// FAB bell can show a rule-count badge without opening the menu. `load()` is
-// idempotent — the FAB and the menu both call it; only the first fetches.
 class AlertsStore {
 	loaded = $state(false);
 	loading = $state(false);

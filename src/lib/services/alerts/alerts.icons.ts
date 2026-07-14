@@ -23,9 +23,6 @@ import {
 import { RewardType } from "@/lib/utils/pokestopUtils";
 import { pokedexTypeMeta, type PokedexTrackingType } from "@/lib/services/alerts/alerts.shared";
 
-// Single source of truth mapping a tracking type to its lucide icon
-// component (used by the type picker and as the section-header fallback
-// when a UICON can't be resolved).
 const registry: Record<string, typeof Sparkles> = {
 	Sparkles,
 	Swords,
@@ -43,10 +40,6 @@ export function typeIcon(type: PokedexTrackingType) {
 	return registry[pokedexTypeMeta[type].icon];
 }
 
-// A representative UICON for each tracking type's section header, mirroring
-// how Diadem draws these objects on the map. Returns a URL, or null for
-// types with no natural single icon (the caller falls back to typeIcon).
-// Wrapped defensively: if uicons/settings aren't ready the lookup can throw.
 export function sectionIconUrl(type: PokedexTrackingType): string | null {
 	try {
 		switch (type) {

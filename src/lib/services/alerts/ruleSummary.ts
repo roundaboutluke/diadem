@@ -1,10 +1,3 @@
-// Turns a structured Poracle tracking rule into a display summary —
-// an icon, a title (what it tracks) and a set of compact attribute
-// chips — mirroring Diadem's own filterset display. This is what lets
-// the rule list read like Diadem's map filters instead of leaning on
-// Poracle's server-built `description` string (which the running
-// backend omits from the bulk GET, producing "Rule #N").
-
 import { m } from "@/lib/paraglide/messages";
 import { mPokemon, mRaid } from "@/lib/services/ingameLocale";
 import { getGenderLabel } from "@/lib/utils/pokemonUtils";
@@ -31,25 +24,16 @@ export interface RuleChip {
 	value: string;
 }
 
-// A rule's card icon: a specific species (rendered via uicons), a raid-egg
-// tier, an emoji (hundo/nundo style, à la Diadem's filter icons), or null —
-// in which case the card falls back to the tracking type's own icon so every
-// row keeps a uniform icon slot. The actual uicon URL is resolved in RuleCard
-// (which owns the uicons-loaded signal); this stays a pure descriptor.
 export type RuleIcon =
 	| { pokemon_id: number; form: number }
 	| { egg: number; hatched: boolean }
 	| { station: true }
 	| { emoji: string };
 
-// Raid-egg tier icon for a raid/egg level — any real tier (1★–5★, Mega,
-// Elite, Primal, Ultra Beast and the 11–15 shadow tiers), matching how
-// Diadem draws eggs. The "any level" sentinel has no tier icon.
 function eggIcon(level: number, hatched: boolean): RuleIcon | null {
 	return level >= 1 && level < 90 ? { egg: level, hatched } : null;
 }
 
-// True for the "any level" sentinel (a rule not pinned to a specific tier).
 function isAnyLevel(level: number): boolean {
 	return level <= 0 || level >= 90;
 }
@@ -72,8 +56,6 @@ function rewardTypeLabel(type: number): string {
 	return questRewardTypes.find((r) => r.value === type)?.label ?? `Reward ${type}`;
 }
 
-// The "where" chip. distance 0 = the profile's selected areas (unless a
-// per-rule override pins specific areas); >0 = a radius in metres.
 function whereChip(rule: AnyRule): RuleChip {
 	const overrideAreas = (rule as { override_areas?: unknown }).override_areas;
 	const overrideLabel = (rule as { override_location_label?: unknown }).override_location_label;
@@ -91,14 +73,11 @@ function speciesName(pokemonId: number, form: number): string {
 }
 
 function ivChip(minIv: number, maxIv: number): RuleChip | null {
-	// Default (-1..100 or 0..100) → not worth a chip. Anything narrower is.
 	if (minIv <= 0 && maxIv >= 100) return null;
 	const lo = minIv < 0 ? "0" : String(minIv);
 	return { label: "IV", value: `${lo}–${maxIv}%` };
 }
 
-// `gymName` resolves a gym ID (from raid/egg/gym rules) to its name; Poracle
-// only stores the ID, so the card shows the raw ID until the name is fetched.
 export function summarizeRule(
 	type: PokedexTrackingType,
 	rule: AnyRule,
@@ -125,9 +104,6 @@ export function summarizeRule(
 			if (r.gender) chips.push({ label: "Gender", value: getGenderLabel(r.gender) });
 			chips.push(where);
 			return {
-				// Specific species → its icon; "any Pokémon" borrows Diadem's
-				// filter-icon convention (hundo/nundo emoji) so the row keeps a
-				// meaningful icon, else falls back to the type icon in the card.
 				icon: !anyMon
 					? { pokemon_id: r.pokemon_id, form: r.form }
 					: (r.min_iv ?? 0) >= 98
@@ -147,7 +123,6 @@ export function summarizeRule(
 			if (r.gym_id) chips.push({ label: "Gym", value: gymName?.(r.gym_id) ?? String(r.gym_id) });
 			chips.push(where);
 			return {
-				// Specific boss → its icon; otherwise the (hatched) egg tier.
 				icon: byMon ? { pokemon_id: r.pokemon_id, form: r.form } : eggIcon(r.level, true),
 				title: byMon
 					? speciesName(r.pokemon_id, r.form)
@@ -165,8 +140,6 @@ export function summarizeRule(
 			chips.push(where);
 			return {
 				icon: eggIcon(r.level, false),
-				// Egg for a raid tier — labelled with Diadem's raid-tier name
-				// (an egg hatches the raid of that tier), e.g. "Legendary Raid".
 				title: isAnyLevel(r.level) ? "Any egg" : mRaid(r.level),
 				chips
 			};
@@ -226,7 +199,6 @@ export function summarizeRule(
 			if (r.gmax) chips.push({ label: "G-Max", value: "Yes" });
 			chips.push(where);
 			return {
-				// Specific boss → its icon; otherwise the power-spot / station icon.
 				icon: byMon ? { pokemon_id: r.pokemon_id, form: r.form } : { station: true },
 				title: byMon
 					? speciesName(r.pokemon_id, r.form)

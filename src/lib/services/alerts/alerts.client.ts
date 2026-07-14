@@ -1,9 +1,3 @@
-// Client-side fetch helpers for the Pokedex page's own SvelteKit
-// endpoints (NOT Poracle directly — those calls are server-side only,
-// behind pokedex.server.ts). Every helper throws PokedexApiError with
-// the server's human-readable message on failure so components can
-// surface it in a toast/banner.
-
 import type {
 	AnyRule,
 	PoracleArea,
@@ -34,9 +28,7 @@ async function req<T>(input: string, init?: RequestInit): Promise<T> {
 	let data: unknown = null;
 	try {
 		data = await res.json();
-	} catch {
-		// Some 200s (or errors) may have no body — leave data null.
-	}
+	} catch {}
 	if (!res.ok) {
 		const message =
 			(data && typeof data === "object" && typeof (data as { error?: unknown }).error === "string"
@@ -162,8 +154,6 @@ export function saveLocation(lat: number, lon: number) {
 		body: JSON.stringify({ lat, lon })
 	});
 }
-
-// ── Profiles ──
 
 export async function fetchProfiles(): Promise<PoracleProfile[]> {
 	const data = await req<{ profile: PoracleProfile[] }>("/api/alerts/profiles");
