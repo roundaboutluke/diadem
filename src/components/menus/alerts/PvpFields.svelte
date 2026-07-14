@@ -33,7 +33,7 @@
 	const enabled = $derived(league > 0);
 </script>
 
-<div class="flex flex-col gap-3 rounded-md border bg-muted/20 p-3">
+<div class="flex flex-col gap-3">
 	<label class="flex items-center gap-2 text-sm font-medium">
 		<Switch checked={enabled} onCheckedChange={(on) => (league = on ? 1500 : 0)} />
 		Filter by PVP rank
