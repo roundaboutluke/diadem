@@ -2,6 +2,7 @@
 	import { Drawer } from "$lib/drawer";
 	import { ArrowLeft } from "@lucide/svelte";
 	import CloseButton from "@/components/ui/CloseButton.svelte";
+	import Button from "@/components/ui/input/Button.svelte";
 	import TypePicker from "./TypePicker.svelte";
 	import PokemonForm from "./PokemonForm.svelte";
 	import RaidForm from "./RaidForm.svelte";
@@ -162,6 +163,15 @@
 							{/key}
 						{/if}
 					</Drawer.Content>
+
+					<!-- Pinned action bar (diadem filterset style) — Save stays reachable
+						at any snap point instead of scrolling with the form. Submits the
+						active form via HTML form association. -->
+					{#if step === "form" && (!needsMasterfile || masterfileLoaded)}
+						<div class="mt-1 flex shrink-0 justify-end border-t border-t-border px-3 pb-1 pt-2">
+							<Button type="submit" form="alert-rule-form" disabled={submitting}>Save</Button>
+						</div>
+					{/if}
 				</Drawer.Popup>
 			</Drawer.Viewport>
 		</Drawer.VirtualKeyboardProvider>

@@ -1,5 +1,4 @@
 <script lang="ts">
-	import Button from "@/components/ui/input/Button.svelte";
 	import { m } from "@/lib/paraglide/messages";
 	import DistanceField from "./DistanceField.svelte";
 	import PokemonPicker from "./PokemonPicker.svelte";
@@ -47,7 +46,7 @@
 	}
 </script>
 
-<div class="flex flex-col gap-4 rounded-md border bg-card p-4">
+<form id="alert-rule-form" class="flex flex-col gap-4 pb-2" onsubmit={(e) => { e.preventDefault(); submit(); }}>
 	<div class="inline-flex overflow-hidden rounded-md border text-sm">
 		<button
 			type="button"
@@ -83,10 +82,4 @@
 
 	<DistanceField bind:distance {maxDistance} />
 
-	<div class="flex items-center justify-end gap-2">
-		{#if onCancel}<Button variant="outline" onclick={onCancel} disabled={submitting}>Cancel</Button>{/if}
-		<Button onclick={submit} disabled={submitting}>
-			Save
-		</Button>
-	</div>
-</div>
+</form>

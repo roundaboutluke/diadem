@@ -349,7 +349,7 @@
 		<div class="grid grid-cols-2 gap-2">
 			<button
 				type="button"
-				class="flex flex-col items-center justify-center gap-1 rounded-md border border-transparent bg-secondary px-3 py-2.5 text-secondary-foreground shadow-sm transition-colors hover:bg-secondary/80"
+				class="flex flex-col items-center justify-center gap-1 rounded-md border border-transparent bg-primary px-3 py-2.5 text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
 				onclick={startAdd}
 			>
 				<Plus class="h-5 w-5" />
