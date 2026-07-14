@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { onMount, setContext } from "svelte";
-	import { Plus } from "@lucide/svelte";
+	import { onMount, setContext, untrack } from "svelte";
+	import { Bell, Plus } from "@lucide/svelte";
 	import { openToast } from "@/lib/ui/toasts.svelte.js";
 	import Button from "@/components/ui/input/Button.svelte";
 	import RadioGroup from "@/components/ui/input/selectgroup/RadioGroup.svelte";
@@ -13,6 +13,7 @@
 	import ProfilesModal from "./ProfilesModal.svelte";
 	import RuleList from "./RuleList.svelte";
 	import AlertModal from "./AlertModal.svelte";
+	import { alertsStore, bundleToRules } from "@/lib/services/alerts/alertsStore.svelte";
 	import {
 		addProfile,
 		bulkDeleteRules,
@@ -20,7 +21,6 @@
 		deleteProfile,
 		deleteRule,
 		fetchGymNames,
-		fetchInit,
 		fetchProfiles,
 		fetchState,
 		fetchTracking,
@@ -36,40 +36,20 @@
 		pokedexTrackingTypes,
 		pokedexTypeMeta,
 		type AnyRule,
-		type PokedexTrackingType,
-		type PoracleArea,
-		type PoracleHuman,
-		type PoracleProfile,
-		type PoracleWebConfig
+		type PokedexTrackingType
 	} from "@/lib/services/alerts/alerts.shared";
 
-	// The native Alerts menu — the notification bell's panel. Replaces the
-	// standalone /pokedex page: it fetches the same bundle client-side (a menu
-	// has no +page.server.ts load) and drives the two nested $lib/drawer sheets
-	// (Add-alert and Settings) that were reworked for this. All CRUD mirrors the
-	// old page orchestrator.
+	// The native Alerts menu — the notification bell's panel. Data lives in the
+	// shared alertsStore (so the menu reopens instantly and the FAB can badge a
+	// count); this component owns the transient UI state + CRUD orchestration and
+	// drives the two nested $lib/drawer sheets (Add-alert and Settings).
 
 	const hasIcons = $derived(hasLoadedFeature(LoadedFeature.ICON_SETS));
 	const masterfileLoaded = $derived(hasLoadedFeature(LoadedFeature.MASTER_FILE));
 	const masterfileTypes: PokedexTrackingType[] = ["pokemon", "raid", "quest", "nest", "maxbattle"];
 
-	// ── Bootstrap (client-side init) ──
-	let loading = $state(true);
-	let loadError = $state<string | null>(null);
-	let config = $state<PoracleWebConfig | null>(null);
-	let gruntTypes = $state<string[]>([]);
-	let areas = $state<PoracleArea[]>([]);
-	let human = $state<PoracleHuman | null>(null);
-	let profiles = $state<PoracleProfile[]>([]);
-	let selectedAreas = $state<string[]>([]);
+	onMount(() => alertsStore.load());
 
-	function bundleToRules(
-		bundle: Record<string, unknown> | null
-	): Partial<Record<PokedexTrackingType, AnyRule[]>> {
-		const out: Partial<Record<PokedexTrackingType, AnyRule[]>> = {};
-		for (const type of pokedexTrackingTypes) out[type] = bundle ? ((bundle[type] as AnyRule[]) ?? []) : [];
-		return out;
-	}
 	function parseAreas(raw: string | null | undefined): string[] {
 		if (!raw) return [];
 		try {
@@ -80,33 +60,13 @@
 		}
 	}
 
-	let rules = $state<Partial<Record<PokedexTrackingType, AnyRule[]>>>(bundleToRules(null));
-
-	onMount(async () => {
-		try {
-			const init = await fetchInit();
-			config = init.config;
-			gruntTypes = init.gruntTypes ?? [];
-			areas = init.areas ?? [];
-			profiles = init.profiles ?? [];
-			human = init.human;
-			selectedAreas = parseAreas(init.human?.area);
-			locationMode = selectedAreas.length > 0 ? "area" : "location";
-			rules = bundleToRules(init.tracking as Record<string, unknown> | null);
-		} catch (err) {
-			loadError = errText(err);
-		} finally {
-			loading = false;
-		}
-	});
-
 	// ── Gym-name resolution for raid/egg/gym cards (lazy, permission-gated) ──
 	let gymNames = $state<Record<string, string>>({});
 	const requestedGyms = new Set<string>();
 	$effect(() => {
 		const missing: string[] = [];
 		for (const t of ["raid", "egg", "gym"] as const) {
-			for (const rule of rules[t] ?? []) {
+			for (const rule of alertsStore.rules[t] ?? []) {
 				const gid = (rule as { gym_id?: string | null }).gym_id;
 				if (gid && !requestedGyms.has(gid)) {
 					requestedGyms.add(gid);
@@ -119,31 +79,36 @@
 		}
 	});
 
-	// ── Derived overview ──
-	const disabledHooks = $derived(config?.disabledHooks ?? []);
+	// ── Derived overview (from the store) ──
+	const disabledHooks = $derived(alertsStore.config?.disabledHooks ?? []);
 	const counts = $derived.by(() => {
 		const c: Partial<Record<PokedexTrackingType, number>> = {};
-		for (const type of pokedexTrackingTypes) c[type] = rules[type]?.length ?? 0;
+		for (const type of pokedexTrackingTypes) c[type] = alertsStore.rules[type]?.length ?? 0;
 		return c;
 	});
 	const visibleTypes = $derived(
 		pokedexTrackingTypes.filter((t) => !disabledHooks.includes(pokedexTypeMeta[t].hook))
 	);
-	const typesWithRules = $derived(visibleTypes.filter((t) => (rules[t]?.length ?? 0) > 0));
-	const totalRules = $derived(pokedexTrackingTypes.reduce((n, t) => n + (rules[t]?.length ?? 0), 0));
+	const typesWithRules = $derived(visibleTypes.filter((t) => (alertsStore.rules[t]?.length ?? 0) > 0));
 
 	// ── Area / location interplay (per-profile) ──
+	const selectedAreas = $derived(parseAreas(alertsStore.human?.area));
 	const hasAreasSelected = $derived(selectedAreas.length > 0);
 	const newRuleDefaultDistance = $derived(
-		hasAreasSelected ? 0 : config?.defaultDistance && config.defaultDistance > 0 ? config.defaultDistance : 1000
+		hasAreasSelected
+			? 0
+			: alertsStore.config?.defaultDistance && alertsStore.config.defaultDistance > 0
+				? alertsStore.config.defaultDistance
+				: 1000
 	);
-	let locationMode = $state<"location" | "area">("location");
-	const initialLat = $derived(human?.latitude ?? null);
-	const initialLon = $derived(human?.longitude ?? null);
+	const initialLat = $derived(alertsStore.human?.latitude ?? null);
+	const initialLon = $derived(alertsStore.human?.longitude ?? null);
 
 	// ── Profiles ──
-	const currentProfileNo = $derived(human?.current_profile_no ?? 1);
-	const activeProfileName = $derived(profiles.find((p) => p.profile_no === currentProfileNo)?.name ?? "");
+	const currentProfileNo = $derived(alertsStore.human?.current_profile_no ?? 1);
+	const activeProfileName = $derived(
+		alertsStore.profiles.find((p) => p.profile_no === currentProfileNo)?.name ?? ""
+	);
 	// Per-rule scope for the deeply-nested DistanceField.
 	setContext("pokedexRuleScope", {
 		get hasAreas() {
@@ -153,6 +118,15 @@
 			return activeProfileName;
 		}
 	});
+
+	// Location vs area is a per-profile choice; reset it to match whenever the
+	// active profile changes (tracked on currentProfileNo only).
+	let locationMode = $state<"location" | "area">("location");
+	$effect(() => {
+		void currentProfileNo;
+		locationMode = untrack(() => (selectedAreas.length > 0 ? "area" : "location"));
+	});
+
 	let managingProfiles = $state(false);
 	let switchingProfile = $state(false);
 	let profileBusy = $state(false);
@@ -183,18 +157,19 @@
 	}
 
 	async function refresh(type: PokedexTrackingType) {
-		rules = { ...rules, [type]: await fetchTracking(type) };
+		alertsStore.rules = { ...alertsStore.rules, [type]: await fetchTracking(type) };
 	}
 	async function refreshProfiles() {
-		profiles = await fetchProfiles();
+		alertsStore.profiles = await fetchProfiles();
 	}
 
 	async function handleSaveAreas(names: string[]) {
 		savingAreas = true;
 		try {
 			const res = await saveAreas(names);
-			selectedAreas = res.setAreas ?? names;
-			if (human) human = { ...human, area: JSON.stringify(selectedAreas) };
+			if (alertsStore.human) {
+				alertsStore.human = { ...alertsStore.human, area: JSON.stringify(res.setAreas ?? names) };
+			}
 			await refreshProfiles();
 			flash("success", "Areas saved.");
 		} catch (err) {
@@ -210,11 +185,9 @@
 		try {
 			await switchProfile(no);
 			const state = await fetchState();
-			human = state.human;
-			profiles = state.profiles;
-			selectedAreas = parseAreas(state.human?.area);
-			locationMode = selectedAreas.length > 0 ? "area" : "location";
-			rules = bundleToRules(state.tracking);
+			alertsStore.human = state.human;
+			alertsStore.profiles = state.profiles;
+			alertsStore.rules = bundleToRules(state.tracking);
 			closeAlertModal();
 		} catch (err) {
 			flash("error", errText(err));
@@ -226,11 +199,11 @@
 	async function handleAddProfile(name: string, copyFrom: number | null) {
 		profileBusy = true;
 		try {
-			const before = new Set(profiles.map((p) => p.profile_no));
+			const before = new Set(alertsStore.profiles.map((p) => p.profile_no));
 			await addProfile(name);
 			await refreshProfiles();
 			if (copyFrom != null) {
-				const created = profiles.find((p) => !before.has(p.profile_no));
+				const created = alertsStore.profiles.find((p) => !before.has(p.profile_no));
 				if (created) await copyProfile(copyFrom, created.profile_no);
 			}
 			flash("success", copyFrom != null ? "Profile created with copied rules." : "Profile created.");
@@ -271,7 +244,9 @@
 		savingLocation = true;
 		try {
 			await saveLocation(lat, lon);
-			if (human) human = { ...human, latitude: lat, longitude: lon };
+			if (alertsStore.human) {
+				alertsStore.human = { ...alertsStore.human, latitude: lat, longitude: lon };
+			}
 			await refreshProfiles();
 			flash("success", "Location saved.");
 		} catch (err) {
@@ -361,7 +336,7 @@
 </script>
 
 <div class="flex flex-col gap-3 px-2 pb-4 pt-1">
-	{#if loading}
+	{#if alertsStore.loading && !alertsStore.loaded}
 		<!-- Layout-shaped skeleton (not a bare spinner) so the sheet reads as
 			structured while the init bundle loads, instead of flashing empty. -->
 		<div class="flex animate-pulse flex-col gap-3" aria-hidden="true">
@@ -376,18 +351,18 @@
 			{/each}
 		</div>
 	{:else}
-		{#if profiles.length > 0}
+		{#if alertsStore.profiles.length > 0}
 			<ProfileBar
-				{profiles}
+				profiles={alertsStore.profiles}
 				{currentProfileNo}
 				managing={managingProfiles}
 				onToggleManage={() => (managingProfiles = !managingProfiles)}
 			/>
 		{/if}
 
-		{#if loadError}
+		{#if alertsStore.error}
 			<p class="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-				{loadError}
+				{alertsStore.error}
 			</p>
 		{/if}
 
@@ -395,14 +370,21 @@
 			<Plus class="h-4 w-4" /> Add alert
 		</Button>
 
-		{#if totalRules === 0}
-			<p class="rounded-md border border-dashed bg-card px-4 py-8 text-center text-sm text-muted-foreground">
-				You're not tracking anything yet. Add an alert to get notified about spawns, raids, quests and
-				more.
-			</p>
+		{#if alertsStore.total === 0}
+			<div
+				class="flex flex-col items-center gap-3 rounded-md border border-dashed bg-card px-4 py-10 text-center"
+			>
+				<Bell class="h-8 w-8 text-muted-foreground/50" />
+				<div>
+					<p class="text-sm font-medium">No alerts yet</p>
+					<p class="mt-1 text-sm text-muted-foreground">
+						Add one to get notified about spawns, raids, quests and more.
+					</p>
+				</div>
+			</div>
 		{:else}
 			{#each typesWithRules as type (type)}
-				{@const count = rules[type]?.length ?? 0}
+				{@const count = alertsStore.rules[type]?.length ?? 0}
 				<CollapsibleSection
 					icon={typeIcon(type)}
 					iconUrl={hasIcons ? (sectionIconUrl(type) ?? undefined) : undefined}
@@ -412,7 +394,7 @@
 				>
 					<RuleList
 						{type}
-						rules={rules[type] ?? []}
+						rules={alertsStore.rules[type] ?? []}
 						{hasIcons}
 						ready={masterfileLoaded}
 						{gymNames}
@@ -444,7 +426,12 @@
 			{#if locationMode === "location"}
 				<LocationBox lat={initialLat} lon={initialLon} saving={savingLocation} onSave={handleSaveLocation} />
 			{:else}
-				<AreaSelector {areas} selected={selectedAreas} saving={savingAreas} onSave={handleSaveAreas} />
+				<AreaSelector
+					areas={alertsStore.areas}
+					selected={selectedAreas}
+					saving={savingAreas}
+					onSave={handleSaveAreas}
+				/>
 			{/if}
 		{/key}
 	</div>
@@ -453,7 +440,7 @@
 <!-- Settings (profiles / areas / schedule / location) — nested drawer. -->
 <ProfilesModal
 	bind:open={managingProfiles}
-	{profiles}
+	profiles={alertsStore.profiles}
 	{currentProfileNo}
 	busy={profileBusy}
 	switching={switchingProfile}
@@ -471,9 +458,9 @@
 	step={showForm ? "form" : "pick"}
 	{formType}
 	{editingRule}
-	{config}
+	config={alertsStore.config}
 	{hasIcons}
-	{gruntTypes}
+	gruntTypes={alertsStore.gruntTypes}
 	defaultDistance={newRuleDefaultDistance}
 	{submitting}
 	{needsMasterfile}

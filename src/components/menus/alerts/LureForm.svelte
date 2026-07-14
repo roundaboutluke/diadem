@@ -35,7 +35,7 @@
 
 <div class="flex flex-col gap-4 rounded-md border bg-card p-4">
 	<label class="flex flex-col gap-1 text-xs text-muted-foreground">
-		Lure type
+		<span class="font-medium uppercase tracking-wide">Lure type</span>
 		<select bind:value={lureId} class="h-10 rounded-md border bg-background px-2 text-sm text-foreground">
 			{#each lureTypes as l (l.value)}
 				<option value={l.value}>{l.label}</option>

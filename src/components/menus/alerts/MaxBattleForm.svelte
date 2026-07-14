@@ -72,7 +72,7 @@
 		</div>
 	{:else}
 		<label class="flex flex-col gap-1 text-xs text-muted-foreground">
-			Battle level
+			<span class="font-medium uppercase tracking-wide">Battle level</span>
 			<select bind:value={level} class="h-10 rounded-md border bg-background px-2 text-sm text-foreground">
 				{#each levels as l (l)}
 					<option value={l}>{m.x_start_max_battle({ level: l })}</option>

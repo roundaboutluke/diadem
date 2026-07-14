@@ -79,7 +79,7 @@
 		</div>
 	{:else}
 		<label class="flex flex-col gap-1 text-xs text-muted-foreground">
-			Raid level
+			<span class="font-medium uppercase tracking-wide">Raid level</span>
 			<select bind:value={level} class="h-10 rounded-md border bg-background px-2 text-sm text-foreground">
 				{#each levels as l (l)}
 					<option value={l}>{mRaid(l)}</option>
@@ -89,7 +89,7 @@
 	{/if}
 
 	<label class="flex flex-col gap-1 text-xs text-muted-foreground">
-		Gym team
+		<span class="font-medium uppercase tracking-wide">Gym team</span>
 		<select bind:value={team} class="h-10 rounded-md border bg-background px-2 text-sm text-foreground">
 			{#each teamOptions as t (t.value)}
 				<option value={t.value}>{t.label}</option>

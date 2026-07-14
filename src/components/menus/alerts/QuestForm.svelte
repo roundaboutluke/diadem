@@ -58,7 +58,7 @@
 
 <div class="flex flex-col gap-4 rounded-md border bg-card p-4">
 	<label class="flex flex-col gap-1 text-xs text-muted-foreground">
-		Reward type
+		<span class="font-medium uppercase tracking-wide">Reward type</span>
 		<select bind:value={rewardType} class="h-10 rounded-md border bg-background px-2 text-sm text-foreground">
 			{#each questRewardTypes as r (r.value)}
 				<option value={r.value}>{r.label}</option>
@@ -79,7 +79,7 @@
 		{/if}
 	{:else if isItem}
 		<label class="flex flex-col gap-1 text-xs text-muted-foreground">
-			Item ID
+			<span class="font-medium uppercase tracking-wide">Item ID</span>
 			<Input
 				type="number"
 				min="0"
@@ -91,7 +91,7 @@
 	{/if}
 
 	<label class="flex flex-col gap-1 text-xs text-muted-foreground">
-		Minimum amount{rewardType === 3 ? " (stardust)" : ""}
+		<span class="font-medium uppercase tracking-wide">Minimum amount{rewardType === 3 ? " (stardust)" : ""}</span>
 		<Input
 			type="number"
 			min="0"

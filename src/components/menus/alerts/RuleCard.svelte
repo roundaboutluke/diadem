@@ -15,6 +15,7 @@
 		hasIcons = true,
 		ready = true,
 		gymNames = {},
+		showSelect = false,
 		selected = false,
 		deleting = false,
 		onToggleSelect,
@@ -26,6 +27,7 @@
 		hasIcons?: boolean;
 		ready?: boolean;
 		gymNames?: Record<string, string>;
+		showSelect?: boolean;
 		selected?: boolean;
 		deleting?: boolean;
 		onToggleSelect: () => void;
@@ -74,13 +76,15 @@
 		? 'bg-primary/10'
 		: 'hover:bg-muted/40'}"
 >
-	<input
-		type="checkbox"
-		checked={selected}
-		onchange={onToggleSelect}
-		aria-label="Select rule"
-		class="shrink-0"
-	/>
+	{#if showSelect}
+		<input
+			type="checkbox"
+			checked={selected}
+			onchange={onToggleSelect}
+			aria-label="Select rule"
+			class="shrink-0"
+		/>
+	{/if}
 
 	<span class="flex h-10 w-10 shrink-0 items-center justify-center">
 		{#if iconSrc}
@@ -88,11 +92,7 @@
 		{:else if emojiIcon}
 			<span class="text-2xl leading-none">{emojiIcon}</span>
 		{:else if TypeIcon}
-			<span
-				class="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-muted-foreground"
-			>
-				<TypeIcon class="h-4.5 w-4.5" />
-			</span>
+			<TypeIcon class="h-6 w-6 text-muted-foreground" />
 		{/if}
 	</span>
 

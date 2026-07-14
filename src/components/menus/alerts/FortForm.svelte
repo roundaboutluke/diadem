@@ -56,7 +56,7 @@
 
 <div class="flex flex-col gap-4 rounded-md border bg-card p-4">
 	<label class="flex flex-col gap-1 text-xs text-muted-foreground">
-		Fort type
+		<span class="font-medium uppercase tracking-wide">Fort type</span>
 		<select bind:value={fortType} class="h-10 rounded-md border bg-background px-2 text-sm text-foreground">
 			{#each fortTypes as f (f.value)}
 				<option value={f.value}>{f.label}</option>

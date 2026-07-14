@@ -49,7 +49,7 @@
 
 <div class="flex flex-col gap-4 rounded-md border bg-card p-4">
 	<label class="flex flex-col gap-1 text-xs text-muted-foreground">
-		Team
+		<span class="font-medium uppercase tracking-wide">Team</span>
 		<select bind:value={team} class="h-10 rounded-md border bg-background px-2 text-sm text-foreground">
 			{#each teamOptions as t (t.value)}
 				<option value={t.value}>{t.label}</option>

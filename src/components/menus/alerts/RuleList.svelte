@@ -33,9 +33,15 @@
 	} = $props();
 
 	let selected = $state(new Set<number>());
+	let selectMode = $state(false);
 
 	const selectedCount = $derived(selected.size);
 	const allSelected = $derived(rules.length > 0 && selected.size === rules.length);
+
+	function exitSelect() {
+		selectMode = false;
+		clearSelection();
+	}
 
 	function toggle(uid: number) {
 		const next = new Set(selected);
@@ -62,21 +68,35 @@
 	</p>
 {:else}
 	<div class="flex flex-col gap-1.5">
-		<!-- Header / bulk bar — only meaningful with 2+ rules -->
+		<!-- Bulk select is opt-in (keeps the default list clean) — only for 2+ -->
 		{#if rules.length > 1}
-			<div class="flex flex-wrap items-center gap-3 px-1 py-1 text-xs text-muted-foreground">
-			<label class="flex items-center gap-2">
-				<input type="checkbox" checked={allSelected} onchange={toggleAll} aria-label="Select all" />
-				Select all
-			</label>
-			{#if selectedCount > 0}
-				<span class="font-medium text-foreground">{selectedCount} selected</span>
-				<Button variant="outline" size="sm" onclick={bulkDelete} disabled={bulkBusy}>
-					<Trash2 class="h-4 w-4" /> Delete
-				</Button>
-				<button type="button" class="underline" onclick={clearSelection}>Clear</button>
+			{#if selectMode}
+				<div class="flex flex-wrap items-center gap-3 px-1 py-1 text-xs text-muted-foreground">
+					<label class="flex items-center gap-2">
+						<input type="checkbox" checked={allSelected} onchange={toggleAll} aria-label="Select all" />
+						Select all
+					</label>
+					{#if selectedCount > 0}
+						<span class="font-medium text-foreground">{selectedCount} selected</span>
+						<Button variant="outline" size="sm" onclick={bulkDelete} disabled={bulkBusy}>
+							<Trash2 class="h-4 w-4" /> Delete
+						</Button>
+					{/if}
+					<button type="button" class="ml-auto underline hover:text-foreground" onclick={exitSelect}>
+						Done
+					</button>
+				</div>
+			{:else}
+				<div class="flex justify-end px-1">
+					<button
+						type="button"
+						class="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+						onclick={() => (selectMode = true)}
+					>
+						Select
+					</button>
+				</div>
 			{/if}
-			</div>
 		{/if}
 
 		<ul class="flex flex-col gap-0.5">
@@ -87,6 +107,7 @@
 					{hasIcons}
 					{ready}
 					{gymNames}
+					showSelect={selectMode}
 					selected={selected.has(rule.uid)}
 					deleting={deletingUid === rule.uid}
 					onToggleSelect={() => toggle(rule.uid)}
