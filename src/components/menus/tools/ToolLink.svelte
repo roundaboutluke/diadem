@@ -10,7 +10,7 @@
 	import { isMenuSidebar } from "@/lib/utils/device";
 	import { getConfig } from "@/lib/services/config/config";
 	import { goto } from "$app/navigation";
-	import { setJustChangedMenus } from "@/lib/ui/menus.svelte";
+	import { clearOverlays } from "@/lib/ui/overlays.svelte";
 
 	let {
 		Icon,
@@ -28,14 +28,15 @@
 		children?: Snippet;
 	} = $props();
 
-	// Navigating to a full-page route from the tools drawer needs to
-	// leave the open menu intentionally: without setJustChangedMenus(),
-	// the drawer's close handler fires closeMenu() → history.back() and
-	// cancels the navigation (you flash the page then bounce back to the
-	// map). This mirrors how the built-in menu switches guard themselves.
+	// Navigating to a full-page route from a menu must first drop the
+	// menu's history/overlay entry, else a later closeOverlay →
+	// history.back() unwinds the navigation (you flash the page then
+	// bounce back to the map). clearOverlays() removes it via
+	// replaceState WITHOUT a history.back — the same sequence the
+	// built-in openCoverageMap() / openWayfarerMap() use.
 	function handleClick() {
 		if (href) {
-			setJustChangedMenus();
+			clearOverlays();
 			void goto(href);
 			return;
 		}

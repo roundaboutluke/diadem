@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from "svelte";
 	import { goto } from "$app/navigation";
+	import { clearOverlays } from "@/lib/ui/overlays.svelte";
 	import { Users, Unplug, UserPlus, LoaderCircle } from "@lucide/svelte";
 	import MenuCard from "@/components/menus/MenuCard.svelte";
 	import Button from "@/components/ui/input/Button.svelte";
@@ -89,7 +90,14 @@
 			</div>
 		{/if}
 
-		<Button class="mt-3 w-full" variant="outline" onclick={() => void goto("/battle")}>
+		<Button
+			class="mt-3 w-full"
+			variant="outline"
+			onclick={() => {
+				clearOverlays();
+				void goto("/battle");
+			}}
+		>
 			<UserPlus class="size-3.5" />
 			Connect new account
 		</Button>

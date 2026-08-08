@@ -203,20 +203,42 @@ export function getNativeAuthToken(event: RequestEvent): string | null {
 	return token || null;
 }
 
+// Discord rotates (single-use) refresh tokens. A page load fires several
+// authenticated requests at once (hooks permission update, /api/user/details,
+// …); if two of them refresh the same expired token concurrently, the loser
+// gets `invalid_grant` and returns null — which strips `details` and trips the
+// Auto Battle login gate for an already-logged-in user. Serialize the refresh
+// per session token so concurrent callers share one refresh instead of racing.
+const accessTokenInFlight = new Map<string, Promise<string | null>>();
+
 export async function getDiscordAccessToken(event: RequestEvent): Promise<string | null> {
 	if (!auth) return null;
-	try {
-		const result = await auth.api.getAccessToken({
-			headers: event.request.headers,
-			body: { providerId: "discord" },
-			returnHeaders: true
-		});
-		applyAuthCookies(event, result.headers);
-		return result.response.accessToken || null;
-	} catch (error) {
-		log.warning(`Failed to fetch Discord access token from Better Auth: ${error}`);
-		return null;
+	const authInstance = auth;
+
+	const dedupeKey = getNativeAuthToken(event) ?? event.request.headers.get("cookie") ?? "";
+	const existing = dedupeKey ? accessTokenInFlight.get(dedupeKey) : undefined;
+	if (existing) return existing;
+
+	const run = (async () => {
+		try {
+			const result = await authInstance.api.getAccessToken({
+				headers: event.request.headers,
+				body: { providerId: "discord" },
+				returnHeaders: true
+			});
+			applyAuthCookies(event, result.headers);
+			return result.response.accessToken || null;
+		} catch (error) {
+			log.warning(`Failed to fetch Discord access token from Better Auth: ${error}`);
+			return null;
+		}
+	})();
+
+	if (dedupeKey) {
+		accessTokenInFlight.set(dedupeKey, run);
+		void run.finally(() => accessTokenInFlight.delete(dedupeKey));
 	}
+	return run;
 }
 
 async function revokeDiscordToken(accessToken: string) {
