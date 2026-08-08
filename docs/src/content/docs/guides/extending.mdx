@@ -68,7 +68,7 @@ Example using the shipped `ToolLink` component for matching style:
 
 ```svelte
 <script lang="ts">
-	import { Trophy } from "lucide-svelte";
+	import { Trophy } from "@lucide/svelte";
 	import { goto } from "$app/navigation";
 	import ToolLink from "@/components/menus/tools/ToolLink.svelte";
 </script>
@@ -78,10 +78,13 @@ Example using the shipped `ToolLink` component for matching style:
 	title="Rankings"
 	description="Local trainer rankings"
 	onclick={() => goto("/rankings")}
->
-	<!-- children slot is required; leave empty for no map preview -->
-</ToolLink>
+/>
 ```
+
+The children snippet is optional — pass one to render a background
+preview pane behind the card (the built-in Coverage Map entry uses it
+for a minimap). With `compactTools = true` every entry renders as a
+single-row card and the preview pane is skipped entirely.
 
 ## Custom CSS
 
