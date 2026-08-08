@@ -6,6 +6,7 @@
 		supportsPopupAction,
 		togglePopupAction
 	} from "@/lib/ui/popupActions.js";
+	import { getRemoteInvite } from "$lib/features/autoBattle";
 	import { CircleDot, CircleOff, Eye, EyeClosed, Navigation, Ticket, Timer, TimerOff } from "@lucide/svelte";
 	import * as m from "@/lib/paraglide/messages";
 	import { getMapsUrl } from "@/lib/utils/mapUrl";
@@ -46,7 +47,7 @@
 		<PopupButton
 			Icon={Ticket}
 			label="Get Remote Invite"
-			onclick={() => {}}
+			onclick={() => void getRemoteInvite(data)}
 		/>
 	{/if}
 	{#if supportsPopupAction(selectedType, PopupAction.DIMMED)}

@@ -74,6 +74,12 @@ export const auth = IS_AUTH_ENABLED
 					clientId: discordConfig?.clientId ?? "",
 					clientSecret: discordConfig?.clientSecret ?? "",
 					disableDefaultScope: true,
+					// Better Auth's Discord provider defaults prompt to "none",
+					// which makes Discord silently error-redirect any browser
+					// without an active discord.com session — sign-in "flashes"
+					// back to the login page with no Discord screen ever shown.
+					// "consent" always renders the Discord login/authorize page.
+					prompt: "consent",
 					scope: ["identify", "guilds.members.read"],
 					mapProfileToUser: (profile) => ({
 						discordId: profile.id,

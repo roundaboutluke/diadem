@@ -707,5 +707,8 @@
 	"with_background": "With Background",
 	"map_limit_title": "Limit reached",
 	"map_limit_zoom_hint": "Zoom in to see more {objects}",
-	"pogo_data": "data"
+	"pogo_data": "data",
+	"auto_battle_connect_account_first": "Connect your Pokémon GO account on the Battle page first",
+	"auto_battle_invite_requested": "Invite requested — accept it in Pokémon GO!",
+	"auto_battle_invite_failed": "The invite request failed. Please try again."
 }

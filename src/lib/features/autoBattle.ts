@@ -1,7 +1,9 @@
 import type { GymData } from "$lib/types/mapObjectData/gym";
 import type { StationData } from "$lib/types/mapObjectData/station";
+import * as m from "@/lib/paraglide/messages";
 import { getLocale } from "@/lib/paraglide/runtime";
 import { MapObjectType } from "$lib/mapObjects/mapObjectTypes";
+import { openToast } from "@/lib/ui/toasts.svelte";
 
 export type BattleType = "raid" | "max_battle";
 
@@ -123,21 +125,28 @@ function getAutoBattleErrorMessage(status: number, body: AutoBattleApiErrorBody)
 	return body.error ?? body.message ?? "The Auto Battle request failed.";
 }
 
-export function getRemoteInvite(data: GymData | StationData) {
-	const friends = ["444434678928"];
+export async function getRemoteInvite(data: GymData | StationData) {
+	try {
+		// Invite the user's own connected accounts (the ones the Battle
+		// page manages). Only "active" accounts can receive invites —
+		// the bot must already be friends with them.
+		const { accounts } = await getConnectedAccounts();
+		const friends = accounts
+			.filter((account) => account.state === "active")
+			.map((account) => account.friendCode);
+		if (!friends.length) {
+			openToast(m.auto_battle_connect_account_first(), 3000);
+			return;
+		}
 
-	// TODO: friend flow
-	// TODO: visual feedback
-	const response = startSpecificBattle(data.type, data.id, friends, data.lat, data.lon);
-	if (!response) return;
-
-	response
-		.then(() => {
-			// TODO: success
-		})
-		.catch((error) => {
-			// TODO: error
-		});
+		await startSpecificBattle(data.type, data.id, friends, data.lat, data.lon);
+		openToast(m.auto_battle_invite_requested(), 3000);
+	} catch (error) {
+		openToast(
+			error instanceof Error ? error.message : m.auto_battle_invite_failed(),
+			3000
+		);
+	}
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
