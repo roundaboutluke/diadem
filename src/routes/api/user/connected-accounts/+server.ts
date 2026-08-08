@@ -4,6 +4,7 @@ import {
 	markConnectedAccountInactive,
 	upsertConnectedAccount
 } from "@/lib/server/db/internal/repository";
+import { noStoreHttpHeaders } from "@/lib/utils/apiUtils.server";
 import { error, json } from "@sveltejs/kit";
 
 const ONE_DAY = 24 * 60 * 60 * 1000;
@@ -65,7 +66,11 @@ async function refreshConnectedAccounts(userId: string) {
 export async function GET({ locals, url }) {
 	if (!locals.user) error(401, "Authentication is required");
 	if (url.searchParams.has("refresh")) await refreshConnectedAccounts(locals.user.id);
-	return json({ accounts: await listConnectedAccounts(locals.user.id) });
+	// Per-user identity data — never let a CDN or service worker cache it.
+	return json(
+		{ accounts: await listConnectedAccounts(locals.user.id) },
+		{ headers: noStoreHttpHeaders }
+	);
 }
 
 export async function POST({ locals, request }) {
@@ -94,5 +99,8 @@ export async function POST({ locals, request }) {
 		state: profile.already_friends ? "active" : "pending"
 	});
 	const accounts = await listConnectedAccounts(locals.user.id);
-	return json({ account: accounts.find((account) => account.friendCode === profile.friend_code) });
+	return json(
+		{ account: accounts.find((account) => account.friendCode === profile.friend_code) },
+		{ headers: noStoreHttpHeaders }
+	);
 }

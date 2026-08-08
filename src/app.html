@@ -31,6 +31,32 @@
 					}
 				} catch (e) {}
 			})();
+
+			// Self-heal: a previous PWA build registered a caching service
+			// worker that cached authenticated API responses (leaking one
+			// user's identity to others). This app ships no service worker;
+			// unregister any that a browser still has and wipe its caches.
+			// Runs on every load until the offending worker is gone — the
+			// worker is network-first, so online browsers still receive this
+			// fresh shell and self-clean without any CDN purge.
+			(function () {
+				try {
+					if ("serviceWorker" in navigator) {
+						navigator.serviceWorker.getRegistrations().then(function (regs) {
+							regs.forEach(function (r) {
+								r.unregister();
+							});
+						});
+					}
+					if (window.caches && caches.keys) {
+						caches.keys().then(function (keys) {
+							keys.forEach(function (k) {
+								caches.delete(k);
+							});
+						});
+					}
+				} catch (e) {}
+			})();
 		</script>
 		<style>
 			html {
