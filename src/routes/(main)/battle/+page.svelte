@@ -22,7 +22,6 @@
 	import { startLogin } from "@/lib/services/user/login";
 	import { RAID_LEVELS } from "@/lib/utils/gymUtils";
 	import { getConfig } from "$lib/services/config/config";
-	import { getCoverageMapInvokedFromMap } from "$lib/features/coverageMap.svelte";
 	import { closeMenu } from "$lib/ui/menus.svelte";
 	import { goto } from "$app/navigation";
 	import { getMapPath } from "$lib/utils/getMapPath";
@@ -112,24 +111,20 @@
 								Auto Battle
 							</h1>
 
-							<!--			todo: coverage map -> auto battle-->
-							{#if getConfig().general.customHome && !getCoverageMapInvokedFromMap()}
-								<Button size="sm" variant="outline" tag="a" href="/" onclick={() => closeMenu()}>
-									<ArrowLeft class="size-4" />
-									<span>{m.error_back_to_website()}</span>
-								</Button>
-							{:else}
-								<Button
-									size="sm"
-									variant="outline"
-									onclick={() => {
-				goto(getMapPath(getConfig()));
-			}}
-								>
-									<ArrowLeft class="size-4" />
-									<span>{m.back_to_map()}</span>
-								</Button>
-							{/if}
+							<!-- Always return to the map. getMapPath() resolves to
+								/map when a custom home page is configured, and / otherwise,
+								so this never dumps the user on the custom landing page. -->
+							<Button
+								size="sm"
+								variant="outline"
+								onclick={() => {
+									closeMenu();
+									goto(getMapPath(getConfig()));
+								}}
+							>
+								<ArrowLeft class="size-4" />
+								<span>{m.back_to_map()}</span>
+							</Button>
 						</div>
 
 						<Tabs.Root bind:value={battleType}>
