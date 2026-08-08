@@ -474,7 +474,7 @@
 	"filter_template_quest_task": "{task}",
 	"filter_template_quest_fallback": "Quest Filter",
 	"count_candies": "{count} Candies",
-	"count_xl_candies": "{count} XL Candies",
+	"count_xl_candies": "{count} Candies XL",
 	"count_stardust": "{count} Stardust",
 	"count_xp": "{count} XP",
 	"filter_template_invasion_leaders": "Team Rocket Leaders",
@@ -704,5 +704,8 @@
 	"quest_pokecoins": "{count} Pokécoins",
 	"count_pokecoins": "{count} Pokécoins",
 	"background": "Background",
-	"with_background": "With Background"
+	"with_background": "With Background",
+	"map_limit_title": "Limit reached",
+	"map_limit_zoom_hint": "Zoom in to see more {objects}",
+	"pogo_data": "data"
 }
