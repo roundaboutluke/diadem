@@ -5,24 +5,17 @@
 	// src/components/custom/Tools.svelte; edit config/Tools.svelte (not
 	// this example) for your deployment.
 	//
-	// Reuse the shipped ToolLink component so entries match the built-in
-	// Scout / Coverage Map cards — including the compactTools single-row
-	// style when that flag is on. Icons come from @lucide/svelte.
-	import { Gift, Trophy } from "@lucide/svelte";
-	import { goto } from "$app/navigation";
+	// Use the shipped ToolLink component so entries match the built-in
+	// Scout / Coverage Map cards. Pass `href` for a page route so the
+	// menu closes cleanly before navigating (an onclick that just calls
+	// goto() bounces off the page on mobile — the drawer's close handler
+	// fires history.back()). Icons come from @lucide/svelte.
+	import { Gift, Swords, Trophy } from "@lucide/svelte";
 	import ToolLink from "@/components/menus/tools/ToolLink.svelte";
 </script>
 
-<ToolLink
-	Icon={Trophy}
-	title="Leaderboard"
-	description="Local trainer rankings"
-	onclick={() => goto("/leaderboard")}
-/>
+<ToolLink Icon={Swords} title="Auto Battle" description="Remote Raids" href="/battle" />
 
-<ToolLink
-	Icon={Gift}
-	title="Vivillon"
-	description="Collect every Vivillon region"
-	onclick={() => goto("/vivillon")}
-/>
+<ToolLink Icon={Gift} title="Vivillon" description="Regional Gifts" href="/vivillon" />
+
+<ToolLink Icon={Trophy} title="Leaderboard" description="Community Rankings" href="/leaderboard" />

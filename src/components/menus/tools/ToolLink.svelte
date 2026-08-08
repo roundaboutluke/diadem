@@ -9,20 +9,38 @@
 	import type { Snippet } from "svelte";
 	import { isMenuSidebar } from "@/lib/utils/device";
 	import { getConfig } from "@/lib/services/config/config";
+	import { goto } from "$app/navigation";
+	import { setJustChangedMenus } from "@/lib/ui/menus.svelte";
 
 	let {
 		Icon,
 		title,
 		description,
 		onclick,
+		href,
 		children
 	}: {
 		Icon: LucideIcon;
 		title: string;
 		description: string;
-		onclick: () => void;
+		onclick?: () => void;
+		href?: string;
 		children?: Snippet;
 	} = $props();
+
+	// Navigating to a full-page route from the tools drawer needs to
+	// leave the open menu intentionally: without setJustChangedMenus(),
+	// the drawer's close handler fires closeMenu() → history.back() and
+	// cancels the navigation (you flash the page then bounce back to the
+	// map). This mirrors how the built-in menu switches guard themselves.
+	function handleClick() {
+		if (href) {
+			setJustChangedMenus();
+			void goto(href);
+			return;
+		}
+		onclick?.();
+	}
 
 	let compact: boolean = $derived(getConfig().tools.compactTools ?? false);
 	let toolsClass: string = $derived(
@@ -34,7 +52,7 @@
 	class="{toolsClass} rounded-lg flex-col! w-full! items-start! gap-0! font-normal! border bg-card text-card-foreground shadow-md px-4 relative overflow-hidden group"
 	variant=""
 	size=""
-	{onclick}
+	onclick={handleClick}
 >
 	<div
 		class="inset-0 absolute size-full z-10 transition-colors group-hover:bg-accent/30 group-active:bg-accent/30"
