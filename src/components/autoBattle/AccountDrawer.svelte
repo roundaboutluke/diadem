@@ -30,7 +30,6 @@
 	let {
 		selectedFriendCode = $bindable(null),
 		bottomPadding = $bindable(undefined),
-		title = "Your account",
 		action
 	}: {
 		selectedFriendCode?: string | null;
@@ -41,7 +40,6 @@
 		 * the drawer's current height/snap; undefined on desktop.
 		 */
 		bottomPadding?: string | undefined;
-		title?: string;
 		/** Tool-specific status/action for the selected account. */
 		action?: Snippet<[{ friendCode: string; account: ConnectedAccount } | null]>;
 	} = $props();
@@ -133,9 +131,10 @@
 <ConnectAccountDialog bind:open={connectOpen} onaccountconnected={onAccountConnected} />
 
 {#snippet panel()}
+	<!-- Structure mirrors AutoBattleControls exactly (no heading — chips
+		start immediately) so this drawer sizes identically to the Auto
+		Battle page's. -->
 	<div class="space-y-3">
-		<p class="text-sm font-semibold">{title}</p>
-
 		<div
 			class="flex gap-2 p-1"
 			class:flex-col={isMenuSidebar()}
@@ -257,9 +256,7 @@
 		{/if}
 
 		{#if action}
-			<div class="pt-1">
-				{@render action(actionArg)}
-			</div>
+			{@render action(actionArg)}
 		{/if}
 	</div>
 {/snippet}
