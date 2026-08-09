@@ -29,10 +29,18 @@
 
 	let {
 		selectedFriendCode = $bindable(null),
+		open = $bindable(false),
 		title = "Your account",
 		action
 	}: {
 		selectedFriendCode?: string | null;
+		/**
+		 * Mobile drawer visibility. Starts closed so the page content is
+		 * never obstructed; the host page provides a header button bound
+		 * to this. Auto-opens once after load when there is no connected
+		 * account yet, so new users still find the Connect flow.
+		 */
+		open?: boolean;
 		title?: string;
 		/** Tool-specific status/action for the selected account. */
 		action?: Snippet<[{ friendCode: string; account: ConnectedAccount } | null]>;
@@ -42,11 +50,6 @@
 	let loading = $state(true);
 	let connectOpen = $state(false);
 	let removing = $state<string | null>(null);
-	// Identical drawer behavior to the Auto Battle page: the popup is
-	// h-fit, so the drawer's size IS its content's size — hosts must
-	// keep the action snippet compact for the drawer to start small.
-	let drawerSnapPoint = $state<number>(1);
-	let drawerHeight = $state(0);
 
 	const selectedAccount = $derived(
 		accounts.find((account) => account.friendCode === selectedFriendCode) ?? null
@@ -67,6 +70,10 @@
 			// Authenticated users only; leave empty otherwise.
 		} finally {
 			loading = false;
+			// Nothing connected yet: surface the panel so the user finds
+			// the Connect flow. With an account linked it stays closed —
+			// the page content is the point, not the account chrome.
+			if (!isMenuSidebar() && accounts.length === 0) open = true;
 		}
 	}
 
@@ -248,17 +255,7 @@
 		{@render panel()}
 	</aside>
 {:else}
-	<Drawer.Root
-		open={true}
-		onOpenChange={(open, details) => {
-			if (!open) details.cancel();
-		}}
-		modal={false}
-		defaultOpen={true}
-		disablePointerDismissal
-		snapPoints={[64, 1]}
-		bind:snapPoint={drawerSnapPoint}
-	>
+	<Drawer.Root bind:open modal={false}>
 		<Drawer.Portal>
 			<Drawer.Viewport class="drawer-viewport flex items-end">
 				<Drawer.Popup
@@ -267,15 +264,13 @@
 					<button
 						type="button"
 						class="mx-auto my-1 flex h-8 w-16 shrink-0 items-center justify-center"
-						aria-label={drawerSnapPoint === 1 ? "Minimize account panel" : "Expand account panel"}
-						onclick={() => (drawerSnapPoint = drawerSnapPoint === 1 ? 64 : 1)}
+						aria-label="Close account panel"
+						onclick={() => (open = false)}
 					>
 						<span class="h-1 w-10 rounded-full bg-ring"></span>
 					</button>
 					<Drawer.Content class="px-6 pb-5">
-						<div bind:clientHeight={drawerHeight}>
-							{@render panel()}
-						</div>
+						{@render panel()}
 					</Drawer.Content>
 				</Drawer.Popup>
 			</Drawer.Viewport>
