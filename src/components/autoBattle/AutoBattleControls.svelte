@@ -1,5 +1,6 @@
 <script lang="ts">
 	import SelectedBattleBoss from "@/components/autoBattle/SelectedBattleBoss.svelte";
+	import TeamLevelBadge from "@/components/autoBattle/TeamLevelBadge.svelte";
 	import Button from "@/components/ui/input/Button.svelte";
 	import type { AvailableBoss, ConnectedAccount } from "@/lib/features/autoBattle";
 	import * as m from "$lib/paraglide/messages";
@@ -64,11 +65,7 @@
 							disabled={account.state !== "active" || disabled}
 							onclick={() => ontoggleaccount(account)}
 						>
-							<div
-								class="flex size-6 items-center justify-center rounded-full border border-yellow-300 bg-yellow-950 text-yellow-100"
-							>
-								<span class="text-xs font-semibold">{account.level}</span>
-							</div>
+							<TeamLevelBadge level={account.level} team={account.team} />
 							<p class="truncate font-medium">{account.nickname}</p>
 						</button>
 						{#if account.state !== "active"}

@@ -4,6 +4,7 @@
 	import { clearOverlays } from "@/lib/ui/overlays.svelte";
 	import { Users, Unplug, UserPlus, LoaderCircle } from "@lucide/svelte";
 	import MenuCard from "@/components/menus/MenuCard.svelte";
+	import TeamLevelBadge from "@/components/autoBattle/TeamLevelBadge.svelte";
 	import Button from "@/components/ui/input/Button.svelte";
 	import {
 		getConnectedAccounts,
@@ -62,11 +63,7 @@
 			<div class="flex flex-col gap-2">
 				{#each accounts as account (account.friendCode)}
 					<div class="flex gap-2 items-center">
-						<div
-							class="border border-yellow-300 rounded-full size-6 flex items-center justify-center shrink-0"
-						>
-							<span class="text-xs font-semibold">{account.level || "?"}</span>
-						</div>
+						<TeamLevelBadge level={account.level} team={account.team} />
 						<div class="min-w-0">
 							<span class="font-medium block truncate">
 								{account.nickname || account.friendCode}

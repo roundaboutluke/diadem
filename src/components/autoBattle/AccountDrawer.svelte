@@ -16,13 +16,12 @@
 	import { isMenuSidebar } from "@/lib/utils/device";
 	import Button from "@/components/ui/input/Button.svelte";
 	import ConnectAccountDialog from "@/components/autoBattle/ConnectAccountDialog.svelte";
+	import TeamLevelBadge from "@/components/autoBattle/TeamLevelBadge.svelte";
 	import {
 		getConnectedAccounts,
 		removeConnectedAccount,
 		type ConnectedAccount
 	} from "@/lib/features/autoBattle";
-	import { getIconTeam } from "$lib/services/uicons.svelte";
-	import { mTeam } from "$lib/services/ingameLocale";
 	import * as m from "$lib/paraglide/messages";
 	import { ClockAlert, Ellipsis, TriangleAlert, UserPlus } from "@lucide/svelte";
 	import { DropdownMenu, Popover } from "bits-ui";
@@ -158,19 +157,8 @@
 							disabled={account.state !== "active"}
 							onclick={() => selectAccount(account)}
 						>
-							<div
-								class="flex size-6 items-center justify-center rounded-full border border-yellow-300 bg-yellow-950 text-yellow-100"
-							>
-								<span class="text-xs font-semibold">{account.level || "?"}</span>
-							</div>
+							<TeamLevelBadge level={account.level} team={account.team} />
 							<p class="truncate font-medium">{account.nickname || account.friendCode}</p>
-							{#if account.team}
-								<img
-									class="size-4 shrink-0"
-									src={getIconTeam(account.team)}
-									alt={mTeam(account.team)}
-								/>
-							{/if}
 						</button>
 						{#if account.state !== "active"}
 							<Popover.Root>
