@@ -18,7 +18,6 @@
 	import ErrorPage from "@/components/ui/ErrorPage.svelte";
 	import Button from "@/components/ui/input/Button.svelte";
 	import { isSupportedFeature } from "@/lib/services/supportedFeatures";
-	import { getUserDetails } from "@/lib/services/user/userDetails.svelte";
 	import { startLogin } from "@/lib/services/user/login";
 	import { RAID_LEVELS } from "@/lib/utils/gymUtils";
 	import { getConfig } from "$lib/services/config/config";
@@ -80,7 +79,7 @@
 	});
 </script>
 
-{#if hasLoadedFeature(LoadedFeature.SUPPORTED_FEATURES, LoadedFeature.USER_DETAILS) && (!isSupportedFeature("autoBattle") || !isSupportedFeature("auth") || !getUserDetails().details)}
+{#if hasLoadedFeature(LoadedFeature.SUPPORTED_FEATURES) && (!isSupportedFeature("autoBattle") || !isSupportedFeature("auth") || isSupportedFeature("showFullscreenLogin"))}
 	<ErrorPage
 		error="Auto Battle is unavailable"
 		description="Sign in with Discord to use Auto Battle."
@@ -91,7 +90,7 @@
 			{/if}
 		{/snippet}
 	</ErrorPage>
-{:else if hasLoadedFeature(LoadedFeature.SUPPORTED_FEATURES, LoadedFeature.USER_DETAILS)}
+{:else if hasLoadedFeature(LoadedFeature.SUPPORTED_FEATURES)}
 	<div class="mx-auto flex h-screen w-full max-w-6xl justify-center overflow-hidden">
 		<main
 			class="h-full min-h-0 min-w-0 flex-1 px-4"
