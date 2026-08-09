@@ -61,8 +61,12 @@
 	);
 
 	function getBattleKey(battle: Battle): string {
+		// Every identity-bearing field must be in the key: the scanner
+		// regularly reports the same boss in both genders (or split by
+		// alignment), and a duplicate key hard-crashes the whole page in
+		// Svelte 5 (each_key_duplicate).
 		const variant = "bread_mode" in battle ? battle.bread_mode : battle.temp_evolution_id;
-		return `${battle.type}-${battle.level}-${battle.pokemon_id}-${battle.form}-${variant}`;
+		return `${battle.type}-${battle.level}-${battle.pokemon_id}-${battle.form}-${battle.gender}-${battle.alignment}-${variant}`;
 	}
 
 	let selectedBattleKey = $derived(selectedBattle ? getBattleKey(selectedBattle) : undefined);
@@ -154,7 +158,7 @@
 
 			</header>
 
-			{#if hasLoadedFeature(LoadedFeature.ICON_SETS, LoadedFeature.REMOTE_LOCALE)}
+			{#if hasLoadedFeature(LoadedFeature.ICON_SETS, LoadedFeature.REMOTE_LOCALE, LoadedFeature.MASTER_FILE)}
 				<div
 					class="grid grid-autofill-28 content-start gap-2"
 					class:h-full={!isMenuSidebar()}
