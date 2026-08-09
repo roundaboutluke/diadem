@@ -42,7 +42,9 @@
 	let loading = $state(true);
 	let connectOpen = $state(false);
 	let removing = $state<string | null>(null);
-	let drawerSnapPoint = $state<number>(1);
+	// Start at the 270px peek (the smaller form) like Auto Battle, not
+	// fully expanded — snapPoint 1 = full viewport height, 270 = peek.
+	let drawerSnapPoint = $state<number>(270);
 	let drawerHeight = $state(0);
 
 	const selectedAccount = $derived(
@@ -265,7 +267,7 @@
 						type="button"
 						class="mx-auto my-1 flex h-8 w-16 shrink-0 items-center justify-center"
 						aria-label={drawerSnapPoint === 1 ? "Minimize account panel" : "Expand account panel"}
-						onclick={() => (drawerSnapPoint = drawerSnapPoint === 1 ? 64 : 1)}
+						onclick={() => (drawerSnapPoint = drawerSnapPoint === 1 ? 270 : 1)}
 					>
 						<span class="h-1 w-10 rounded-full bg-ring"></span>
 					</button>
