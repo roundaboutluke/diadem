@@ -23,7 +23,10 @@
 
 	onMount(async () => {
 		try {
-			accounts = (await getConnectedAccounts()).accounts;
+			// refresh=true re-pulls team/level/nickname from the backend
+			// for any stale account, so the panel shows live trainer info
+			// rather than whatever was last stored.
+			accounts = (await getConnectedAccounts(true)).accounts;
 		} catch {
 			// Only available to authenticated users; leave the list empty otherwise.
 		} finally {
