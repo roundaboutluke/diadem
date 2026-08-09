@@ -24,7 +24,8 @@
 	import { closeMenu } from "$lib/ui/menus.svelte";
 	import { goto } from "$app/navigation";
 	import { getMapPath } from "$lib/utils/getMapPath";
-	import { ArrowLeft } from "@lucide/svelte";
+	import { getGenderLabel } from "$lib/utils/pokemonUtils";
+	import { ArrowLeft, Mars, Venus } from "@lucide/svelte";
 	import { Tabs } from "bits-ui";
 	import RaidIcon from "@/components/icons/RaidIcon.svelte";
 
@@ -50,13 +51,23 @@
 		data.bosses
 			.filter((battle) => battle.type === battleType)
 			.sort((a, b) => {
+				// Tiebreak all the way down to gender so variants of the
+				// same species (male/female, forms, shadow) always sit
+				// next to each other in the grid.
+				const variants =
+					(a.form ?? 0) - (b.form ?? 0) ||
+					(a.temp_evolution_id ?? 0) - (b.temp_evolution_id ?? 0) ||
+					(a.alignment ?? 0) - (b.alignment ?? 0) ||
+					(a.bread_mode ?? 0) - (b.bread_mode ?? 0) ||
+					(a.gender ?? 0) - (b.gender ?? 0);
 				if (battleType === "raid") {
 					return (
 						RAID_LEVELS.indexOf(b.level) - RAID_LEVELS.indexOf(a.level) ||
-						a.pokemon_id - b.pokemon_id
+						a.pokemon_id - b.pokemon_id ||
+						variants
 					);
 				}
-				return b.level - a.level || a.pokemon_id - b.pokemon_id;
+				return b.level - a.level || a.pokemon_id - b.pokemon_id || variants;
 			})
 	);
 
@@ -192,6 +203,15 @@
 										alt={mRaid(battle.level)}
 										src={getIconRaidEgg(battle.level)}
 									>
+								{/if}
+
+								<!-- Dimorphic species can appear as separate male and
+									female entries; the badge is what tells the two
+									otherwise-identical tiles apart. -->
+								{#if battle.gender === 1}
+									<Mars class="absolute -top-1 -right-3 size-4 text-sky-500" aria-label={getGenderLabel(1)} />
+								{:else if battle.gender === 2}
+									<Venus class="absolute -top-1 -right-3 size-4 text-pink-500" aria-label={getGenderLabel(2)} />
 								{/if}
 							</div>
 
