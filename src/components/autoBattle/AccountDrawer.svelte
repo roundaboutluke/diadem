@@ -29,18 +29,18 @@
 
 	let {
 		selectedFriendCode = $bindable(null),
-		open = $bindable(false),
+		bottomPadding = $bindable(undefined),
 		title = "Your account",
 		action
 	}: {
 		selectedFriendCode?: string | null;
 		/**
-		 * Mobile drawer visibility. Starts closed so the page content is
-		 * never obstructed; the host page provides a header button bound
-		 * to this. Auto-opens once after load when there is no connected
-		 * account yet, so new users still find the Connect flow.
+		 * CSS padding-bottom the host should apply to its scrollable
+		 * content on mobile so everything can scroll clear of the
+		 * drawer — the exact pattern the Auto Battle page uses. Tracks
+		 * the drawer's current height/snap; undefined on desktop.
 		 */
-		open?: boolean;
+		bottomPadding?: string | undefined;
 		title?: string;
 		/** Tool-specific status/action for the selected account. */
 		action?: Snippet<[{ friendCode: string; account: ConnectedAccount } | null]>;
@@ -50,6 +50,24 @@
 	let loading = $state(true);
 	let connectOpen = $state(false);
 	let removing = $state<string | null>(null);
+	// Drawer behavior mirrors the Auto Battle page verbatim: always
+	// present, h-fit (its size IS its content's size), handle toggles
+	// full ↔ 64px mini strip, swipe snaps between 270px peek and full —
+	// never dismissed.
+	let drawerSnapPoint = $state<number>(1);
+	let drawerHeight = $state(0);
+
+	// Mirrors Auto Battle's selectPaddingBottom exactly, exported so the
+	// host page can pad its scrollable content clear of the drawer.
+	$effect(() => {
+		if (isMenuSidebar()) {
+			bottomPadding = undefined;
+		} else if (drawerSnapPoint === 1) {
+			bottomPadding = drawerHeight + 70 + "px";
+		} else {
+			bottomPadding = drawerSnapPoint + 10 + "px";
+		}
+	});
 
 	const selectedAccount = $derived(
 		accounts.find((account) => account.friendCode === selectedFriendCode) ?? null
@@ -70,10 +88,6 @@
 			// Authenticated users only; leave empty otherwise.
 		} finally {
 			loading = false;
-			// Nothing connected yet: surface the panel so the user finds
-			// the Connect flow. With an account linked it stays closed —
-			// the page content is the point, not the account chrome.
-			if (!isMenuSidebar() && accounts.length === 0) open = true;
 		}
 	}
 
@@ -255,7 +269,17 @@
 		{@render panel()}
 	</aside>
 {:else}
-	<Drawer.Root bind:open modal={false}>
+	<Drawer.Root
+		open={true}
+		onOpenChange={(open, details) => {
+			if (!open) details.cancel();
+		}}
+		modal={false}
+		defaultOpen={true}
+		disablePointerDismissal
+		snapPoints={[270, 1]}
+		bind:snapPoint={drawerSnapPoint}
+	>
 		<Drawer.Portal>
 			<Drawer.Viewport class="drawer-viewport flex items-end">
 				<Drawer.Popup
@@ -264,13 +288,15 @@
 					<button
 						type="button"
 						class="mx-auto my-1 flex h-8 w-16 shrink-0 items-center justify-center"
-						aria-label="Close account panel"
-						onclick={() => (open = false)}
+						aria-label={drawerSnapPoint === 1 ? "Minimize account panel" : "Expand account panel"}
+						onclick={() => (drawerSnapPoint = drawerSnapPoint === 1 ? 64 : 1)}
 					>
 						<span class="h-1 w-10 rounded-full bg-ring"></span>
 					</button>
 					<Drawer.Content class="px-6 pb-5">
-						{@render panel()}
+						<div bind:clientHeight={drawerHeight}>
+							{@render panel()}
+						</div>
 					</Drawer.Content>
 				</Drawer.Popup>
 			</Drawer.Viewport>

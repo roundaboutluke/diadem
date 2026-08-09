@@ -246,7 +246,7 @@
 				modal={false}
 				defaultOpen={true}
 				disablePointerDismissal
-				snapPoints={[64, 1]}
+				snapPoints={[270, 1]}
 				bind:snapPoint={drawerSnapPoint}
 			>
 				<Drawer.Portal>
