@@ -3,8 +3,17 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@source "routes/(custom)/**/*.{js,ts,svelte}";
-@source "components/custom/**/*.{js,ts,svelte}";
+/* Re-include the gitignored custom pages in Tailwind's scan. Two traps
+   make the obvious forms silently match NOTHING: @source treats the
+   parentheses in "(custom)" as glob syntax, and the scanner applies
+   .gitignore filtering even inside an explicit @source directory. The
+   tailwindsrc/ symlinks sidestep both — paren-free paths that are not
+   themselves gitignored, and OUTSIDE src so svelte-check doesn't visit
+   the routes a second time without their generated $types. Without
+   this, every class unique to the custom pages (the 85dvh sheet height
+   cap, z-40, max-h-64, ...) compiles to nothing. */
+@source "../tailwindsrc/custom-pages";
+@source "../tailwindsrc/custom-components";
 
 @custom-variant dark (&:is(.dark *));
 
